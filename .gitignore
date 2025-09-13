@@ -36,3 +36,7 @@ yarn-error.log*
 !package-lock.json
 !public/
 !src/
+
+# Inclure les configs ESLint et Prettier
+!.eslintrc
+!.prettierrc
