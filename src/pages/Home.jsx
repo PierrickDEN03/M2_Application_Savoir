@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 function Home() {
     return (
         <div style={{ textAlign: 'center', marginTop: '50px' }}>
-            <h1>Bienvenue sur notre application</h1>
+            <h1>Bienvenue sur notre application Echo</h1>
             <p>Veuillez appuyer sur un des liens suivants :</p>
 
             <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 3 }}>
