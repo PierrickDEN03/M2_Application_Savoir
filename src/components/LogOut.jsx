@@ -1,18 +1,18 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { Button, Box } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
-import { signOut } from 'firebase/auth'
-import { auth } from '../firebase-config'
+import { UserContext } from '../context/userContext.js'
 
 export default function LogOut() {
     const navigate = useNavigate()
+    const { signOut } = useContext(UserContext)
 
     async function handleLogout() {
         try {
-            await signOut(auth)
+            await signOut()
             navigate('/')
         } catch {
-            alert('Pour certaines raisons, vous ne pouvez pas vous déconnecter. Veuillez vérifier votre connexion Internet et réessayer')
+            alert('Pour certaines raisons, vous ne pouvez pas vous déconnecter. Veuillez vérifier votre connexion Internet et réessayer.')
         }
     }
 

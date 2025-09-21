@@ -1,24 +1,39 @@
 import React from 'react'
-import { Button, Stack } from '@mui/material'
-import { Link } from 'react-router-dom'
+import { Container, Box, Typography, Button } from '@mui/material'
+import { useNavigate } from 'react-router-dom'
 
-function Home() {
+export default function Home() {
+    const navigate = useNavigate()
+
     return (
-        <div style={{ textAlign: 'center', marginTop: '50px' }}>
-            <h1>Bienvenue sur notre application Echo</h1>
-            <p>Veuillez appuyer sur un des liens suivants :</p>
+        <Container maxWidth="sm">
+            <Box
+                sx={{
+                    mt: 12,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    textAlign: 'center',
+                }}
+            >
+                <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
+                    Bienvenue 👋
+                </Typography>
 
-            <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 3 }}>
-                <Button component={Link} to="/login/signIn" variant="contained" color="primary">
-                    Connexion
-                </Button>
+                <Typography variant="h6" color="text.secondary" sx={{ mb: 4 }}>
+                    Découvre notre application d’échanges entre étudiants. Connecte-toi avec ton email en 1 clic grâce au lien magique.
+                </Typography>
 
-                <Button component={Link} to="/login/signUp" variant="outlined" color="secondary">
-                    Inscription
+                <Button
+                    variant="contained"
+                    color="secondary"
+                    size="large"
+                    sx={{ borderRadius: '2rem', px: 5, py: 1.5, fontSize: '1.1rem', textTransform: 'none', boxShadow: 3 }}
+                    onClick={() => navigate('/login')}
+                >
+                    🚀 Commencer
                 </Button>
-            </Stack>
-        </div>
+            </Box>
+        </Container>
     )
 }
-
-export default Home

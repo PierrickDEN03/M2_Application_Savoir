@@ -6,7 +6,7 @@ import { Outlet, Navigate } from 'react-router-dom'
 export default function Private() {
     const { currentUser } = useContext(UserContext)
     if (!currentUser) {
-        return <Navigate to="/login/signIn" />
+        return <Navigate to="/login" />
     }
 
     return (

@@ -1,0 +1,138 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Magic Link Auth API",
+        "version": "1.0.0",
+        "description": "API pour la gestion de l'authentification par lien magique et des profils utilisateurs."
+    },
+    "paths": {
+        "/auth/send-magic-link": {
+            "post": {
+                "summary": "Envoie un lien magique à l'email",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "email": { "type": "string", "format": "email" }
+                                },
+                                "required": ["email"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Lien envoyé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": { "type": "boolean", "example": true }
+                            }
+                        }
+                    },
+                    "400": { "description": "Email manquant ou invalide" },
+                    "500": { "description": "Erreur serveur" }
+                }
+            }
+        },
+        "/auth/complete-sign-in": {
+            "post": {
+                "summary": "Complète la connexion via un lien magique",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "url": { "type": "string", "format": "uri" }
+                                },
+                                "required": ["url"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Connexion réussie",
+                        "content": {
+                            "application/json": {
+                                "schema": { "type": "object" }
+                            }
+                        }
+                    },
+                    "400": { "description": "Lien invalide ou email manquant" },
+                    "500": { "description": "Erreur serveur" }
+                }
+            }
+        },
+        "/users/{uid}/exists": {
+            "get": {
+                "summary": "Vérifie si un profil utilisateur existe",
+                "parameters": [
+                    {
+                        "name": "uid",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" },
+                        "description": "UID de l'utilisateur"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Retourne true si le profil existe",
+                        "content": {
+                            "application/json": {
+                                "schema": { "type": "boolean", "example": true }
+                            }
+                        }
+                    },
+                    "404": { "description": "Utilisateur non trouvé" },
+                    "500": { "description": "Erreur serveur" }
+                }
+            }
+        },
+        "/users/{uid}": {
+            "post": {
+                "summary": "Crée ou met à jour un profil utilisateur",
+                "parameters": [
+                    {
+                        "name": "uid",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" },
+                        "description": "UID de l'utilisateur"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "description": "Données du profil utilisateur",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": { "description": "Profil créé ou mis à jour avec succès" },
+                    "400": { "description": "UID manquant" },
+                    "500": { "description": "Erreur serveur" }
+                }
+            }
+        },
+        "/auth/sign-out": {
+            "post": {
+                "summary": "Déconnexion",
+                "responses": {
+                    "200": { "description": "Déconnexion réussie" },
+                    "500": { "description": "Erreur serveur" }
+                }
+            }
+        }
+    }
+}

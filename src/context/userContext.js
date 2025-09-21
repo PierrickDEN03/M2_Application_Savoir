@@ -1,31 +1,35 @@
-import { createContext, useState, useEffect } from 'react'
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth'
+// FILE: src/context/UserContext.jsx
+import React, { createContext, useEffect, useState } from 'react'
+import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '../firebase-config'
+import { sendMagicLink, completeSignInWithEmailLink, profileExists, createProfile, signOut } from '../services/userService'
 
-export const UserContext = createContext()
+export const UserContext = createContext(null)
 
-export function UserContextProvider(props) {
+export function UserContextProvider({ children }) {
     const [currentUser, setCurrentUser] = useState(null)
-    const [loadingData, setLoadingData] = useState(true)
+    const [loading, setLoading] = useState(true)
 
-    //Met à jour le state currentUser et loadingData à chaque changement d’authentification avec Firebase.
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setCurrentUser(currentUser)
-            setLoadingData(false)
+        const unsub = onAuthStateChanged(auth, (user) => {
+            setCurrentUser(user)
+            setLoading(false)
         })
-        return unsubscribe
+        return unsub
     }, [])
 
-    const signUp = function (email, password) {
-        //A changer en fonction de la BDD
-        return createUserWithEmailAndPassword(auth, email, password)
-    }
-
-    const signIn = function (email, password) {
-        //A changer en fonction de la BDD
-        return signInWithEmailAndPassword(auth, email, password)
-    }
-
-    return <UserContext.Provider value={{ signUp, signIn, currentUser }}>{!loadingData && props.children}</UserContext.Provider>
+    return (
+        <UserContext.Provider
+            value={{
+                currentUser,
+                sendMagicLink,
+                completeSignInWithEmailLink,
+                profileExists,
+                createProfile,
+                signOut,
+            }}
+        >
+            {!loading && children}
+        </UserContext.Provider>
+    )
 }

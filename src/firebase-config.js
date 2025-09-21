@@ -1,6 +1,8 @@
-// Import the functions you need from the SDKs you need
+// firebase-config.js
 import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
+import { getFirestore } from 'firebase/firestore'
+import { getStorage } from 'firebase/storage' // <-- ajouter
 
 const firebaseConfig = {
     apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -12,6 +14,12 @@ const firebaseConfig = {
     appId: process.env.REACT_APP_FIREBASE_BASE_ID,
 }
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
+export const db = getFirestore(app)
+export const storage = getStorage(app)
+
+export const actionCodeSettings = {
+    url: `${process.env.REACT_APP_BASE_URL || 'http://localhost:3000'}/auth/callback`,
+    handleCodeInApp: true,
+}
