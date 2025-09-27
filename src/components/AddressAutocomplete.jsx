@@ -2,7 +2,7 @@
 import React, { useState } from 'react'
 import { TextField, Autocomplete } from '@mui/material'
 
-export default function AddressAutocomplete({ value, onAddressSelected, error, helperText }) {
+export default function AddressAutocomplete({ value, onAddressSelected, error, helperText, sx }) {
     const [addressSuggestions, setAddressSuggestions] = useState([])
 
     // Cherche des suggestions d'adresses
@@ -45,8 +45,22 @@ export default function AddressAutocomplete({ value, onAddressSelected, error, h
             value={value}
             onInputChange={(e, newValue) => fetchAddressSuggestions(newValue)}
             onChange={(e, newValue) => newValue && fetchPlaceDetails(newValue.placeId)}
+            sx={{ width: '100%', ...sx }}
             renderInput={(params) => (
-                <TextField {...params} label="Adresse complète" fullWidth required sx={{ mb: 2 }} error={!!error} helperText={helperText} />
+                <TextField
+                    {...params}
+                    label="Adresse complète"
+                    required
+                    error={!!error}
+                    helperText={helperText}
+                    sx={{
+                        mb: 2,
+                        bgcolor: 'white',
+                        borderRadius: '8px',
+                        '& .MuiOutlinedInput-root': { borderRadius: '8px' },
+                        width: '100%',
+                    }}
+                />
             )}
         />
     )

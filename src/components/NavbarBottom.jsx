@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import BottomNavigation from '@mui/material/BottomNavigation'
 import BottomNavigationAction from '@mui/material/BottomNavigationAction'
 import HomeIcon from '@mui/icons-material/Home'
@@ -10,7 +10,23 @@ import Paper from '@mui/material/Paper'
 
 export default function BottomNav() {
     const navigate = useNavigate()
-    const [value, setValue] = React.useState(0)
+    const location = useLocation()
+
+    // Détermine quel onglet est actif selon l'URL
+    const getValueFromPath = (path) => {
+        if (path.startsWith('/user/dashboard')) return 0
+        if (path.startsWith('/user/map')) return 1
+        if (path.startsWith('/reservations')) return 2
+        if (path.startsWith('/messagerie')) return 3
+        return 0
+    }
+
+    const [value, setValue] = React.useState(getValueFromPath(location.pathname))
+
+    // 🔑 Update automatique quand l'URL change (back, forward, refresh)
+    React.useEffect(() => {
+        setValue(getValueFromPath(location.pathname))
+    }, [location.pathname])
 
     const handleChange = (event, newValue) => {
         setValue(newValue)
@@ -22,7 +38,7 @@ export default function BottomNav() {
                 navigate('/user/map')
                 break
             case 2:
-                navigate('/reservations')
+                navigate('/research-activities')
                 break
             case 3:
                 navigate('/messagerie')
@@ -34,21 +50,85 @@ export default function BottomNav() {
 
     return (
         <Paper
+            className="bottomNav"
             sx={{
                 position: 'fixed',
                 bottom: 0,
                 left: 0,
                 right: 0,
-                borderRadius: 0,
-                boxShadow: '0 -2px 8px rgba(0,0,0,0.1)',
+                borderRadius: '20px 20px 0 0',
+                bgcolor: '#F0E7D6',
+                zIndex: 1000,
+                border: 'none',
             }}
-            elevation={3}
+            elevation={0}
         >
-            <BottomNavigation value={value} onChange={handleChange} showLabels>
-                <BottomNavigationAction label="Home" icon={<HomeIcon />} />
-                <BottomNavigationAction label="Carte" icon={<MapIcon />} />
-                <BottomNavigationAction label="Réservations" icon={<BookmarksIcon />} />
-                <BottomNavigationAction label="Messagerie" icon={<ChatIcon />} />
+            <BottomNavigation
+                value={value}
+                onChange={handleChange}
+                showLabels={false}
+                sx={{
+                    height: 70,
+                    bgcolor: 'transparent',
+                    '& .MuiBottomNavigationAction-root': {
+                        color: 'rgba(237, 106, 90, 0.5)', // ✅ non sélectionné 50%
+                        minWidth: 'auto',
+                        padding: '8px',
+                        borderRadius: '12px',
+                        margin: '4px',
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                            color: 'rgba(237, 106, 90, 0.5)', // ✅ hover aussi en transparent
+                            bgcolor: 'rgba(178, 221, 247, 0.1)',
+                            transform: 'translateY(-2px)',
+                        },
+                        '& .MuiSvgIcon-root': {
+                            fontSize: '28px',
+                        },
+                    },
+                    '& .Mui-selected': {
+                        color: '#ED6A5A !important', // ✅ sélectionné opaque
+                        bgcolor: 'rgba(237, 106, 90, 0.1)',
+                        borderRadius: '12px',
+                        transform: 'scale(1.1)',
+                        '& .MuiSvgIcon-root': {
+                            fontSize: '32px',
+                        },
+                    },
+                }}
+            >
+                <BottomNavigationAction
+                    icon={<HomeIcon />}
+                    sx={{
+                        '&.Mui-selected .MuiSvgIcon-root': {
+                            filter: 'drop-shadow(0 2px 4px rgba(237, 106, 90, 0.3))',
+                        },
+                    }}
+                />
+                <BottomNavigationAction
+                    icon={<MapIcon />}
+                    sx={{
+                        '&.Mui-selected .MuiSvgIcon-root': {
+                            filter: 'drop-shadow(0 2px 4px rgba(237, 106, 90, 0.3))',
+                        },
+                    }}
+                />
+                <BottomNavigationAction
+                    icon={<BookmarksIcon />}
+                    sx={{
+                        '&.Mui-selected .MuiSvgIcon-root': {
+                            filter: 'drop-shadow(0 2px 4px rgba(237, 106, 90, 0.3))',
+                        },
+                    }}
+                />
+                <BottomNavigationAction
+                    icon={<ChatIcon />}
+                    sx={{
+                        '&.Mui-selected .MuiSvgIcon-root': {
+                            filter: 'drop-shadow(0 2px 4px rgba(237, 106, 90, 0.3))',
+                        },
+                    }}
+                />
             </BottomNavigation>
         </Paper>
     )

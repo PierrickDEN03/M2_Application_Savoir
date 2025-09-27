@@ -1,9 +1,9 @@
 {
     "openapi": "3.1.0",
     "info": {
-        "title": "Magic Link Auth API",
-        "version": "1.0.0",
-        "description": "API pour la gestion de l'authentification par lien magique et des profils utilisateurs."
+        "title": "Magic Link Auth & User Interests API",
+        "version": "1.1.0",
+        "description": "API pour la gestion de l'authentification par lien magique, des profils utilisateurs et des centres d'intérêt."
     },
     "paths": {
         "/auth/send-magic-link": {
@@ -26,11 +26,7 @@
                 "responses": {
                     "200": {
                         "description": "Lien envoyé avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": { "type": "boolean", "example": true }
-                            }
-                        }
+                        "content": { "application/json": { "schema": { "type": "boolean", "example": true } } }
                     },
                     "400": { "description": "Email manquant ou invalide" },
                     "500": { "description": "Erreur serveur" }
@@ -46,24 +42,24 @@
                         "application/json": {
                             "schema": {
                                 "type": "object",
-                                "properties": {
-                                    "url": { "type": "string", "format": "uri" }
-                                },
+                                "properties": { "url": { "type": "string", "format": "uri" } },
                                 "required": ["url"]
                             }
                         }
                     }
                 },
                 "responses": {
-                    "200": {
-                        "description": "Connexion réussie",
-                        "content": {
-                            "application/json": {
-                                "schema": { "type": "object" }
-                            }
-                        }
-                    },
+                    "200": { "description": "Connexion réussie", "content": { "application/json": { "schema": { "type": "object" } } } },
                     "400": { "description": "Lien invalide ou email manquant" },
+                    "500": { "description": "Erreur serveur" }
+                }
+            }
+        },
+        "/auth/sign-out": {
+            "post": {
+                "summary": "Déconnexion",
+                "responses": {
+                    "200": { "description": "Déconnexion réussie" },
                     "500": { "description": "Erreur serveur" }
                 }
             }
@@ -72,22 +68,12 @@
             "get": {
                 "summary": "Vérifie si un profil utilisateur existe",
                 "parameters": [
-                    {
-                        "name": "uid",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "string" },
-                        "description": "UID de l'utilisateur"
-                    }
+                    { "name": "uid", "in": "path", "required": true, "schema": { "type": "string" }, "description": "UID de l'utilisateur" }
                 ],
                 "responses": {
                     "200": {
                         "description": "Retourne true si le profil existe",
-                        "content": {
-                            "application/json": {
-                                "schema": { "type": "boolean", "example": true }
-                            }
-                        }
+                        "content": { "application/json": { "schema": { "type": "boolean", "example": true } } }
                     },
                     "404": { "description": "Utilisateur non trouvé" },
                     "500": { "description": "Erreur serveur" }
@@ -98,23 +84,13 @@
             "post": {
                 "summary": "Crée ou met à jour un profil utilisateur",
                 "parameters": [
-                    {
-                        "name": "uid",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "string" },
-                        "description": "UID de l'utilisateur"
-                    }
+                    { "name": "uid", "in": "path", "required": true, "schema": { "type": "string" }, "description": "UID de l'utilisateur" }
                 ],
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "description": "Données du profil utilisateur",
-                                "additionalProperties": true
-                            }
+                            "schema": { "type": "object", "description": "Données du profil utilisateur", "additionalProperties": true }
                         }
                     }
                 },
@@ -125,11 +101,73 @@
                 }
             }
         },
-        "/auth/sign-out": {
-            "post": {
-                "summary": "Déconnexion",
+        "/categories": {
+            "get": {
+                "summary": "Récupère toutes les catégories disponibles",
                 "responses": {
-                    "200": { "description": "Déconnexion réussie" },
+                    "200": {
+                        "description": "Liste des catégories",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": { "type": "string" },
+                                            "description": { "type": "string" },
+                                            "iconName": { "type": "string" },
+                                            "createdAt": { "type": "string", "format": "date-time" },
+                                            "isActive": { "type": "boolean" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": { "description": "Erreur serveur" }
+                }
+            }
+        },
+        "/users/{uid}/interests": {
+            "get": {
+                "summary": "Récupère les intérêts sélectionnés par l'utilisateur",
+                "parameters": [
+                    { "name": "uid", "in": "path", "required": true, "schema": { "type": "string" }, "description": "UID de l'utilisateur" }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des IDs de catégories",
+                        "content": {
+                            "application/json": {
+                                "schema": { "type": "array", "items": { "type": "string" }, "example": ["catId1", "catId2"] }
+                            }
+                        }
+                    },
+                    "404": { "description": "Utilisateur non trouvé" },
+                    "500": { "description": "Erreur serveur" }
+                }
+            },
+            "post": {
+                "summary": "Met à jour les intérêts de l'utilisateur",
+                "parameters": [
+                    { "name": "uid", "in": "path", "required": true, "schema": { "type": "string" }, "description": "UID de l'utilisateur" }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": { "interests": { "type": "array", "items": { "type": "string" } } },
+                                "required": ["interests"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": { "description": "Intérêts mis à jour avec succès" },
+                    "400": { "description": "Paramètres invalides" },
                     "500": { "description": "Erreur serveur" }
                 }
             }

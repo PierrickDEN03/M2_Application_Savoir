@@ -1,7 +1,7 @@
 // FILE: src/pages/RegisterProfile.jsx
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Container, TextField, Button, Box, Typography, CircularProgress, Snackbar, Alert, Avatar, IconButton } from '@mui/material'
+import { TextField, Button, Box, Typography, CircularProgress, Snackbar, Alert, Avatar, IconButton } from '@mui/material'
 import { PhotoCamera } from '@mui/icons-material'
 import { auth, db, storage } from '../firebase-config'
 import { doc, setDoc } from 'firebase/firestore'
@@ -25,17 +25,16 @@ export default function RegisterProfile() {
         city: '',
         postalCode: '',
         phone: '',
-        photoUrl: '', // Pour l'affichage local de l'avatar
+        photoUrl: '',
     })
-    const [photoFile, setPhotoFile] = useState(null) // Fichier réel pour l'upload
+    const [photoFile, setPhotoFile] = useState(null)
     const [errors, setErrors] = useState({})
     const [status, setStatus] = useState({ open: false, severity: 'info', message: '' })
 
-    // Vérifie si l'utilisateur est connecté dès le chargement
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (!user) {
-                navigate('/login') // Redirection si pas connecté
+                navigate('/login')
             } else {
                 setFormData((prev) => ({
                     ...prev,
@@ -48,16 +47,12 @@ export default function RegisterProfile() {
     }, [location.state, navigate])
 
     const handleChange = (field) => (e) => setFormData({ ...formData, [field]: e.target.value })
-
-    const handleAddressSelected = ({ street, city, postalCode }) => {
-        setFormData((prev) => ({ ...prev, street, city, postalCode }))
-    }
-
+    const handleAddressSelected = ({ street, city, postalCode }) => setFormData((p) => ({ ...p, street, city, postalCode }))
     const handlePhotoChange = (e) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0]
-            setPhotoFile(file) // Stocke le fichier réel pour l'upload
-            setFormData((prev) => ({ ...prev, photoUrl: URL.createObjectURL(file) })) // Pour aperçu local
+            setPhotoFile(file)
+            setFormData((prev) => ({ ...prev, photoUrl: URL.createObjectURL(file) }))
         }
     }
 
@@ -67,24 +62,21 @@ export default function RegisterProfile() {
             if (!formData.firstName.trim()) newErrors.firstName = 'Prénom requis'
             if (!formData.lastName.trim()) newErrors.lastName = 'Nom requis'
             if (!formData.email.trim()) newErrors.email = 'Email requis'
-            else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Email invalide'
         } else if (step === 2) {
             if (!formData.street.trim()) newErrors.street = 'Rue requise'
             if (!formData.city.trim()) newErrors.city = 'Ville requise'
             if (!formData.postalCode.trim()) newErrors.postalCode = 'Code postal requis'
         } else if (step === 3) {
-            if (!formData.phone.trim()) newErrors.phone = 'Numéro de téléphone requis'
-            else if (!/^\+?\d{10,15}$/.test(formData.phone)) newErrors.phone = 'Numéro invalide'
+            if (!formData.phone.trim()) newErrors.phone = 'Numéro requis'
         }
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
     }
 
     const nextStep = () => {
-        if (validateStep()) setStep((prev) => prev + 1)
+        if (validateStep()) setStep((p) => p + 1)
     }
-
-    const prevStep = () => setStep((prev) => prev - 1)
+    const prevStep = () => setStep((p) => p - 1)
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -93,195 +85,232 @@ export default function RegisterProfile() {
             setStatus({ open: true, severity: 'error', message: 'Utilisateur non connecté' })
             return
         }
-
         const uid = auth.currentUser.uid
         let photoUrl = formData.photoUrl || '/avatar_default.jpg'
-
         try {
             if (photoFile) {
-                // Upload du fichier réel sur Firebase Storage
                 const storageRef = ref(storage, `users/${uid}/profile.jpg`)
                 await uploadBytes(storageRef, photoFile)
-                // Récupère l'URL publique pour Firestore
                 photoUrl = await getDownloadURL(storageRef)
             }
-
             const payload = {
                 displayName: `${formData.firstName} ${formData.lastName}`,
-                firstName: formData.firstName,
-                lastName: formData.lastName,
-                email: formData.email,
-                phone: formData.phone,
-                photoUrl, // URL finale stockée dans Firestore
-                address: {
-                    street: formData.street,
-                    city: formData.city,
-                    postalCode: formData.postalCode,
-                },
+                ...formData,
+                photoUrl,
                 createdAt: new Date().toISOString(),
             }
-
             await setDoc(doc(db, 'users', uid), payload, { merge: true })
-            navigate('/user/dashboard')
+            navigate('/user/interest')
         } catch (err) {
-            console.error('Erreur Firestore/Storage:', err)
-            setStatus({
-                open: true,
-                severity: 'error',
-                message: `Erreur lors de la création du profil: ${err.message}`,
-            })
+            console.error(err)
+            setStatus({ open: true, severity: 'error', message: `Erreur: ${err.message}` })
         }
     }
 
     if (loadingUser) {
         return (
-            <Container sx={{ mt: 8, textAlign: 'center' }}>
+            <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                 <CircularProgress />
                 <Typography sx={{ mt: 2 }}>Chargement de l'utilisateur…</Typography>
-            </Container>
+            </Box>
         )
     }
 
     return (
-        <Container maxWidth="xs">
-            <Box sx={{ mt: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <Typography component="h1" variant="h5">
+        <Box
+            sx={{
+                height: '100vh',
+                bgcolor: '#3454D1',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                px: 2,
+            }}
+        >
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    textAlign: 'center',
+                    width: '100%',
+                    maxWidth: 400,
+                }}
+            >
+                {/* Logo */}
+                <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#F0E7D6', mb: 1, fontFamily: 'Poppins, sans-serif' }}>
+                    echo
+                    <Box component="span" sx={{ color: '#ED6A5A' }}>
+                        •
+                    </Box>
+                    ly
+                </Typography>
+                <Typography variant="subtitle2" sx={{ color: '#FFD166', mb: 4 }}>
+                    Là où chaque rencontre résonne
+                </Typography>
+
+                {/* Titre */}
+                <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#F0E7D6', mb: 3 }}>
                     Complète ton profil
                 </Typography>
-                <Box component="form" sx={{ mt: 3, width: '100%' }} onSubmit={handleSubmit}>
-                    {/* STEP 1 */}
+
+                <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
                     {step === 1 && (
-                        <Box>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <TextField
-                                label="Prénom"
-                                fullWidth
-                                required
+                                placeholder="Prénom"
                                 value={formData.firstName}
                                 onChange={handleChange('firstName')}
-                                sx={{ mb: 2 }}
                                 error={!!errors.firstName}
                                 helperText={errors.firstName}
+                                sx={{ width: '100%', mb: 2, bgcolor: 'white', borderRadius: '8px' }}
                             />
                             <TextField
-                                label="Nom"
-                                fullWidth
-                                required
+                                placeholder="Nom"
                                 value={formData.lastName}
                                 onChange={handleChange('lastName')}
-                                sx={{ mb: 2 }}
                                 error={!!errors.lastName}
                                 helperText={errors.lastName}
+                                sx={{ width: '100%', mb: 2, bgcolor: 'white', borderRadius: '8px' }}
                             />
                             <TextField
-                                label="Email"
-                                type="email"
-                                fullWidth
-                                required
+                                placeholder="Email"
                                 value={formData.email}
-                                sx={{ mb: 2 }}
                                 disabled
                                 error={!!errors.email}
                                 helperText={errors.email}
+                                sx={{ width: '100%', mb: 2, bgcolor: 'white', borderRadius: '8px' }}
                             />
-                            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                <Button variant="contained" color="secondary" onClick={nextStep}>
-                                    Suivant
-                                </Button>
-                            </Box>
+                            <Button
+                                onClick={nextStep}
+                                sx={{
+                                    bgcolor: '#ED6A5A',
+                                    color: '#fff',
+                                    borderRadius: '12px',
+                                    px: 5,
+                                    py: 1.2,
+                                    mt: 2,
+                                    '&:hover': { bgcolor: '#B2DDF7', color: '#3454D1' },
+                                }}
+                            >
+                                Suivant →
+                            </Button>
                         </Box>
                     )}
 
-                    {/* STEP 2 */}
                     {step === 2 && (
-                        <Box>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <AddressAutocomplete
-                                value={formData.street ? `${formData.street}, ${formData.city}, ${formData.postalCode}` : ''}
+                                value={formData.street ? `${formData.street}, ${formData.city}` : ''}
                                 onAddressSelected={handleAddressSelected}
-                                error={!!errors.street || !!errors.city || !!errors.postalCode}
-                                helperText={errors.street || errors.city || errors.postalCode || ''}
+                                sx={{ maxWidth: 400, mb: 2 }}
                             />
                             <TextField
-                                label="Rue"
-                                fullWidth
-                                required
+                                placeholder="Rue"
                                 value={formData.street}
                                 onChange={handleChange('street')}
-                                sx={{ mb: 2 }}
-                                error={!!errors.street}
-                                helperText={errors.street}
+                                sx={{ width: '100%', mb: 2, bgcolor: 'white', borderRadius: '8px' }}
                             />
                             <TextField
-                                label="Ville"
-                                fullWidth
-                                required
+                                placeholder="Ville"
                                 value={formData.city}
                                 onChange={handleChange('city')}
-                                sx={{ mb: 2 }}
-                                error={!!errors.city}
-                                helperText={errors.city}
+                                sx={{ width: '100%', mb: 2, bgcolor: 'white', borderRadius: '8px' }}
                             />
                             <TextField
-                                label="Code Postal"
-                                fullWidth
-                                required
+                                placeholder="Code postal"
                                 value={formData.postalCode}
                                 onChange={handleChange('postalCode')}
-                                sx={{ mb: 2 }}
-                                error={!!errors.postalCode}
-                                helperText={errors.postalCode}
+                                sx={{ width: '100%', mb: 2, bgcolor: 'white', borderRadius: '8px' }}
                             />
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <Button variant="outlined" onClick={prevStep}>
-                                    Précédent
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mt: 2 }}>
+                                <Button
+                                    onClick={prevStep}
+                                    sx={{
+                                        bgcolor: '#B2DDF7', // couleur principale du bouton précédent
+                                        color: '#3454D1', // texte en bleu foncé
+                                        borderRadius: '12px',
+                                        px: 4,
+                                        py: 1.2,
+                                        fontWeight: 'bold',
+                                        textTransform: 'uppercase',
+                                        '&:hover': {
+                                            bgcolor: '#ED6A5A', // couleur hover
+                                            color: '#F0E7D6', // texte hover
+                                        },
+                                    }}
+                                >
+                                    ← Précédent
                                 </Button>
-                                <Button variant="contained" color="secondary" onClick={nextStep}>
-                                    Suivant
+                                <Button
+                                    onClick={nextStep}
+                                    sx={{
+                                        bgcolor: '#ED6A5A',
+                                        color: '#fff',
+                                        borderRadius: '12px',
+                                        px: 4,
+                                        '&:hover': { bgcolor: '#B2DDF7', color: '#3454D1' },
+                                    }}
+                                >
+                                    Suivant →
                                 </Button>
                             </Box>
                         </Box>
                     )}
 
-                    {/* STEP 3 */}
                     {step === 3 && (
-                        <Box>
-                            {/* Avatar affiché à partir de l'URL locale pour aperçu */}
-                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
-                                <Avatar src={formData.photoUrl || '/avatar_default.jpg'} sx={{ width: 120, height: 120, mb: 1 }} />
-                                <label htmlFor="icon-button-file">
-                                    <input
-                                        accept="image/*"
-                                        id="icon-button-file"
-                                        type="file"
-                                        style={{ display: 'none' }}
-                                        onChange={handlePhotoChange}
-                                    />
-                                    <IconButton color="primary" component="span">
-                                        <PhotoCamera />
-                                    </IconButton>
-                                </label>
-                                <Typography variant="caption" sx={{ mt: 1 }}>
-                                    Cliquez sur l’icône pour changer la photo
-                                </Typography>
-                            </Box>
-
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <Avatar src={formData.photoUrl || '/avatar_default.jpg'} sx={{ width: 120, height: 120, mb: 2 }} />
+                            <label htmlFor="icon-button-file">
+                                <input
+                                    accept="image/*"
+                                    id="icon-button-file"
+                                    type="file"
+                                    style={{ display: 'none' }}
+                                    onChange={handlePhotoChange}
+                                />
+                                <IconButton component="span" sx={{ color: '#FFD166' }}>
+                                    <PhotoCamera />
+                                </IconButton>
+                            </label>
                             <TextField
-                                label="Numéro de téléphone"
-                                fullWidth
-                                required
+                                placeholder="Numéro de téléphone"
                                 value={formData.phone}
                                 onChange={handleChange('phone')}
-                                sx={{ mb: 3 }}
                                 error={!!errors.phone}
                                 helperText={errors.phone || 'Ex: +33123456789'}
-                                inputProps={{ maxLength: 15 }}
+                                sx={{ width: '100%', mt: 2, mb: 3, bgcolor: 'white', borderRadius: '8px' }}
                             />
-
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <Button variant="outlined" onClick={prevStep}>
-                                    Précédent
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                                <Button
+                                    onClick={prevStep}
+                                    sx={{
+                                        bgcolor: '#B2DDF7', // couleur principale du bouton précédent
+                                        color: '#3454D1', // texte en bleu foncé
+                                        borderRadius: '12px',
+                                        px: 4,
+                                        py: 1.2,
+                                        fontWeight: 'bold',
+                                        textTransform: 'uppercase',
+                                        '&:hover': {
+                                            bgcolor: '#ED6A5A', // couleur hover
+                                            color: '#F0E7D6', // texte hover
+                                        },
+                                    }}
+                                >
+                                    ← Précédent
                                 </Button>
-                                <Button type="submit" variant="contained" color="secondary">
-                                    Terminer
+                                <Button
+                                    type="submit"
+                                    sx={{
+                                        bgcolor: '#ED6A5A',
+                                        color: '#fff',
+                                        borderRadius: '12px',
+                                        px: 4,
+                                        '&:hover': { bgcolor: '#B2DDF7', color: '#3454D1' },
+                                    }}
+                                >
+                                    Terminer ✔
                                 </Button>
                             </Box>
                         </Box>
@@ -294,6 +323,6 @@ export default function RegisterProfile() {
                     {status.message}
                 </Alert>
             </Snackbar>
-        </Container>
+        </Box>
     )
 }

@@ -3,7 +3,7 @@ import { GoogleMap, Marker, useLoadScript } from '@react-google-maps/api'
 
 const containerStyle = {
     width: '100%',
-    height: '400px', // adapte à ton design mobile-first
+    height: '100vh', // adapte à ton design mobile-first
 }
 
 // Coordonnées de Lyon comme point de départ
