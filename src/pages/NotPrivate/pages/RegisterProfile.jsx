@@ -3,12 +3,12 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { TextField, Button, Box, Typography, CircularProgress, Snackbar, Alert, Avatar, IconButton } from '@mui/material'
 import { PhotoCamera } from '@mui/icons-material'
-import { auth, db, storage } from '../firebase-config'
+import { auth, db, storage } from '../../../firebase-config'
 import { doc, setDoc } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { onAuthStateChanged } from 'firebase/auth'
-import useLoadGooglePlaces from '../components/useLoadGooglePlaces'
-import AddressAutocomplete from '../components/AddressAutocomplete'
+import useLoadGooglePlaces from '../../../components/google_api/useLoadGooglePlaces'
+import AddressAutocomplete from '../../../components/google_api/AddressAutocomplete'
 
 export default function RegisterProfile() {
     const navigate = useNavigate()

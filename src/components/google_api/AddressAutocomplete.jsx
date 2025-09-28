@@ -5,20 +5,25 @@ import { TextField, Autocomplete } from '@mui/material'
 export default function AddressAutocomplete({ value, onAddressSelected, error, helperText, sx }) {
     const [addressSuggestions, setAddressSuggestions] = useState([])
 
-    // Cherche des suggestions d'adresses
     const fetchAddressSuggestions = (input) => {
         if (!window.google) return
         const service = new window.google.maps.places.AutocompleteService()
-        service.getPlacePredictions({ input, types: ['address'], componentRestrictions: { country: 'fr' } }, (predictions, status) => {
-            if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
-                setAddressSuggestions(predictions)
-            } else {
-                setAddressSuggestions([])
+        service.getPlacePredictions(
+            {
+                input,
+                types: ['address'],
+                componentRestrictions: { country: 'fr' },
+            },
+            (predictions, status) => {
+                if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+                    setAddressSuggestions(predictions)
+                } else {
+                    setAddressSuggestions([])
+                }
             }
-        })
+        )
     }
 
-    // Récupère les détails exacts d'une adresse sélectionnée
     const fetchPlaceDetails = (placeId) => {
         const service = new window.google.maps.places.PlacesService(document.createElement('div'))
         service.getDetails({ placeId }, (place, status) => {
@@ -33,6 +38,8 @@ export default function AddressAutocomplete({ value, onAddressSelected, error, h
                     street: streetNumber ? `${streetNumber} ${street}` : street,
                     city,
                     postalCode,
+                    full: place.formatted_address, // ✅ stock l’adresse complète
+                    placeId: place.place_id, // ✅ utile si tu veux vérifier avec placeId
                 })
             }
         })

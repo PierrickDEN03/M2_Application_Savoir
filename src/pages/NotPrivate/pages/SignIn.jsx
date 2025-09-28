@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react'
 import { TextField, Button, Typography, Snackbar, Alert, Box, Link } from '@mui/material'
-import { UserContext } from '../context/userContext'
+import { UserContext } from '../../../context/userContext'
 
 export default function SignInMagic() {
     const { sendMagicLink } = useContext(UserContext)
