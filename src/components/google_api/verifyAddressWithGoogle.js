@@ -28,3 +28,41 @@ export const verifyAddressWithGoogle = (formData) => {
         )
     })
 }
+
+export const verifyAddressWithId = (placeId) => {
+    return new Promise((resolve, reject) => {
+        if (!window.google) {
+            reject(new Error('Google Maps API non chargée'))
+            return
+        }
+
+        if (!placeId) {
+            reject(new Error('placeId vide'))
+            return
+        }
+
+        const service = new window.google.maps.places.PlacesService(document.createElement('div'))
+
+        service.getDetails(
+            {
+                placeId,
+                fields: ['name', 'formatted_address', 'geometry', 'place_id'],
+            },
+            (result, status) => {
+                if (status === window.google.maps.places.PlacesServiceStatus.OK && result?.geometry?.location) {
+                    resolve({
+                        placeId: result.place_id,
+                        address: result.formatted_address,
+                        position: {
+                            lat: result.geometry.location.lat(),
+                            lng: result.geometry.location.lng(),
+                        },
+                        name: result.name,
+                    })
+                } else {
+                    reject(new Error(`Impossible de récupérer le lieu pour ${placeId}`))
+                }
+            }
+        )
+    })
+}

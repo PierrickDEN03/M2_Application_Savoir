@@ -1,6 +1,6 @@
 // FILE: src/services/activitiesService.js
 import { db } from '../firebase-config'
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { collection, addDoc, serverTimestamp, getDocs } from 'firebase/firestore'
 
 /**
  * Crée une nouvelle activité dans Firestore
@@ -21,4 +21,12 @@ export async function createActivity(uid, activityData = {}) {
 
     const docRef = await addDoc(activitiesRef, payload)
     return docRef.id
+}
+
+export async function fetchActivitiesFromDB() {
+    const querySnapshot = await getDocs(collection(db, 'activities'))
+    return querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+    }))
 }

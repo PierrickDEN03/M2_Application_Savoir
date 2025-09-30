@@ -54,5 +54,15 @@ export async function createProfile(uid, profileData = {}) {
     return true
 }
 
+export async function fetchUserById(userId) {
+    if (!userId) return null
+    const docRef = doc(db, 'users', userId)
+    const docSnap = await getDoc(docRef)
+    if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() }
+    }
+    return null
+}
+
 // Déconnexion
 export const signOut = () => firebaseSignOut(auth)
