@@ -12,28 +12,26 @@ export default function ChooseInterest() {
     const [selected, setSelected] = useState([])
     const navigate = useNavigate()
 
-    const colors = ['#3454D1', '#B2DDF7', '#ED6A5A', '#FFD166', '#F0E7D6']
     const { currentUser } = useContext(UserContext)
 
     useEffect(() => {
         const fetchCategoriesAndUserInterests = async () => {
             try {
-                // Récupérer les catégories
+                // 🔹 Charger toutes les catégories disponibles
                 const querySnapshot = await getDocs(collection(db, 'categories'))
                 const cats = querySnapshot.docs.map((doc) => ({
                     id: doc.id,
                     ...doc.data(),
                 }))
-                const coloredCats = cats.map((cat, index) => ({
-                    ...cat,
-                    randomColor: colors[index % colors.length],
-                }))
-                setCategories(coloredCats)
+                setCategories(cats)
 
-                // Récupérer les intérêts de l'utilisateur connecté
+                // 🔹 Charger les intérêts utilisateur (objets complets)
                 if (currentUser) {
                     const userInterests = await getUserInterests(currentUser.uid)
-                    setSelected(userInterests)
+
+                    // On extrait uniquement les ids pour gérer la sélection
+                    const interestIds = userInterests.map((c) => c.id)
+                    setSelected(interestIds)
                 }
             } catch (err) {
                 console.error('Erreur lors de la récupération des catégories ou intérêts:', err)
@@ -41,14 +39,12 @@ export default function ChooseInterest() {
         }
 
         fetchCategoriesAndUserInterests()
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentUser]) // dépend de l'utilisateur
+    }, [currentUser])
 
     const toggleSelect = (id) => {
         setSelected((prev) => (prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]))
     }
 
-    //Envoi des données à firebase
     const handleFinish = async () => {
         if (!currentUser) {
             console.error('Aucun utilisateur connecté')
@@ -64,15 +60,40 @@ export default function ChooseInterest() {
     }
 
     return (
-        <Box sx={{ px: 3, py: 4, bgcolor: '#3454D1', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <Box
+            sx={{
+                px: 3,
+                py: 4,
+                bgcolor: '#3454D1',
+                minHeight: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+            }}
+        >
             <Typography
                 variant="h4"
-                sx={{ color: 'white', textAlign: 'center', mb: 4, fontWeight: 'bold', fontSize: { xs: '1.5rem', sm: '2rem' } }}
+                sx={{
+                    color: 'white',
+                    textAlign: 'center',
+                    mb: 4,
+                    fontWeight: 'bold',
+                    fontSize: { xs: '1.5rem', sm: '2rem' },
+                }}
             >
                 Quelles sont tes passions ?
             </Typography>
 
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 2, maxWidth: '400px', mb: 4 }}>
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    justifyContent: 'center',
+                    gap: 2,
+                    maxWidth: '400px',
+                    mb: 4,
+                }}
+            >
                 {categories.map((cat) => {
                     const IconComponent = Icons[cat.iconName]
                     const isSelected = selected.includes(cat.id)
@@ -104,7 +125,8 @@ export default function ChooseInterest() {
                                 },
                             }}
                         >
-                            {IconComponent && <IconComponent sx={{ fontSize: 20, color: isSelected ? 'white' : cat.randomColor }} />}
+                            {IconComponent && <IconComponent sx={{ fontSize: 20, color: isSelected ? 'white' : cat.color }} />}
+
                             <Typography sx={{ fontSize: '0.9rem', fontWeight: '500' }}>{cat.description}</Typography>
                         </Button>
                     )
@@ -134,7 +156,7 @@ export default function ChooseInterest() {
                     },
                 }}
                 disabled={selected.length === 0}
-                onClick={handleFinish} // <-- redirection
+                onClick={handleFinish}
             >
                 Sélectionner →
             </Button>

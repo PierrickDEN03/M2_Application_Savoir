@@ -1,5 +1,5 @@
 // FILE: src/pages/Private/CreateActivityForm.jsx
-import React, { useState, useContext } from 'react'
+import React, { useState, useContext, useEffect } from 'react'
 import { Container, TextField, Button, Box, Typography, Slider, IconButton, Snackbar, Alert, CircularProgress } from '@mui/material'
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
@@ -11,12 +11,11 @@ import useLoadGooglePlaces from '../../../components/google_api/useLoadGooglePla
 import AddressAutocomplete from '../../../components/google_api/AddressAutocomplete'
 import { UserContext } from '../../../context/userContext'
 import { createActivity } from '../../../services/activitiesService'
+import { getUserInterests } from '../../../services/categoriesService'
+import * as MuiIcons from '@mui/icons-material'
 
 export default function CreateActivityForm() {
-    // hook qui charge la lib Google Maps et renvoie `loaded`
     const loaded = useLoadGooglePlaces()
-
-    // user
     const { currentUser } = useContext(UserContext)
 
     const [formData, setFormData] = useState({
@@ -28,23 +27,41 @@ export default function CreateActivityForm() {
         description: '',
     })
 
+    const [categories, setCategories] = useState([])
+    const [selectedCategory, setSelectedCategory] = useState(null)
     const [errors, setErrors] = useState({})
     const [status, setStatus] = useState({ open: false, severity: 'info', message: '' })
     const [submitting, setSubmitting] = useState(false)
 
-    // nettoyage d'erreur quand on modifie un champ texte
+    // Charger les intérêts utilisateur (catégories complètes)
+    useEffect(() => {
+        async function fetchCategories() {
+            if (!currentUser) return
+            try {
+                const cats = await getUserInterests(currentUser.uid)
+                setCategories(cats)
+            } catch (err) {
+                console.error('Erreur chargement catégories utilisateur', err)
+            }
+        }
+        fetchCategories()
+    }, [currentUser])
+
+    const handleSelectCategory = (id) => {
+        setSelectedCategory(id)
+        setErrors((prev) => ({ ...prev, category: undefined }))
+    }
+
     const handleChange = (field) => (e) => {
         setFormData((s) => ({ ...s, [field]: e.target.value }))
         setErrors((prev) => ({ ...prev, [field]: undefined }))
     }
 
-    // callback déclenché depuis AddressAutocomplete
     const handleAddressSelected = (addrObj) => {
         setFormData((s) => ({ ...s, address: addrObj }))
         setErrors((prev) => ({ ...prev, address: undefined }))
     }
 
-    // upload photo
     const handlePhotoUpload = (e) => {
         if (e.target.files && e.target.files[0]) {
             setFormData((s) => ({ ...s, photos: e.target.files[0] }))
@@ -52,9 +69,9 @@ export default function CreateActivityForm() {
         }
     }
 
-    // validation côté client
     const validateFields = () => {
         const newErrors = {}
+        if (!selectedCategory) newErrors.category = 'Veuillez choisir une catégorie'
         if (!formData.title?.trim()) newErrors.title = 'Titre requis'
         if (!formData.date || isNaN(new Date(formData.date).getTime())) newErrors.date = 'Date invalide'
         if (!formData.address?.placeId) {
@@ -72,7 +89,6 @@ export default function CreateActivityForm() {
         return Object.keys(newErrors).length === 0
     }
 
-    // récupère les détails complets via placeId
     const fetchPlaceDetails = (placeId) => {
         return new Promise((resolve, reject) => {
             if (!loaded || !window.google) {
@@ -80,35 +96,27 @@ export default function CreateActivityForm() {
                 return
             }
             const service = new window.google.maps.places.PlacesService(document.createElement('div'))
-            service.getDetails(
-                {
-                    placeId,
-                    fields: ['address_components', 'formatted_address', 'place_id'],
-                },
-                (place, status) => {
-                    if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
-                        const components = place.address_components || []
-                        const street = components.find((c) => c.types.includes('route'))?.long_name || ''
-                        const streetNumber = components.find((c) => c.types.includes('street_number'))?.long_name || ''
-                        const city = components.find((c) => c.types.includes('locality'))?.long_name || ''
-                        const postalCode = components.find((c) => c.types.includes('postal_code'))?.long_name || ''
-
-                        resolve({
-                            street: streetNumber ? `${streetNumber} ${street}` : street,
-                            city,
-                            postalCode,
-                            full: place.formatted_address,
-                            placeId: place.place_id,
-                        })
-                    } else {
-                        reject(new Error('Adresse introuvable via Google Places.'))
-                    }
+            service.getDetails({ placeId, fields: ['address_components', 'formatted_address', 'place_id'] }, (place, status) => {
+                if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
+                    const components = place.address_components || []
+                    const street = components.find((c) => c.types.includes('route'))?.long_name || ''
+                    const streetNumber = components.find((c) => c.types.includes('street_number'))?.long_name || ''
+                    const city = components.find((c) => c.types.includes('locality'))?.long_name || ''
+                    const postalCode = components.find((c) => c.types.includes('postal_code'))?.long_name || ''
+                    resolve({
+                        street: streetNumber ? `${streetNumber} ${street}` : street,
+                        city,
+                        postalCode,
+                        full: place.formatted_address,
+                        placeId: place.place_id,
+                    })
+                } else {
+                    reject(new Error('Adresse introuvable via Google Places.'))
                 }
-            )
+            })
         })
     }
 
-    // soumission du formulaire
     const handleSubmit = async () => {
         setStatus({ open: false, severity: 'info', message: '' })
 
@@ -124,7 +132,6 @@ export default function CreateActivityForm() {
 
         setSubmitting(true)
         try {
-            // ✅ vérification via placeId uniquement
             let place
             try {
                 place = await fetchPlaceDetails(formData.address.placeId)
@@ -135,7 +142,6 @@ export default function CreateActivityForm() {
                 return
             }
 
-            // upload éventuel d'une photo
             let photoUrl = null
             if (formData.photos) {
                 const storageRef = ref(storage, `activities/${currentUser.uid}/${Date.now()}_${formData.photos.name}`)
@@ -143,23 +149,22 @@ export default function CreateActivityForm() {
                 photoUrl = await getDownloadURL(storageRef)
             }
 
-            // payload
             const payload = {
                 title: formData.title.trim(),
                 date: formData.date instanceof Date ? formData.date.toISOString() : formData.date,
-                address: place, // ✅ on stocke les infos validées de Google
+                address: place,
                 participants: formData.participants,
                 description: formData.description.trim(),
                 photoUrl: photoUrl || null,
                 placeId: place.placeId,
                 createdAt: new Date().toISOString(),
                 userId: currentUser.uid,
+                categoryId: selectedCategory,
             }
 
             const activityId = await createActivity(currentUser.uid, payload)
             setStatus({ open: true, severity: 'success', message: `Activité créée (id: ${activityId})` })
 
-            // reset du formulaire
             setFormData({
                 title: '',
                 date: new Date(),
@@ -168,6 +173,7 @@ export default function CreateActivityForm() {
                 participants: 1,
                 description: '',
             })
+            setSelectedCategory(null)
             setErrors({})
         } catch (err) {
             console.error(err)
@@ -187,6 +193,51 @@ export default function CreateActivityForm() {
                 </Box>
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    {/* Catégorie */}
+                    <Box>
+                        <Typography sx={{ color: 'white', mb: 1, fontSize: '0.95rem', fontWeight: 500 }}>Choisis une catégorie</Typography>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                            {categories.map((cat) => {
+                                const IconComponent = MuiIcons[cat.iconName] || null
+                                const isSelected = selectedCategory === cat.id
+                                return (
+                                    <Button
+                                        key={cat.id}
+                                        onClick={() => handleSelectCategory(cat.id)}
+                                        sx={{
+                                            minWidth: '110px',
+                                            height: '50px',
+                                            bgcolor: isSelected ? '#ED6A5A' : 'white',
+                                            color: isSelected ? 'white' : '#333',
+                                            borderRadius: '25px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: 1,
+                                            textTransform: 'none',
+                                            fontSize: '0.9rem',
+                                            fontWeight: '500',
+                                            border: isSelected ? '2px solid #ED6A5A' : '2px solid transparent',
+                                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                                            transition: 'all 0.3s ease',
+                                            '&:hover': {
+                                                bgcolor: isSelected ? '#d45a4a' : '#f5f5f5',
+                                                transform: 'translateY(-2px)',
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                            },
+                                        }}
+                                    >
+                                        {IconComponent && <IconComponent sx={{ fontSize: 20, color: isSelected ? 'white' : cat.color }} />}
+                                        <Typography sx={{ fontSize: '0.9rem', fontWeight: '500' }}>{cat.description}</Typography>
+                                    </Button>
+                                )
+                            })}
+                        </Box>
+                        {errors.category && (
+                            <Typography sx={{ color: 'error.main', fontSize: '0.85rem', mt: 1 }}>{errors.category}</Typography>
+                        )}
+                    </Box>
+
                     {/* Titre */}
                     <Box>
                         <Typography sx={{ color: 'white', mb: 1, fontSize: '0.95rem', fontWeight: 500 }}>
