@@ -1,7 +1,7 @@
 import React, { useContext } from 'react'
 import { UserContext } from '../../context/userContext'
 import { Outlet, Navigate, useLocation } from 'react-router-dom'
-import BottomNav from '../../components/NavbarBottom'
+import BottomNav from '../../components/utils/NavbarBottom'
 
 export default function Private() {
     const { currentUser } = useContext(UserContext)

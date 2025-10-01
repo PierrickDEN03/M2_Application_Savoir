@@ -11,6 +11,8 @@ import Map from './pages/Private/pages/Map'
 import SwaggerUIComponent from './components/SwaggerDoc'
 import CreateActivityForm from './pages/Private/pages/CreateActivityForm'
 import ChooseInterest from './pages/Private/pages/ChooseInterst'
+import ResearchActivity from './pages/Private/pages/ResearchActivity'
+import ActivityDetail from './pages/Private/pages/ActivityDetail'
 
 function App() {
     return (
@@ -31,10 +33,14 @@ function App() {
 
             {/* Espace privé */}
             <Route path="/user" element={<Private />}>
+                <Route path="/user/*" element={<Dashboard />} />
+                <Route path="/user/" element={<Dashboard />} />
                 <Route path="/user/dashboard" element={<Dashboard />} />
                 <Route path="/user/map" element={<Map />}></Route>
                 <Route path="/user/create-activity" element={<CreateActivityForm />}></Route>
                 <Route path="/user/interest" element={<ChooseInterest />}></Route>
+                <Route path="/user/search-activity" element={<ResearchActivity />}></Route>
+                <Route path="/user/activity/:activityId" element={<ActivityDetail />} />
             </Route>
         </Routes>
     )

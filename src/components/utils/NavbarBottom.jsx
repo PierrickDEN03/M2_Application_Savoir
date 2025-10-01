@@ -14,10 +14,18 @@ export default function BottomNav() {
 
     // Détermine quel onglet est actif selon l'URL
     const getValueFromPath = (path) => {
-        if (path.startsWith('/user/dashboard')) return 0
-        if (path.startsWith('/reservations')) return 1
+        // Élément 4 : Map
+        if (path === '/user/map') return 3
+
+        // Élément 2 : Liste des activités
+        if (path === '/user/search-activity' || path.startsWith('/user/activity/')) return 1
+
+        // Élément 3 : Messagerie
         if (path.startsWith('/messagerie')) return 2
-        if (path.startsWith('/user/map')) return 3
+
+        // Élément 1 : Dashboard (défaut pour toutes les autres routes /user/*)
+        if (path.startsWith('/user') || path === '/create-activity') return 0
+
         return 0
     }
 
@@ -34,7 +42,7 @@ export default function BottomNav() {
                 navigate('/user/dashboard')
                 break
             case 1:
-                navigate('/reservations')
+                navigate('/user/search-activity')
                 break
             case 2:
                 navigate('/messagerie')

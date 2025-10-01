@@ -1,6 +1,6 @@
 import React from 'react'
 import MapActivities from '../../../components/google_api/MapActivities'
-import CreateActivityButton from '../../../components/CreateActivityBtn'
+import CreateActivityButton from '../../../components/utils/CreateActivityBtn'
 
 export default function Map() {
     return (

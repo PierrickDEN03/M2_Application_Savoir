@@ -1,4 +1,6 @@
+// FILE: src/components/google_api/ActivityItem.jsx
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Marker, InfoWindow } from '@react-google-maps/api'
 import { fetchUserById } from '../../services/userService.js'
 import { fetchCategoryById } from '../../services/categoriesService.js'
@@ -7,6 +9,7 @@ import * as MuiIcons from '@mui/icons-material'
 import ReactDOMServer from 'react-dom/server'
 
 export default function ActivityItem({ activity }) {
+    const navigate = useNavigate()
     const [open, setOpen] = useState(false)
     const [user, setUser] = useState(null)
     const [category, setCategory] = useState(null)
@@ -30,7 +33,6 @@ export default function ActivityItem({ activity }) {
         const IconComponent = MuiIcons[category.iconName]
         if (!IconComponent) return null
 
-        // On clone le composant pour forcer le fill en blanc
         const IconWithWhiteFill = React.cloneElement(<IconComponent />, { style: { fill: 'white' } })
 
         const svgString = ReactDOMServer.renderToStaticMarkup(
@@ -46,37 +48,63 @@ export default function ActivityItem({ activity }) {
         }
     }
 
+    const handleClick = () => {
+        navigate(`/user/activity/${activity.id}`)
+    }
+
     const customIcon = getCustomIcon()
 
     return (
         <>
             <Marker position={activity.position} title={activity.title} icon={customIcon} onClick={() => setOpen(true)} />
             {open && (
-                <InfoWindow position={activity.position} onCloseClick={() => setOpen(false)}>
+                <InfoWindow
+                    position={activity.position}
+                    onCloseClick={() => setOpen(false)}
+                    options={{
+                        pixelOffset: new window.google.maps.Size(0, -40),
+                        disableAutoPan: false,
+                    }}
+                >
                     <div
+                        onClick={handleClick}
                         style={{
                             background: '#fefce8',
-                            padding: '8px 12px',
+                            padding: '12px',
                             borderRadius: '12px',
                             fontFamily: 'sans-serif',
-                            maxWidth: '220px',
+                            maxWidth: '200px',
+                            border: '2px dashed #cbd5e0',
+                            cursor: 'pointer',
+                            margin: 0,
                         }}
                     >
-                        <h4 style={{ margin: '0 0 6px', fontWeight: '600' }}>{activity.title}</h4>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <h4
+                            style={{
+                                margin: '0 0 8px',
+                                fontWeight: '600',
+                                fontSize: '14px',
+                                color: '#1a1a1a',
+                            }}
+                        >
+                            {activity.title}
+                        </h4>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <img
                                 src={user?.photoUrl || 'https://randomuser.me/api/portraits/women/44.jpg'}
                                 alt={user?.firstName || 'User'}
                                 style={{
-                                    width: '28px',
-                                    height: '28px',
+                                    width: '32px',
+                                    height: '32px',
                                     borderRadius: '50%',
                                     objectFit: 'cover',
                                 }}
                             />
                             <div>
-                                <div style={{ fontWeight: '500' }}>{user?.firstName || 'Utilisateur'}</div>
-                                <div style={{ fontSize: '0.85rem', color: '#444' }}>{formatActivityDate(activity.date)}</div>
+                                <div style={{ fontWeight: '600', fontSize: '13px', color: '#1a1a1a' }}>
+                                    {user?.firstName || 'Utilisateur'}
+                                </div>
+                                <div style={{ fontSize: '12px', color: '#666' }}>{formatActivityDate(activity.date)}</div>
                             </div>
                         </div>
                     </div>
