@@ -13,6 +13,7 @@ import CreateActivityButton from '../../../components/utils/CreateActivityBtn'
 import RappelActivity from '../../../components/dashboard/RappelActivity'
 import AroundYou from '../../../components/dashboard/AroundYou'
 import Favoris from '../../../components/dashboard/Favoris'
+import AvatarPlaceholder from '../../../components/utils/Avatar_Placeholder'
 
 export default function Dashboard() {
     const navigate = useNavigate()
@@ -108,6 +109,7 @@ export default function Dashboard() {
                 pb: 10,
             }}
         >
+            <AvatarPlaceholder />
             {/* Header */}
             <Box sx={{ p: 3, pt: 4 }}>
                 <Typography

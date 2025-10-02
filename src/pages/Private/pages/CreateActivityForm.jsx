@@ -13,6 +13,7 @@ import { UserContext } from '../../../context/userContext'
 import { createActivity } from '../../../services/activitiesService'
 import { getUserInterests } from '../../../services/categoriesService'
 import * as MuiIcons from '@mui/icons-material'
+import AvatarPlaceholder from '../../../components/utils/Avatar_Placeholder'
 
 export default function CreateActivityForm() {
     const loaded = useLoadGooglePlaces()
@@ -185,6 +186,7 @@ export default function CreateActivityForm() {
 
     return (
         <Box sx={{ minHeight: '100vh', bgcolor: '#ED6A5A', py: 2 }}>
+            <AvatarPlaceholder />
             <Container maxWidth="sm" sx={{ px: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, pt: 2 }}>
                     <Typography variant="h5" sx={{ color: 'white', fontWeight: 'bold', fontSize: '1.3rem' }}>
@@ -271,14 +273,13 @@ export default function CreateActivityForm() {
                                     setFormData((s) => ({ ...s, date: newValue }))
                                     setErrors((p) => ({ ...p, date: undefined }))
                                 }}
-                                renderInput={(params) => (
-                                    <TextField
-                                        fullWidth
-                                        {...params}
-                                        placeholder="Demain à 15h30"
-                                        error={!!errors.date}
-                                        helperText={errors.date}
-                                        sx={{
+                                slotProps={{
+                                    textField: {
+                                        fullWidth: true,
+                                        placeholder: 'Demain à 15h30',
+                                        error: !!errors.date,
+                                        helperText: errors.date,
+                                        sx: {
                                             bgcolor: 'white',
                                             borderRadius: '12px',
                                             '& .MuiOutlinedInput-root': {
@@ -287,9 +288,9 @@ export default function CreateActivityForm() {
                                                 '& fieldset': { border: 'none' },
                                             },
                                             '& input': { py: 1.5, fontSize: '0.9rem' },
-                                        }}
-                                    />
-                                )}
+                                        },
+                                    },
+                                }}
                             />
                         </LocalizationProvider>
                     </Box>

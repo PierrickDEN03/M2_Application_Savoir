@@ -1,22 +1,22 @@
 import { db } from '../firebase-config.js'
-import { collection, addDoc, updateDoc, doc, getDoc } from 'firebase/firestore'
+import { collection, addDoc, updateDoc, doc, getDoc, getDocs } from 'firebase/firestore'
 
 // Liste des catégories avec description, icône et couleur
 const categories = [
-    { description: 'Sport', iconName: 'SportsBaseball', color: '#E74C3C' }, // rouge
-    { description: 'Musique', iconName: 'MusicNote', color: '#3498DB' }, // bleu
-    { description: 'Danse', iconName: 'EmojiPeople', color: '#9B59B6' }, // violet
-    { description: 'Cuisine', iconName: 'Restaurant', color: '#E67E22' }, // orange
-    { description: 'Bricolage', iconName: 'Build', color: '#27AE60' }, // vert
-    { description: 'Art', iconName: 'Palette', color: '#F39C12' }, // jaune
-    { description: 'Culture', iconName: 'MenuBook', color: '#2ECC71' }, // vert clair
-    { description: 'Théâtre', iconName: 'TheaterComedy', color: '#D35400' }, // marron/orange foncé
-    { description: 'Running', iconName: 'DirectionsRun', color: '#1ABC9C' }, // turquoise
-    { description: 'Shopping', iconName: 'ShoppingCart', color: '#C0392B' }, // rouge foncé
-    { description: 'Jeux vidéo', iconName: 'VideogameAsset', color: '#2980B9' }, // bleu foncé
-    { description: 'Randonnées', iconName: 'Hiking', color: '#16A085' }, // vert forêt
-    { description: 'Natation', iconName: 'Pool', color: '#2874A6' }, // bleu océan
-    { description: 'Autres', iconName: 'MoreHoriz', color: '#7F8C8D' }, // gris
+    { description: 'Sport', iconName: 'SportsBaseball', color: '#E74C3C' },
+    { description: 'Musique', iconName: 'MusicNote', color: '#3498DB' },
+    { description: 'Danse', iconName: 'EmojiPeople', color: '#9B59B6' },
+    { description: 'Cuisine', iconName: 'Restaurant', color: '#E67E22' },
+    { description: 'Bricolage', iconName: 'Build', color: '#27AE60' },
+    { description: 'Art', iconName: 'Palette', color: '#F39C12' },
+    { description: 'Culture', iconName: 'MenuBook', color: '#2ECC71' },
+    { description: 'Théâtre', iconName: 'TheaterComedy', color: '#D35400' },
+    { description: 'Running', iconName: 'DirectionsRun', color: '#1ABC9C' },
+    { description: 'Shopping', iconName: 'ShoppingCart', color: '#C0392B' },
+    { description: 'Jeux vidéo', iconName: 'VideogameAsset', color: '#2980B9' },
+    { description: 'Randonnées', iconName: 'Hiking', color: '#16A085' },
+    { description: 'Natation', iconName: 'Pool', color: '#2874A6' },
+    { description: 'Autres', iconName: 'MoreHoriz', color: '#7F8C8D' },
 ]
 
 export const createCategories = async () => {
@@ -48,13 +48,32 @@ export const saveUserInterests = async (uid, interests) => {
         await updateDoc(userRef, {
             interests_id: interests,
         })
-        console.log('Intérêts enregistrés pour l’utilisateur:', uid, interests)
+        console.log("Intérêts enregistrés pour l'utilisateur:", uid, interests)
     } catch (error) {
         console.error('Erreur lors de la sauvegarde des intérêts:', error)
     }
 }
 
-// Récupérer les intérêts complets de l'utilisateur
+/**
+ * Récupère toutes les catégories depuis Firestore
+ * @returns {Promise<Array>} - Liste de toutes les catégories
+ */
+export const fetchCategoriesFromDB = async () => {
+    try {
+        const querySnapshot = await getDocs(collection(db, 'categories'))
+        return querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+        }))
+    } catch (error) {
+        console.error('Erreur lors de la récupération des catégories:', error)
+        return []
+    }
+}
+
+/**
+ * Récupère les intérêts complets de l'utilisateur
+ */
 export const getUserInterests = async (userId) => {
     const userRef = doc(db, 'users', userId)
     const snap = await getDoc(userRef)
@@ -71,11 +90,16 @@ export const getUserInterests = async (userId) => {
             }
         }
 
-        return categories // ✅ retourne les objets complets
+        return categories
     }
     return []
 }
 
+/**
+ * Récupère une catégorie par son ID
+ * @param {string} categoryId - L'ID de la catégorie
+ * @returns {Promise<object|null>} - La catégorie ou null
+ */
 export const fetchCategoryById = async (categoryId) => {
     const ref = doc(db, 'categories', categoryId)
     const snap = await getDoc(ref)

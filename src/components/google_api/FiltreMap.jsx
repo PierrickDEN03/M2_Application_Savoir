@@ -2,8 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { Box, Paper, Typography, TextField, FormControl, Select, MenuItem, Chip, IconButton, Collapse } from '@mui/material'
 import * as MuiIcons from '@mui/icons-material'
-import { fetchCategoryById } from '../../services/categoriesService'
-
+import { fetchCategoriesFromDB } from '../../services/categoriesService'
 export default function FiltreMap({ onFilterChange }) {
     const [open, setOpen] = useState(false)
     const [categories, setCategories] = useState([])
@@ -16,7 +15,7 @@ export default function FiltreMap({ onFilterChange }) {
     useEffect(() => {
         const loadCategories = async () => {
             try {
-                const cats = await fetchCategoryById()
+                const cats = await fetchCategoriesFromDB()
                 setCategories(cats)
             } catch (error) {
                 console.error('Erreur chargement des catégories:', error)
@@ -65,8 +64,8 @@ export default function FiltreMap({ onFilterChange }) {
         <Box
             sx={{
                 position: 'absolute',
-                top: 16,
-                right: 16,
+                top: 80,
+                right: 20,
                 zIndex: 1000,
                 maxWidth: 400,
             }}

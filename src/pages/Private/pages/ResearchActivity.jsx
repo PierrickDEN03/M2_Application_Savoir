@@ -5,6 +5,7 @@ import { fetchActivitiesFromDB, fetchCategoriesFromDB } from '../../../services/
 import { auth } from '../../../firebase-config'
 import SearchBar from '../../../components/activities/SearchBar'
 import CategorySection from '../../../components/activities/CategorySection'
+import AvatarPlaceholder from '../../../components/utils/Avatar_Placeholder'
 
 function ResearchActivity() {
     const currentUser = auth.currentUser
@@ -76,6 +77,7 @@ function ResearchActivity() {
                 pb: 10,
             }}
         >
+            <AvatarPlaceholder />
             {/* Header */}
             <Box
                 sx={{

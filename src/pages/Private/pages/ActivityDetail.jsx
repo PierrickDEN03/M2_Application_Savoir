@@ -9,6 +9,7 @@ import { fetchCategoryById } from '../../../services/categoriesService'
 import { checkReservation, addReservation, removeReservation } from '../../../services/reservationsService'
 import { checkFavorite, addFavorite, removeFavorite } from '../../../services/favorisService'
 import { auth } from '../../../firebase-config'
+import AvatarPlaceholder from '../../../components/utils/Avatar_Placeholder'
 
 function ActivityDetail() {
     const { activityId } = useParams()
@@ -136,11 +137,6 @@ function ActivityDetail() {
         return `${hours}h${minutes}`
     }
 
-    const getIconComponent = (iconName) => {
-        const IconComponent = MuiIcons[iconName] || MuiIcons.ShoppingCart
-        return IconComponent
-    }
-
     if (loading) {
         return (
             <Box
@@ -173,6 +169,7 @@ function ActivityDetail() {
                 pb: 10,
             }}
         >
+            <AvatarPlaceholder />
             {/* Header avec image */}
             <Box
                 sx={{
@@ -244,7 +241,11 @@ function ActivityDetail() {
                         }}
                     />
                     <Box>
-                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                        <Typography
+                            variant="h6"
+                            sx={{ fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                            onClick={() => navigate(`/user/profile/${creator?.id}`)}
+                        >
                             {creator?.displayName || 'Utilisateur'}
                         </Typography>
                         <Typography variant="body2" sx={{ color: '#666' }}>

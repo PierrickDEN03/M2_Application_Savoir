@@ -13,6 +13,8 @@ import CreateActivityForm from './pages/Private/pages/CreateActivityForm'
 import ChooseInterest from './pages/Private/pages/ChooseInterst'
 import ResearchActivity from './pages/Private/pages/ResearchActivity'
 import ActivityDetail from './pages/Private/pages/ActivityDetail'
+import UserProfile from './pages/Private/pages/UserProfile'
+import EditProfile from './pages/Private/pages/EditProfile'
 
 function App() {
     return (
@@ -41,6 +43,8 @@ function App() {
                 <Route path="/user/interest" element={<ChooseInterest />}></Route>
                 <Route path="/user/search-activity" element={<ResearchActivity />}></Route>
                 <Route path="/user/activity/:activityId" element={<ActivityDetail />} />
+                <Route path="/user/profile/:idUser" element={<UserProfile />} />
+                <Route path="/user/modif-profile/:idUser" element={<EditProfile />} />
             </Route>
         </Routes>
     )

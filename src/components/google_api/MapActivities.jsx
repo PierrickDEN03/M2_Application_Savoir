@@ -5,6 +5,7 @@ import { verifyAddressWithId } from './verifyAddressWithGoogle.js'
 import ActivityItem from './ActivityItem'
 import { fetchActivitiesFromDB } from '../../services/activitiesService.js'
 import { fetchCategoryById } from '../../services/categoriesService.js'
+import { auth } from '../../firebase-config'
 import FiltreMap from './FiltreMap'
 
 const containerStyle = {
@@ -20,6 +21,7 @@ const center = {
 const libraries = ['places']
 
 export default function MapActivities() {
+    const currentUser = auth.currentUser
     const { isLoaded, loadError } = useLoadScript({
         googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
         libraries,
@@ -38,9 +40,16 @@ export default function MapActivities() {
     async function loadActivities() {
         try {
             const docs = await fetchActivitiesFromDB()
+            const now = new Date()
+
+            // Filtrer pour exclure les activités de l'utilisateur courant et les activités passées
+            const filteredDocs = currentUser
+                ? docs.filter((doc) => doc.createdBy !== currentUser.uid && doc.userId !== currentUser.uid && new Date(doc.date) > now)
+                : docs.filter((doc) => new Date(doc.date) > now)
+
             const verified = []
 
-            for (const doc of docs) {
+            for (const doc of filteredDocs) {
                 try {
                     const pos = await verifyAddressWithId(doc.placeId)
                     const category = await fetchCategoryById(doc.categoryId)
@@ -60,7 +69,7 @@ export default function MapActivities() {
     useEffect(() => {
         if (!isLoaded) return
         loadActivities()
-    }, [isLoaded])
+    }, [isLoaded, currentUser])
 
     // Appliquer les filtres
     useEffect(() => {
