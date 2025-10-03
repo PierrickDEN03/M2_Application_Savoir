@@ -16,7 +16,7 @@ export default function CreateActivityButton() {
             onClick={handleClick}
             sx={{
                 position: 'fixed',
-                bottom: 24,
+                bottom: 100,
                 right: 24,
                 zIndex: 1000,
                 bgcolor: '#FFCC4D', // jaune

@@ -1,31 +1,31 @@
-import { sendSignInLinkToEmail, signInWithEmailLink, isSignInWithEmailLink, signOut as firebaseSignOut } from 'firebase/auth'
-import { auth, db, actionCodeSettings } from '../firebase-config'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
+// FILE: src/services/userService.js
+import {
+    sendSignInLinkToEmail,
+    signInWithEmailLink,
+    isSignInWithEmailLink,
+    signOut as firebaseSignOut,
+    onAuthStateChanged,
+} from 'firebase/auth'
+import { auth, db, actionCodeSettings, storage } from '../firebase-config'
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 
-// Envoie un lien magique à l’email
+// --- Magic link ---
 export async function sendMagicLink(email) {
     if (!email) throw new Error('email-required')
 
-    // Ajout de l’email en query param
     const urlWithEmail = `${actionCodeSettings.url}?email=${encodeURIComponent(email)}`
+    await sendSignInLinkToEmail(auth, email, { ...actionCodeSettings, url: urlWithEmail })
 
-    await sendSignInLinkToEmail(auth, email, {
-        ...actionCodeSettings,
-        url: urlWithEmail,
-    })
-
-    // Stockage local (utile si même appareil)
     window.localStorage.setItem('emailForSignIn', email)
     return true
 }
 
-// Complète la connexion après clic sur le lien
 export async function completeSignInWithEmailLink(url) {
     if (!isSignInWithEmailLink(auth, url)) {
         throw new Error('not-an-email-link')
     }
 
-    // Vérification de l’email
     let email = window.localStorage.getItem('emailForSignIn')
     if (!email) {
         const urlParams = new URL(url).searchParams
@@ -38,7 +38,7 @@ export async function completeSignInWithEmailLink(url) {
     return result
 }
 
-// Vérifie si un profil existe en base
+// --- Profiles ---
 export async function profileExists(uid) {
     if (!uid) return false
     const ref = doc(db, 'users', uid)
@@ -46,11 +46,32 @@ export async function profileExists(uid) {
     return snap.exists()
 }
 
-// Crée ou met à jour un profil utilisateur
-export async function createProfile(uid, profileData = {}) {
+export async function createProfile(uid, profileData = {}, photoFile = null) {
+    if (!uid) throw new Error('uid-required')
+
+    let photoUrl = profileData.photoUrl || '/avatar_default.jpg'
+
+    // Upload photo si fournie
+    if (photoFile) {
+        const storageRef = ref(storage, `users/${uid}/profile.jpg`)
+        await uploadBytes(storageRef, photoFile)
+        photoUrl = await getDownloadURL(storageRef)
+    }
+
+    const payload = {
+        ...profileData,
+        photoUrl,
+        createdAt: new Date().toISOString(),
+    }
+
+    await setDoc(doc(db, 'users', uid), payload, { merge: true })
+    return payload
+}
+
+export async function updateUserProfile(uid, updates = {}) {
     if (!uid) throw new Error('uid-required')
     const ref = doc(db, 'users', uid)
-    await setDoc(ref, profileData, { merge: true })
+    await updateDoc(ref, updates)
     return true
 }
 
@@ -64,5 +85,6 @@ export async function fetchUserById(userId) {
     return null
 }
 
-// Déconnexion
+// --- Auth utils ---
 export const signOut = () => firebaseSignOut(auth)
+export const subscribeToAuth = (callback) => onAuthStateChanged(auth, callback)

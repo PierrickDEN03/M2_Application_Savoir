@@ -21,8 +21,6 @@ function App() {
         <Routes>
             <Route path="/auth/callback" element={<AuthCallback />} />
 
-            {/* Complétion du profil après 1ère connexion */}
-            <Route path="/register-profile" element={<RegisterProfile />} />
             {/* Documentation Swagger */}
             <Route path="/docs" element={<SwaggerUIComponent />} />
 
@@ -31,6 +29,8 @@ function App() {
                 <Route path="/" element={<Home />} />
                 {/* Connexion par lien magique */}
                 <Route path="/login" element={<SignInMagic />} />
+                {/* Complétion du profil après 1ère connexion */}
+                <Route path="/register-profile" element={<RegisterProfile />} />
             </Route>
 
             {/* Espace privé */}

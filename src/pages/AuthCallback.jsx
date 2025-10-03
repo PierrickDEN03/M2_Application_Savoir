@@ -1,3 +1,4 @@
+// FILE: src/pages/AuthCallback.jsx
 import React, { useEffect, useState, useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Container, Typography, CircularProgress } from '@mui/material'
@@ -12,7 +13,7 @@ export default function AuthCallback() {
     useEffect(() => {
         async function run() {
             try {
-                // Finalise la connexion en passant l’URL
+                // Finalise la connexion en utilisant l’URL
                 const result = await completeSignInWithEmailLink(window.location.href)
 
                 const user = auth.currentUser || result.user
@@ -21,21 +22,22 @@ export default function AuthCallback() {
                     return
                 }
 
-                // Vérifie si un profil existe déjà
+                // Vérifie si un profil existe en base
                 const exists = await profileExists(user.uid)
+
                 if (exists) {
+                    // Si profil déjà créé => dashboard
                     navigate('/user/dashboard')
                 } else {
+                    // Sinon => page pour compléter son profil
                     navigate('/register-profile', { state: { email: user.email } })
                 }
             } catch (err) {
                 console.error('Erreur AuthCallback:', err)
                 if (err.message === 'email-required') {
                     setError('Impossible de retrouver ton email, recommence la connexion.')
-                    //navigate('/login')
                 } else {
                     setError('Lien invalide ou expiré, demande un nouveau lien de connexion.')
-                    //navigate('/login')
                 }
             }
         }

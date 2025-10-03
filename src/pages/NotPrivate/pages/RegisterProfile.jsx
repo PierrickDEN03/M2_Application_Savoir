@@ -3,10 +3,8 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { TextField, Button, Box, Typography, CircularProgress, Snackbar, Alert, Avatar, IconButton } from '@mui/material'
 import { PhotoCamera } from '@mui/icons-material'
-import { auth, db, storage } from '../../../firebase-config'
-import { doc, setDoc } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { onAuthStateChanged } from 'firebase/auth'
+import { auth } from '../../../firebase-config'
+import { subscribeToAuth, createProfile } from '../../../services/userService'
 import useLoadGooglePlaces from '../../../components/google_api/useLoadGooglePlaces'
 import AddressAutocomplete from '../../../components/google_api/AddressAutocomplete'
 
@@ -31,8 +29,9 @@ export default function RegisterProfile() {
     const [errors, setErrors] = useState({})
     const [status, setStatus] = useState({ open: false, severity: 'info', message: '' })
 
+    // Vérifie si l’utilisateur est connecté
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
+        const unsubscribe = subscribeToAuth((user) => {
             if (!user) {
                 navigate('/login')
             } else {
@@ -85,21 +84,15 @@ export default function RegisterProfile() {
             setStatus({ open: true, severity: 'error', message: 'Utilisateur non connecté' })
             return
         }
-        const uid = auth.currentUser.uid
-        let photoUrl = formData.photoUrl || '/avatar_default.jpg'
+
         try {
-            if (photoFile) {
-                const storageRef = ref(storage, `users/${uid}/profile.jpg`)
-                await uploadBytes(storageRef, photoFile)
-                photoUrl = await getDownloadURL(storageRef)
-            }
+            const uid = auth.currentUser.uid
             const payload = {
                 displayName: `${formData.firstName} ${formData.lastName}`,
                 ...formData,
-                photoUrl,
-                createdAt: new Date().toISOString(),
             }
-            await setDoc(doc(db, 'users', uid), payload, { merge: true })
+
+            await createProfile(uid, payload, photoFile)
             navigate('/user/interest')
         } catch (err) {
             console.error(err)

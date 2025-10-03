@@ -19,7 +19,7 @@ export default function Dashboard() {
     const navigate = useNavigate()
     const currentUser = auth.currentUser
     const [loading, setLoading] = useState(true)
-    const [userName, setUserName] = useState('Sarah')
+    const [userName, setUserName] = useState('Utilisateur')
     const [nextActivity, setNextActivity] = useState(null)
     const [nearbyActivities, setNearbyActivities] = useState([])
     const [favorites, setFavorites] = useState([])

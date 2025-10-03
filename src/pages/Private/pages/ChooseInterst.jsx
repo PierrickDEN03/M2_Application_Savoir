@@ -53,7 +53,8 @@ export default function ChooseInterest() {
 
         try {
             await saveUserInterests(currentUser.uid, selected)
-            navigate('/user/dashboard')
+            // Retour à la page précédente
+            navigate(-1)
         } catch (error) {
             console.error("Erreur lors de l'enregistrement des intérêts:", error)
         }
