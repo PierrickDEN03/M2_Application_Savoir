@@ -1,6 +1,7 @@
 // FILE: src/components/google_api/MapActivities.jsx
 import React, { useCallback, useEffect, useState } from 'react'
 import { GoogleMap, useLoadScript } from '@react-google-maps/api'
+import { Box, CircularProgress, Typography, Alert } from '@mui/material'
 import { verifyAddressWithId } from './verifyAddressWithGoogle.js'
 import ActivityItem from './ActivityItem'
 import { fetchActivitiesFromDB } from '../../services/activitiesService.js'
@@ -35,14 +36,17 @@ export default function MapActivities() {
         timeSlot: '',
         categories: [],
     })
+    const [loadingActivities, setLoadingActivities] = useState(true)
+    const [error, setError] = useState(null)
 
     // Chargement des activités
     async function loadActivities() {
         try {
+            setLoadingActivities(true)
+            setError(null)
             const docs = await fetchActivitiesFromDB()
             const now = new Date()
 
-            // Filtrer pour exclure les activités de l'utilisateur courant et les activités passées
             const filteredDocs = currentUser
                 ? docs.filter((doc) => doc.createdBy !== currentUser.uid && doc.userId !== currentUser.uid && new Date(doc.date) > now)
                 : docs.filter((doc) => new Date(doc.date) > now)
@@ -63,6 +67,9 @@ export default function MapActivities() {
             setFilteredActivities(verified)
         } catch (err) {
             console.error('Erreur chargement des activités depuis Firestore', err)
+            setError('Impossible de charger les activités. Veuillez réessayer plus tard.')
+        } finally {
+            setLoadingActivities(false)
         }
     }
 
@@ -75,7 +82,6 @@ export default function MapActivities() {
     useEffect(() => {
         let filtered = [...activities]
 
-        // Filtre par localisation
         if (filters.location) {
             const searchTerm = filters.location.toLowerCase()
             filtered = filtered.filter((activity) => {
@@ -85,7 +91,6 @@ export default function MapActivities() {
             })
         }
 
-        // Filtre par horaire
         if (filters.timeSlot) {
             filtered = filtered.filter((activity) => {
                 if (!activity.date) return false
@@ -107,7 +112,6 @@ export default function MapActivities() {
             })
         }
 
-        // Filtre par catégories
         if (filters.categories.length > 0) {
             filtered = filtered.filter((activity) => filters.categories.includes(activity.categoryId))
         }
@@ -115,15 +119,28 @@ export default function MapActivities() {
         setFilteredActivities(filtered)
     }, [filters, activities])
 
-    const handleFilterChange = (newFilters) => {
-        setFilters(newFilters)
-    }
-
+    const handleFilterChange = (newFilters) => setFilters(newFilters)
     const onLoad = useCallback((mapInstance) => setMap(mapInstance), [])
     const onUnmount = useCallback(() => setMap(null), [])
 
-    if (loadError) return <p>Erreur de chargement de Google Maps</p>
-    if (!isLoaded) return <p>Chargement de la carte...</p>
+    if (loadError)
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', p: 2 }}>
+                <Alert severity="error" variant="filled">
+                    Erreur de chargement de Google Maps
+                </Alert>
+            </Box>
+        )
+
+    if (!isLoaded || loadingActivities)
+        return (
+            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', gap: 2 }}>
+                <CircularProgress sx={{ color: '#3454D1' }} />
+                <Typography variant="body1" sx={{ color: '#3454D1', fontWeight: 500 }}>
+                    Chargement des activités...
+                </Typography>
+            </Box>
+        )
 
     return (
         <>

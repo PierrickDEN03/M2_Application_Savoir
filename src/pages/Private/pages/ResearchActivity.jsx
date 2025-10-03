@@ -12,23 +12,22 @@ function ResearchActivity() {
     const [activities, setActivities] = useState([])
     const [categories, setCategories] = useState([])
     const [loading, setLoading] = useState(true)
-    const [searchQuery, setSearchQuery] = useState('Cuisine dans le 7e')
+    const [searchQuery, setSearchQuery] = useState('')
 
     useEffect(() => {
         const loadData = async () => {
             try {
                 const [activitiesData, categoriesData] = await Promise.all([fetchActivitiesFromDB(), fetchCategoriesFromDB()])
 
-                // Filtrer les activités pour exclure celles créées par l'utilisateur courant
-                // et celles qui sont déjà passées
+                // Filtrer les activités pour exclure celles créées par l'utilisateur courant et celles passées
                 const now = new Date()
-                const filteredActivities = currentUser
+                const filteredByUser = currentUser
                     ? activitiesData.filter(
                           (act) => act.createdBy !== currentUser.uid && act.userId !== currentUser.uid && new Date(act.date) > now
                       )
                     : activitiesData.filter((act) => new Date(act.date) > now)
 
-                setActivities(filteredActivities)
+                setActivities(filteredByUser)
                 setCategories(categoriesData)
             } catch (error) {
                 console.error('Erreur lors du chargement des données:', error)
@@ -36,6 +35,7 @@ function ResearchActivity() {
                 setLoading(false)
             }
         }
+
         loadData()
     }, [currentUser])
 
@@ -46,11 +46,23 @@ function ResearchActivity() {
         return actDate.toDateString() === today.toDateString()
     }
 
-    const todayActivities = activities.filter((act) => isToday(act.date))
+    // 🔹 Filtrage des activités selon la recherche
+    const filteredActivities = activities.filter((act) => {
+        const query = searchQuery.toLowerCase()
+        return (
+            act.title?.toLowerCase().includes(query) ||
+            act.description?.toLowerCase().includes(query) ||
+            act.city?.toLowerCase().includes(query)
+        )
+    })
 
+    // 🔹 Activités du jour
+    const todayActivities = filteredActivities.filter((act) => isToday(act.date))
+
+    // 🔹 Activités regroupées par catégorie (hors today)
     const groupedActivities = categories.map((category) => ({
         ...category,
-        activities: activities.filter((act) => act.categoryId === category.id && !isToday(act.date)),
+        activities: filteredActivities.filter((act) => act.categoryId === category.id && !isToday(act.date)),
     }))
 
     if (loading) {
@@ -78,6 +90,7 @@ function ResearchActivity() {
             }}
         >
             <AvatarPlaceholder />
+
             {/* Header */}
             <Box
                 sx={{
@@ -89,29 +102,16 @@ function ResearchActivity() {
                 }}
             >
                 <Box>
-                    <Typography
-                        variant="h4"
-                        sx={{
-                            color: '#3454D1',
-                            fontWeight: 700,
-                            lineHeight: 1.2,
-                        }}
-                    >
+                    <Typography variant="h4" sx={{ color: '#3454D1', fontWeight: 700, lineHeight: 1.2 }}>
                         Que veux
                     </Typography>
-                    <Typography
-                        variant="h4"
-                        sx={{
-                            color: '#3454D1',
-                            fontWeight: 700,
-                            lineHeight: 1.2,
-                        }}
-                    >
+                    <Typography variant="h4" sx={{ color: '#3454D1', fontWeight: 700, lineHeight: 1.2 }}>
                         tu faire today ?
                     </Typography>
                 </Box>
             </Box>
 
+            {/* Barre de recherche */}
             <SearchBar value={searchQuery} onChange={setSearchQuery} />
 
             {/* Section Ce soir */}
