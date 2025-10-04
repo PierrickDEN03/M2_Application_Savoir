@@ -1,13 +1,23 @@
 {
     "openapi": "3.1.0",
     "info": {
-        "title": "Magic Link Auth & User Interests API",
-        "version": "1.1.0",
-        "description": "API pour la gestion de l'authentification par lien magique, des profils utilisateurs et des centres d'intérêt."
+        "title": "Echo.ly Documentation",
+        "version": "1.0.0",
+        "description": "API pour la documentation des services Echo.ly (auth, utilisateurs, activités, catégories, favoris, messages, réservations)."
     },
+    "tags": [
+        { "name": "Auth", "description": "Tout ce qui concerne l'authentification" },
+        { "name": "Users", "description": "Gestion des profils et intérêts" },
+        { "name": "Activities", "description": "Gestion des activités" },
+        { "name": "Categories", "description": "Gestion des catégories" },
+        { "name": "Favorites", "description": "Gestion des favoris" },
+        { "name": "Messages", "description": "Gestion des messages" },
+        { "name": "Reservations", "description": "Gestion des réservations" }
+    ],
     "paths": {
-        "/auth/send-magic-link": {
+        "/api/auth/send-magic-link": {
             "post": {
+                "tags": ["Auth"],
                 "summary": "Envoie un lien magique à l'email",
                 "requestBody": {
                     "required": true,
@@ -15,9 +25,7 @@
                         "application/json": {
                             "schema": {
                                 "type": "object",
-                                "properties": {
-                                    "email": { "type": "string", "format": "email" }
-                                },
+                                "properties": { "email": { "type": "string", "format": "email" } },
                                 "required": ["email"]
                             }
                         }
@@ -33,8 +41,9 @@
                 }
             }
         },
-        "/auth/complete-sign-in": {
+        "/api/auth/complete-sign-in": {
             "post": {
+                "tags": ["Auth"],
                 "summary": "Complète la connexion via un lien magique",
                 "requestBody": {
                     "required": true,
@@ -55,8 +64,9 @@
                 }
             }
         },
-        "/auth/sign-out": {
+        "/api/auth/sign-out": {
             "post": {
+                "tags": ["Auth"],
                 "summary": "Déconnexion",
                 "responses": {
                     "200": { "description": "Déconnexion réussie" },
@@ -64,8 +74,9 @@
                 }
             }
         },
-        "/users/{uid}/exists": {
+        "/api/users/{uid}/exists": {
             "get": {
+                "tags": ["Users"],
                 "summary": "Vérifie si un profil utilisateur existe",
                 "parameters": [
                     { "name": "uid", "in": "path", "required": true, "schema": { "type": "string" }, "description": "UID de l'utilisateur" }
@@ -80,8 +91,9 @@
                 }
             }
         },
-        "/users/{uid}": {
+        "/api/users/{uid}": {
             "post": {
+                "tags": ["Users"],
                 "summary": "Crée ou met à jour un profil utilisateur",
                 "parameters": [
                     { "name": "uid", "in": "path", "required": true, "schema": { "type": "string" }, "description": "UID de l'utilisateur" }
@@ -101,36 +113,9 @@
                 }
             }
         },
-        "/categories": {
+        "/api/users/{uid}/interests": {
             "get": {
-                "summary": "Récupère toutes les catégories disponibles",
-                "responses": {
-                    "200": {
-                        "description": "Liste des catégories",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "object",
-                                        "properties": {
-                                            "id": { "type": "string" },
-                                            "description": { "type": "string" },
-                                            "iconName": { "type": "string" },
-                                            "createdAt": { "type": "string", "format": "date-time" },
-                                            "isActive": { "type": "boolean" }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "500": { "description": "Erreur serveur" }
-                }
-            }
-        },
-        "/users/{uid}/interests": {
-            "get": {
+                "tags": ["Users"],
                 "summary": "Récupère les intérêts sélectionnés par l'utilisateur",
                 "parameters": [
                     { "name": "uid", "in": "path", "required": true, "schema": { "type": "string" }, "description": "UID de l'utilisateur" }
@@ -138,17 +123,14 @@
                 "responses": {
                     "200": {
                         "description": "Liste des IDs de catégories",
-                        "content": {
-                            "application/json": {
-                                "schema": { "type": "array", "items": { "type": "string" }, "example": ["catId1", "catId2"] }
-                            }
-                        }
+                        "content": { "application/json": { "schema": { "type": "array", "items": { "type": "string" } } } }
                     },
                     "404": { "description": "Utilisateur non trouvé" },
                     "500": { "description": "Erreur serveur" }
                 }
             },
             "post": {
+                "tags": ["Users"],
                 "summary": "Met à jour les intérêts de l'utilisateur",
                 "parameters": [
                     { "name": "uid", "in": "path", "required": true, "schema": { "type": "string" }, "description": "UID de l'utilisateur" }
@@ -170,6 +152,211 @@
                     "400": { "description": "Paramètres invalides" },
                     "500": { "description": "Erreur serveur" }
                 }
+            }
+        },
+        "/api/categories": {
+            "get": {
+                "tags": ["Categories"],
+                "summary": "Récupère toutes les catégories disponibles",
+                "responses": {
+                    "200": {
+                        "description": "Liste des catégories",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": { "type": "string" },
+                                            "description": { "type": "string" },
+                                            "iconName": { "type": "string" },
+                                            "color": { "type": "string" },
+                                            "createdAt": { "type": "string", "format": "date-time" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": { "description": "Erreur serveur" }
+                }
+            }
+        },
+        "/api/activities/create": {
+            "post": {
+                "tags": ["Activities"],
+                "summary": "Crée une nouvelle activité",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "uid": { "type": "string" },
+                                    "activityData": { "type": "object", "additionalProperties": true }
+                                },
+                                "required": ["uid", "activityData"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "ID de l'activité créée",
+                        "content": { "application/json": { "schema": { "type": "string" } } }
+                    }
+                }
+            }
+        },
+        "/api/activities/{activityId}": {
+            "get": {
+                "tags": ["Activities"],
+                "summary": "Récupère une activité par ID",
+                "parameters": [{ "name": "activityId", "in": "path", "required": true, "schema": { "type": "string" } }],
+                "responses": {
+                    "200": {
+                        "description": "Détails de l'activité",
+                        "content": { "application/json": { "schema": { "type": "object" } } }
+                    },
+                    "404": { "description": "Activité non trouvée" }
+                }
+            },
+            "put": {
+                "tags": ["Activities"],
+                "summary": "Met à jour une activité",
+                "parameters": [{ "name": "activityId", "in": "path", "required": true, "schema": { "type": "string" } }],
+                "requestBody": {
+                    "required": true,
+                    "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } }
+                },
+                "responses": {
+                    "200": { "description": "Activité mise à jour avec succès" },
+                    "400": { "description": "Paramètres invalides" }
+                }
+            },
+            "delete": {
+                "tags": ["Activities"],
+                "summary": "Supprime une activité",
+                "parameters": [{ "name": "activityId", "in": "path", "required": true, "schema": { "type": "string" } }],
+                "responses": { "200": { "description": "Activité supprimée" }, "404": { "description": "Activité non trouvée" } }
+            }
+        },
+        "/api/favoris": {
+            "post": {
+                "tags": ["Favorites"],
+                "summary": "Ajoute une activité aux favoris",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": { "userId": { "type": "string" }, "activityId": { "type": "string" } },
+                                "required": ["userId", "activityId"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Favori ajouté avec succès",
+                        "content": { "application/json": { "schema": { "type": "string" } } }
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["Favorites"],
+                "summary": "Supprime un favori",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": { "type": "object", "properties": { "favoriteId": { "type": "string" } }, "required": ["favoriteId"] }
+                        }
+                    }
+                },
+                "responses": { "200": { "description": "Favori supprimé avec succès" } }
+            }
+        },
+        "/api/messages/send": {
+            "post": {
+                "tags": ["Messages"],
+                "summary": "Envoie un message à un utilisateur",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "senderId": { "type": "string" },
+                                    "receiverId": { "type": "string" },
+                                    "text": { "type": "string" }
+                                },
+                                "required": ["senderId", "receiverId", "text"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Message envoyé avec succès",
+                        "content": { "application/json": { "schema": { "type": "string" } } }
+                    }
+                }
+            }
+        },
+        "/api/messages/conversations/{userId}": {
+            "get": {
+                "tags": ["Messages"],
+                "summary": "Récupère toutes les conversations d'un utilisateur",
+                "parameters": [{ "name": "userId", "in": "path", "required": true, "schema": { "type": "string" } }],
+                "responses": {
+                    "200": {
+                        "description": "Liste des IDs d'utilisateurs",
+                        "content": { "application/json": { "schema": { "type": "array", "items": { "type": "string" } } } }
+                    }
+                }
+            }
+        },
+        "/api/reservations": {
+            "post": {
+                "tags": ["Reservations"],
+                "summary": "Ajoute une réservation à une activité",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": { "userId": { "type": "string" }, "activityId": { "type": "string" } },
+                                "required": ["userId", "activityId"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": { "description": "Réservation ajoutée", "content": { "application/json": { "schema": { "type": "string" } } } }
+                }
+            },
+            "delete": {
+                "tags": ["Reservations"],
+                "summary": "Supprime une réservation",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": { "reservationId": { "type": "string" } },
+                                "required": ["reservationId"]
+                            }
+                        }
+                    }
+                },
+                "responses": { "200": { "description": "Réservation supprimée" } }
             }
         }
     }
