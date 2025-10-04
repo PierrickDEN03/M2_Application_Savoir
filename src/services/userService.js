@@ -21,6 +21,35 @@ export async function sendMagicLink(email) {
     return true
 }
 
+// --- Vérifie si l'utilisateur est connecté ET enregistré dans Firestore ---
+export async function getAuthenticatedUser() {
+    return new Promise((resolve, reject) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            unsubscribe() // stop listening
+
+            if (!user) {
+                resolve(null) // pas connecté
+                return
+            }
+
+            try {
+                const userDocRef = doc(db, 'users', user.uid)
+                const snap = await getDoc(userDocRef)
+
+                if (!snap.exists()) {
+                    // connecté mais profil pas encore créé
+                    resolve({ uid: user.uid, email: user.email, registered: false })
+                } else {
+                    resolve({ uid: user.uid, email: user.email, registered: true, data: snap.data() })
+                }
+            } catch (err) {
+                console.error('Erreur getAuthenticatedUser:', err)
+                reject(err)
+            }
+        })
+    })
+}
+
 export async function completeSignInWithEmailLink(url) {
     if (!isSignInWithEmailLink(auth, url)) {
         throw new Error('not-an-email-link')

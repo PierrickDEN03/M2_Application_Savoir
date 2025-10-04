@@ -1,44 +1,36 @@
+// src/pages/Private/pages/ChooseInterest.js
 import React, { useEffect, useState, useContext } from 'react'
-import { db } from '../../../firebase-config'
-import { collection, getDocs } from 'firebase/firestore'
 import { Button, Typography, Box } from '@mui/material'
 import * as Icons from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { UserContext } from '../../../context/userContext'
-import { saveUserInterests, getUserInterests } from '../../../services/categoriesService'
+import { fetchCategoriesFromDB, getUserInterests, saveUserInterests } from '../../../services/categoriesService'
 
 export default function ChooseInterest() {
     const [categories, setCategories] = useState([])
     const [selected, setSelected] = useState([])
     const navigate = useNavigate()
-
     const { currentUser } = useContext(UserContext)
 
     useEffect(() => {
-        const fetchCategoriesAndUserInterests = async () => {
+        const loadData = async () => {
             try {
-                // 🔹 Charger toutes les catégories disponibles
-                const querySnapshot = await getDocs(collection(db, 'categories'))
-                const cats = querySnapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                }))
+                // 🔹 Récupérer toutes les catégories depuis le service
+                const cats = await fetchCategoriesFromDB()
                 setCategories(cats)
 
-                // 🔹 Charger les intérêts utilisateur (objets complets)
+                // 🔹 Récupérer les intérêts de l'utilisateur s'il est connecté
                 if (currentUser) {
                     const userInterests = await getUserInterests(currentUser.uid)
-
-                    // On extrait uniquement les ids pour gérer la sélection
                     const interestIds = userInterests.map((c) => c.id)
                     setSelected(interestIds)
                 }
             } catch (err) {
-                console.error('Erreur lors de la récupération des catégories ou intérêts:', err)
+                console.error('Erreur lors du chargement des données:', err)
             }
         }
 
-        fetchCategoriesAndUserInterests()
+        loadData()
     }, [currentUser])
 
     const toggleSelect = (id) => {
@@ -53,7 +45,6 @@ export default function ChooseInterest() {
 
         try {
             await saveUserInterests(currentUser.uid, selected)
-            // Retour à la page précédente
             navigate(-1)
         } catch (error) {
             console.error("Erreur lors de l'enregistrement des intérêts:", error)
@@ -127,7 +118,6 @@ export default function ChooseInterest() {
                             }}
                         >
                             {IconComponent && <IconComponent sx={{ fontSize: 20, color: isSelected ? 'white' : cat.color }} />}
-
                             <Typography sx={{ fontSize: '0.9rem', fontWeight: '500' }}>{cat.description}</Typography>
                         </Button>
                     )

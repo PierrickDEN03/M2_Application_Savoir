@@ -1,15 +1,55 @@
-import React, { useContext } from 'react'
-import { UserContext } from '../../context/userContext'
+// src/pages/NotPrivate/NotPrivate.js
+import React, { useEffect, useState } from 'react'
 import { Outlet, Navigate } from 'react-router-dom'
+import { Box, CircularProgress } from '@mui/material'
+import { getAuthenticatedUser } from '../../services/userService'
 
 export default function NotPrivate() {
-    const { currentUser } = useContext(UserContext)
+    const [checkingUser, setCheckingUser] = useState(true)
+    const [authUser, setAuthUser] = useState(null)
 
-    // Si déjà connecté, redirige vers le dashboard
-    if (currentUser) {
-        return <Navigate to="/user/dashboard" />
+    useEffect(() => {
+        let mounted = true
+
+        async function checkUser() {
+            try {
+                const user = await getAuthenticatedUser()
+                if (!mounted) return
+                setAuthUser(user)
+            } catch (err) {
+                console.error('Erreur NotPrivate:', err)
+            } finally {
+                if (mounted) setCheckingUser(false)
+            }
+        }
+
+        checkUser()
+        return () => {
+            mounted = false
+        }
+    }, [])
+
+    if (checkingUser) {
+        return (
+            <Box
+                sx={{
+                    height: '100vh',
+                    bgcolor: '#3454D1',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                }}
+            >
+                <CircularProgress sx={{ color: '#FFD166' }} />
+            </Box>
+        )
     }
 
-    // Sinon, autorise la navigation (ex: /login, /signup)
+    // Si connecté ET profil enregistré → redirige vers dashboard
+    if (authUser && authUser.registered) {
+        return <Navigate to="/user/dashboard" replace />
+    }
+
+    // Sinon, autorise l'accès aux pages non privées
     return <Outlet />
 }
