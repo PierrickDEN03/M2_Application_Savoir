@@ -21,7 +21,7 @@ export default function BottomNav() {
         if (path === '/user/search-activity' || path.startsWith('/user/activity/')) return 1
 
         // Élément 3 : Messagerie
-        if (path.startsWith('/messagerie')) return 2
+        if (path.startsWith('/user/messagerie') || path.startsWith('/user/send-message')) return 2
 
         // Élément 1 : Dashboard (défaut pour toutes les autres routes /user/*)
         if (path.startsWith('/user') || path === '/create-activity') return 0
@@ -45,7 +45,7 @@ export default function BottomNav() {
                 navigate('/user/search-activity')
                 break
             case 2:
-                navigate('/messagerie')
+                navigate('/user/messagerie')
                 break
             case 3:
                 navigate('/user/map')

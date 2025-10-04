@@ -85,6 +85,25 @@ export async function fetchUserById(userId) {
     return null
 }
 
+// --- Contacts ---
+export async function fetchContact(contactId) {
+    if (!contactId) throw new Error('contactId-required')
+
+    try {
+        const docRef = doc(db, 'users', contactId)
+        const docSnap = await getDoc(docRef)
+
+        if (docSnap.exists()) {
+            return { id: docSnap.id, ...docSnap.data() }
+        } else {
+            return { id: contactId, name: 'Utilisateur inconnu', avatar: null }
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement du contact :', error)
+        throw error
+    }
+}
+
 // --- Auth utils ---
 export const signOut = () => firebaseSignOut(auth)
 export const subscribeToAuth = (callback) => onAuthStateChanged(auth, callback)

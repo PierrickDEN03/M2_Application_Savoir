@@ -248,7 +248,11 @@ function ActivityDetail() {
                         >
                             {creator?.displayName || 'Utilisateur'}
                         </Typography>
-                        <Typography variant="body2" sx={{ color: '#666' }}>
+                        <Typography
+                            variant="body2"
+                            sx={{ color: '#666', cursor: 'pointer' }}
+                            onClick={() => navigate(`/user/send-message/${creator?.id}`)}
+                        >
                             Contact de l'organisateur
                         </Typography>
                     </Box>
