@@ -91,7 +91,7 @@ export default function ActivityItem({ activity }) {
                         </h4>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <img
-                                src={user?.photoUrl || 'https://randomuser.me/api/portraits/women/44.jpg'}
+                                src={user?.photoUrl || '/avatar_default.jpg'}
                                 alt={user?.firstName || 'User'}
                                 style={{
                                     width: '32px',
