@@ -3,17 +3,12 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Typography, CircularProgress } from '@mui/material'
 import { auth } from '../../../firebase-config'
-import { getUserReservations } from '../../../services/reservationsService'
-import { getUserFavorites } from '../../../services/favorisService'
-import { fetchActivityById, fetchActivitiesFromDB } from '../../../services/activitiesService'
-import { fetchCategoryById } from '../../../services/categoriesService'
 import { fetchUserById } from '../../../services/userService'
 import BottomNav from '../../../components/utils/NavbarBottom'
-import CreateActivityButton from '../../../components/utils/CreateActivityBtn'
-import RappelActivity from '../../../components/dashboard/RappelActivity'
-import AroundYou from '../../../components/dashboard/AroundYou'
-import Favoris from '../../../components/dashboard/Favoris'
 import AvatarPlaceholder from '../../../components/utils/Avatar_Placeholder'
+import MyActivities from '../../../components/dashboard/MyActivities/MyActivities'
+import MyInscriptions from '../../../components/dashboard/MyInscriptions/MyInscriptions'
+import MyFavorites from '../../../components/dashboard/MyFavorites/MyFavorites'
 
 export default function Dashboard() {
     const navigate = useNavigate()
@@ -21,55 +16,18 @@ export default function Dashboard() {
 
     const [loading, setLoading] = useState(true)
     const [userName, setUserName] = useState('Utilisateur')
-    const [nextActivity, setNextActivity] = useState(null)
-    const [nearbyActivities, setNearbyActivities] = useState([])
-    const [favorites, setFavorites] = useState([])
+    const [currentTab, setCurrentTab] = useState('activities') // 'activities', 'inscriptions', 'favorites'
 
     useEffect(() => {
-        const loadDashboardData = async () => {
+        const loadUserData = async () => {
             if (!currentUser) {
                 navigate('/login')
                 return
             }
 
             try {
-                // 🔹 Informations utilisateur
                 const userData = await fetchUserById(currentUser.uid)
                 if (userData?.firstName) setUserName(userData.firstName)
-
-                // 🔹 Réservations et prochaine activité
-                const reservations = await getUserReservations(currentUser.uid)
-                if (reservations.length > 0) {
-                    const activitiesWithDetails = await Promise.all(
-                        reservations.map(async (res) => {
-                            const activity = await fetchActivityById(res.activityId)
-                            const category = activity ? await fetchCategoryById(activity.categoryId) : null
-                            return { ...activity, category }
-                        })
-                    )
-
-                    const futureActivities = activitiesWithDetails
-                        .filter((act) => act && new Date(act.date) > new Date())
-                        .sort((a, b) => new Date(a.date) - new Date(b.date))
-
-                    if (futureActivities.length > 0) setNextActivity(futureActivities[0])
-                }
-
-                // 🔹 Favoris
-                const favoritesData = await getUserFavorites(currentUser.uid)
-                const favoritesWithDetails = await Promise.all(
-                    favoritesData.slice(0, 3).map(async (fav) => {
-                        const activity = await fetchActivityById(fav.activityId)
-                        const category = activity ? await fetchCategoryById(activity.categoryId) : null
-                        return { ...activity, category }
-                    })
-                )
-                setFavorites(favoritesWithDetails.filter((f) => f !== null))
-
-                // 🔹 Activités autour de l'utilisateur
-                const allActivities = await fetchActivitiesFromDB()
-                const upcomingActivities = allActivities.filter((act) => new Date(act.date) > new Date())
-                setNearbyActivities(upcomingActivities)
             } catch (error) {
                 console.error('Erreur lors du chargement du dashboard:', error)
             } finally {
@@ -77,7 +35,7 @@ export default function Dashboard() {
             }
         }
 
-        loadDashboardData()
+        loadUserData()
     }, [currentUser, navigate])
 
     if (loading) {
@@ -101,7 +59,7 @@ export default function Dashboard() {
             <AvatarPlaceholder />
 
             {/* Header */}
-            <Box sx={{ p: 3, pt: 4 }}>
+            <Box sx={{ p: 3, pt: 4, pb: 2 }}>
                 <Typography variant="h3" sx={{ color: 'white', fontWeight: 700, mb: 1 }}>
                     Hello
                 </Typography>
@@ -110,12 +68,95 @@ export default function Dashboard() {
                 </Typography>
             </Box>
 
-            {/* Composants */}
-            <RappelActivity activity={nextActivity} />
-            <AroundYou activities={nearbyActivities} />
-            <Favoris favorites={favorites} />
+            {/* Tabs */}
+            <Box sx={{ px: 3, mb: 3 }}>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        gap: 1,
+                        bgcolor: 'rgba(255, 255, 255, 0.15)',
+                        p: 0.5,
+                        borderRadius: 3,
+                        backdropFilter: 'blur(10px)',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                    }}
+                >
+                    <Box
+                        onClick={() => setCurrentTab('activities')}
+                        sx={{
+                            flex: 1,
+                            textAlign: 'center',
+                            py: 1.2,
+                            borderRadius: 2.5,
+                            cursor: 'pointer',
+                            bgcolor: currentTab === 'activities' ? '#FFD168' : 'transparent',
+                            color: currentTab === 'activities' ? '#1a1a1a' : 'white',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            transition: 'all 0.3s ease',
+                            boxShadow: currentTab === 'activities' ? '0 4px 8px rgba(255, 209, 104, 0.3)' : 'none',
+                            '&:hover': {
+                                bgcolor: currentTab === 'activities' ? '#FFD168' : 'rgba(255, 255, 255, 0.1)',
+                                transform: 'translateY(-1px)',
+                            },
+                        }}
+                    >
+                        Mes activités
+                    </Box>
+                    <Box
+                        onClick={() => setCurrentTab('inscriptions')}
+                        sx={{
+                            flex: 1,
+                            textAlign: 'center',
+                            py: 1.2,
+                            borderRadius: 2.5,
+                            cursor: 'pointer',
+                            bgcolor: currentTab === 'inscriptions' ? '#82D0F7' : 'transparent',
+                            color: currentTab === 'inscriptions' ? '#1a1a1a' : 'white',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            transition: 'all 0.3s ease',
+                            boxShadow: currentTab === 'inscriptions' ? '0 4px 8px rgba(130, 208, 247, 0.3)' : 'none',
+                            '&:hover': {
+                                bgcolor: currentTab === 'inscriptions' ? '#FFD168' : 'rgba(255, 255, 255, 0.1)',
+                                transform: 'translateY(-1px)',
+                            },
+                        }}
+                    >
+                        Mes inscriptions
+                    </Box>
+                    <Box
+                        onClick={() => setCurrentTab('favorites')}
+                        sx={{
+                            flex: 1,
+                            textAlign: 'center',
+                            py: 1.2,
+                            borderRadius: 2.5,
+                            cursor: 'pointer',
+                            bgcolor: currentTab === 'favorites' ? '#ED8A8A' : 'transparent',
+                            color: currentTab === 'favorites' ? '#1a1a1a' : 'white',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            transition: 'all 0.3s ease',
+                            boxShadow: currentTab === 'favorites' ? '0 4px 8px rgba(237, 138, 138, 0.3)' : 'none',
+                            '&:hover': {
+                                bgcolor: currentTab === 'favorites' ? '#FFD168' : 'rgba(255, 255, 255, 0.1)',
+                                transform: 'translateY(-1px)',
+                            },
+                        }}
+                    >
+                        Mes envies
+                    </Box>
+                </Box>
+            </Box>
 
-            <CreateActivityButton />
+            {/* Content */}
+            <Box sx={{ px: 3 }}>
+                {currentTab === 'activities' && <MyActivities userId={currentUser.uid} />}
+                {currentTab === 'inscriptions' && <MyInscriptions userId={currentUser.uid} />}
+                {currentTab === 'favorites' && <MyFavorites userId={currentUser.uid} />}
+            </Box>
+
             <BottomNav />
         </Box>
     )

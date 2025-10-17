@@ -108,3 +108,24 @@ export const fetchCategoryById = async (categoryId) => {
     }
     return null
 }
+
+export const getCategoryImage = (category) => {
+    const imageMap = {
+        Sport: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=800&q=80',
+        Musique: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
+        Danse: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80',
+        Cuisine: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80',
+        Bricolage: 'https://images.unsplash.com/photo-1581091012184-5c97e8ce53a9?auto=format&fit=crop&w=800&q=80',
+        Art: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80',
+        Culture: 'https://images.unsplash.com/photo-1551806235-7d864347a1e9?auto=format&fit=crop&w=800&q=80',
+        Théâtre: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=800&q=80',
+        Running: 'https://images.unsplash.com/photo-1558611848-73f7eb4001a1?auto=format&fit=crop&w=800&q=80',
+        Shopping: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=800&q=80',
+        'Jeux vidéo': 'https://images.unsplash.com/photo-1580128637425-1c79a6720d2b?auto=format&fit=crop&w=800&q=80',
+        Randonnées: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80',
+        Natation: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
+        Autres: 'https://images.unsplash.com/photo-1520975918318-3e9ce41f1cc6?auto=format&fit=crop&w=800&q=80',
+    }
+
+    return imageMap[category] || 'https://images.unsplash.com/photo-1503264116251-35a269479413?auto=format&fit=crop&w=800&q=80'
+}
