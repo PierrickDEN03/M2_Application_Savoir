@@ -16,8 +16,8 @@ export default function ActivityItem({ activity }) {
 
     useEffect(() => {
         async function loadUserAndCategory() {
-            if (activity.userId) {
-                const u = await fetchUserById(activity.userId)
+            if (activity.createdBy) {
+                const u = await fetchUserById(activity.createdBy)
                 setUser(u)
             }
             if (activity.categoryId) {
@@ -26,7 +26,7 @@ export default function ActivityItem({ activity }) {
             }
         }
         loadUserAndCategory()
-    }, [activity.userId, activity.categoryId])
+    }, [activity.userId, activity.categoryId, activity.createdBy])
 
     const getCustomIcon = () => {
         if (!category) return null

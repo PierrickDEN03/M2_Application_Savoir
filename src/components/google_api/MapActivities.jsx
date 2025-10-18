@@ -1,28 +1,19 @@
-// FILE: src/components/google_api/MapActivities.jsx
 import React, { useCallback, useEffect, useState } from 'react'
 import { GoogleMap, useLoadScript } from '@react-google-maps/api'
 import { Box, CircularProgress, Typography, Alert } from '@mui/material'
-import { verifyAddressWithId } from './verifyAddressWithGoogle.js'
+import { verifyAddressWithId } from './verifyAddressWithGoogle'
 import ActivityItem from './ActivityItem'
-import { fetchActivitiesFromDB } from '../../services/activitiesService.js'
-import { fetchCategoryById } from '../../services/categoriesService.js'
+import { fetchActivitiesFromDB } from '../../services/activitiesService'
+import FiltreMap from '../search_filter/FiltreMap'
+import useActivitiesFilter from '../search_filter/useActivitiesFilter'
 import { auth } from '../../firebase-config'
-import FiltreMap from './FiltreMap'
 
-const containerStyle = {
-    width: '100%',
-    height: '100vh',
-}
-
-const center = {
-    lat: 45.75,
-    lng: 4.85,
-}
-
-const libraries = ['places']
+// --- Map style ---
+const containerStyle = { width: '100%', height: '100vh' }
+const center = { lat: 45.75, lng: 4.85 }
+const libraries = ['places', 'geometry']
 
 export default function MapActivities() {
-    const currentUser = auth.currentUser
     const { isLoaded, loadError } = useLoadScript({
         googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
         libraries,
@@ -30,99 +21,78 @@ export default function MapActivities() {
 
     const [map, setMap] = useState(null)
     const [activities, setActivities] = useState([])
-    const [filteredActivities, setFilteredActivities] = useState([])
     const [filters, setFilters] = useState({
         location: '',
-        timeSlot: '',
+        distance: null,
+        startDate: null,
+        endDate: null,
         categories: [],
+        userPosition: null,
+        date: null,
     })
+
     const [loadingActivities, setLoadingActivities] = useState(true)
     const [error, setError] = useState(null)
 
-    // Chargement des activités
-    async function loadActivities() {
+    // 🔹 Fonction de chargement — PAS de dépendances dynamiques
+    const loadActivities = async (user) => {
         try {
+            console.log('Fetching activities...')
             setLoadingActivities(true)
             setError(null)
+
             const docs = await fetchActivitiesFromDB()
             const now = new Date()
 
-            const filteredDocs = currentUser
-                ? docs.filter((doc) => doc.createdBy !== currentUser.uid && doc.userId !== currentUser.uid && new Date(doc.date) > now)
+            const filteredDocs = user
+                ? docs.filter((doc) => doc.createdBy !== user.uid && doc.userId !== user.uid && new Date(doc.date) > now)
                 : docs.filter((doc) => new Date(doc.date) > now)
 
             const verified = []
-
             for (const doc of filteredDocs) {
+                if (!doc.placeId) continue
                 try {
                     const pos = await verifyAddressWithId(doc.placeId)
-                    const category = await fetchCategoryById(doc.categoryId)
-                    verified.push({ ...doc, position: pos.position, category })
+                    if (!pos?.position) continue
+                    verified.push({
+                        ...doc,
+                        position: pos.position,
+                        address: pos.address,
+                    })
                 } catch (e) {
-                    console.warn(`Impossible de géocoder ${doc.title}`, e)
+                    console.warn('Impossible de géocoder', doc.title, e)
                 }
             }
 
             setActivities(verified)
-            setFilteredActivities(verified)
         } catch (err) {
-            console.error('Erreur chargement des activités depuis Firestore', err)
-            setError('Impossible de charger les activités. Veuillez réessayer plus tard.')
+            console.error(err)
+            setError('Impossible de charger les activités. Réessayez plus tard.')
         } finally {
             setLoadingActivities(false)
         }
     }
 
+    // 🔹 Chargement initial (une seule fois)
     useEffect(() => {
         if (!isLoaded) return
-        loadActivities()
-    }, [isLoaded, currentUser])
+        const user = auth?.currentUser || null
+        loadActivities(user)
+    }, [isLoaded])
 
-    // Appliquer les filtres
-    useEffect(() => {
-        let filtered = [...activities]
+    // 🔹 Application des filtres
+    const filteredActivities = useActivitiesFilter(activities, filters)
 
-        if (filters.location) {
-            const searchTerm = filters.location.toLowerCase()
-            filtered = filtered.filter((activity) => {
-                const city = activity.address?.city?.toLowerCase() || ''
-                const fullAddress = activity.address?.full?.toLowerCase() || ''
-                return city.includes(searchTerm) || fullAddress.includes(searchTerm)
-            })
-        }
+    // 🔹 Gestion des filtres enfants
+    const handleFilterChange = useCallback((newFilters) => {
+        setFilters((prev) => ({ ...prev, ...newFilters }))
+    }, [])
 
-        if (filters.timeSlot) {
-            filtered = filtered.filter((activity) => {
-                if (!activity.date) return false
-                const date = new Date(activity.date)
-                const hours = date.getHours()
-
-                switch (filters.timeSlot) {
-                    case 'morning':
-                        return hours >= 6 && hours < 12
-                    case 'afternoon':
-                        return hours >= 12 && hours < 18
-                    case 'evening':
-                        return hours >= 18 && hours < 23
-                    case 'night':
-                        return hours >= 23 || hours < 6
-                    default:
-                        return true
-                }
-            })
-        }
-
-        if (filters.categories.length > 0) {
-            filtered = filtered.filter((activity) => filters.categories.includes(activity.categoryId))
-        }
-
-        setFilteredActivities(filtered)
-    }, [filters, activities])
-
-    const handleFilterChange = (newFilters) => setFilters(newFilters)
+    // 🔹 Gestion de la carte
     const onLoad = useCallback((mapInstance) => setMap(mapInstance), [])
     const onUnmount = useCallback(() => setMap(null), [])
 
+    // --- RENDER ---
     if (loadError)
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', p: 2 }}>
@@ -134,7 +104,16 @@ export default function MapActivities() {
 
     if (!isLoaded || loadingActivities)
         return (
-            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', gap: 2 }}>
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: '100vh',
+                    gap: 2,
+                }}
+            >
                 <CircularProgress sx={{ color: '#3454D1' }} />
                 <Typography variant="body1" sx={{ color: '#3454D1', fontWeight: 500 }}>
                     Chargement des activités...
@@ -149,6 +128,7 @@ export default function MapActivities() {
                     <ActivityItem key={activity.id} activity={activity} />
                 ))}
             </GoogleMap>
+
             <FiltreMap onFilterChange={handleFilterChange} />
         </>
     )
