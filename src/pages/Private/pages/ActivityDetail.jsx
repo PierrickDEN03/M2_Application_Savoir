@@ -72,7 +72,7 @@ function ActivityDetail() {
         }
 
         if (activityId) loadActivityDetails()
-    }, [activityId, navigate, currentUser])
+    }, [activityId, navigate, currentUser, creator])
 
     const handleToggleFavorite = async () => {
         if (!currentUser) return
@@ -195,13 +195,55 @@ function ActivityDetail() {
                 <Box sx={{ p: 3 }}>
                     {/* Profil organisateur */}
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                        <Avatar src={creator?.photoUrl} sx={{ width: 56, height: 56, mr: 2, border: '3px solid #3454D1' }} />
+                        {/* Lien vers le profil */}
+                        <Box
+                            component="a"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                navigate(`/user/profile/${creator?.id}`)
+                            }}
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                textDecoration: 'none',
+                                color: 'inherit',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            <Avatar
+                                src={creator?.photoUrl}
+                                sx={{
+                                    width: 56,
+                                    height: 56,
+                                    mr: 2,
+                                    border: '3px solid #3454D1',
+                                }}
+                            />
+                        </Box>
+
                         <Box>
-                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            {/* Lien vers le profil sur le nom */}
+                            <Typography
+                                variant="h6"
+                                sx={{ fontWeight: 600, cursor: 'pointer' }}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    navigate(`/user/profile/${creator?.id}`)
+                                }}
+                            >
                                 {creator?.displayName || 'Utilisateur'}
                             </Typography>
-                            <Typography variant="body2" sx={{ color: '#666' }}>
-                                Contacter l'organisateur
+
+                            {/* Lien vers la messagerie */}
+                            <Typography
+                                variant="body2"
+                                sx={{ color: '#666', cursor: 'pointer' }}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    navigate(`/user/send-message/${creator?.id}`)
+                                }}
+                            >
+                                Contacter l’organisateur
                             </Typography>
                         </Box>
                     </Box>
