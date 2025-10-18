@@ -1,14 +1,15 @@
-// FILE: src/pages/ActivityDetail.jsx
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Box, Typography, Avatar, Button, CircularProgress } from '@mui/material'
+import { Box, Typography, Avatar, Button, CircularProgress, Chip } from '@mui/material'
 import * as MuiIcons from '@mui/icons-material'
 import { fetchActivityById } from '../../../services/activitiesService'
 import { fetchUserById } from '../../../services/userService'
-import { fetchCategoryById } from '../../../services/categoriesService'
+import { fetchCategoryById, getCategoryImage } from '../../../services/categoriesService'
 import { checkReservation, addReservation, removeReservation } from '../../../services/reservationsService'
 import { checkFavorite, addFavorite, removeFavorite } from '../../../services/favorisService'
-import { auth } from '../../../firebase-config'
+import { auth, db } from '../../../firebase-config'
+import { collection, query, where, getDocs } from 'firebase/firestore'
+import { formatActivityDate } from '../../../components/utils/formatDate'
 import AvatarPlaceholder from '../../../components/utils/Avatar_Placeholder'
 
 function ActivityDetail() {
@@ -23,6 +24,7 @@ function ActivityDetail() {
     const [reservationId, setReservationId] = useState(null)
     const [favoriteId, setFavoriteId] = useState(null)
     const [actionLoading, setActionLoading] = useState(false)
+    const [registeredCount, setRegisteredCount] = useState(0)
 
     const currentUser = auth.currentUser
 
@@ -34,31 +36,29 @@ function ActivityDetail() {
                     return
                 }
 
-                // Récupérer l'activité
                 const activityData = await fetchActivityById(activityId)
                 if (!activityData) {
-                    console.error('Activité non trouvée')
                     navigate('/user/activity')
                     return
                 }
                 setActivity(activityData)
 
-                // Récupérer le créateur
                 const userData = await fetchUserById(activityData.userId || activityData.createdBy)
                 setCreator(userData)
 
-                // Récupérer la catégorie
                 const categoryData = await fetchCategoryById(activityData.categoryId)
                 setCategory(categoryData)
 
-                // Vérifier si l'utilisateur est déjà inscrit
+                const q = query(collection(db, 'reservations'), where('activityId', '==', activityId))
+                const querySnapshot = await getDocs(q)
+                setRegisteredCount(querySnapshot.size)
+
                 const resId = await checkReservation(currentUser.uid, activityId)
                 if (resId) {
                     setIsRegistered(true)
                     setReservationId(resId)
                 }
 
-                // Vérifier si l'activité est dans les favoris
                 const favId = await checkFavorite(currentUser.uid, activityId)
                 if (favId) {
                     setIsFavorite(true)
@@ -71,83 +71,55 @@ function ActivityDetail() {
             }
         }
 
-        if (activityId) {
-            loadActivityDetails()
-        }
+        if (activityId) loadActivityDetails()
     }, [activityId, navigate, currentUser])
-
-    const handleToggleRegistration = async () => {
-        if (!currentUser) return
-        setActionLoading(true)
-
-        try {
-            if (isRegistered) {
-                // Désinscrire
-                await removeReservation(reservationId)
-                setIsRegistered(false)
-                setReservationId(null)
-            } else {
-                // Inscrire
-                const newResId = await addReservation(currentUser.uid, activityId)
-                setIsRegistered(true)
-                setReservationId(newResId)
-            }
-        } catch (error) {
-            console.error("Erreur lors de la gestion de l'inscription:", error)
-        } finally {
-            setActionLoading(false)
-        }
-    }
 
     const handleToggleFavorite = async () => {
         if (!currentUser) return
         setActionLoading(true)
-
         try {
             if (isFavorite) {
-                // Retirer des favoris
                 await removeFavorite(favoriteId)
                 setIsFavorite(false)
                 setFavoriteId(null)
             } else {
-                // Ajouter aux favoris
                 const newFavId = await addFavorite(currentUser.uid, activityId)
                 setIsFavorite(true)
                 setFavoriteId(newFavId)
             }
         } catch (error) {
-            console.error('Erreur lors de la gestion des favoris:', error)
+            console.error('Erreur lors des favoris:', error)
         } finally {
             setActionLoading(false)
         }
     }
 
-    const formatDate = (dateString) => {
-        if (!dateString) return ''
-        const date = new Date(dateString)
-        const options = { weekday: 'long', day: 'numeric', month: 'long' }
-        return date.toLocaleDateString('fr-FR', options)
+    const handleToggleRegistration = async () => {
+        if (!currentUser) return
+        setActionLoading(true)
+        try {
+            if (isRegistered) {
+                await removeReservation(reservationId)
+                setIsRegistered(false)
+                setRegisteredCount((prev) => Math.max(0, prev - 1))
+            } else {
+                const newResId = await addReservation(currentUser.uid, activityId)
+                setIsRegistered(true)
+                setReservationId(newResId)
+                setRegisteredCount((prev) => prev + 1)
+            }
+        } catch (error) {
+            console.error('Erreur lors de la réservation:', error)
+        } finally {
+            setActionLoading(false)
+        }
     }
 
-    const formatTime = (dateString) => {
-        if (!dateString) return ''
-        const date = new Date(dateString)
-        const hours = date.getHours().toString().padStart(2, '0')
-        const minutes = date.getMinutes().toString().padStart(2, '0')
-        return `${hours}h${minutes}`
-    }
+    const formatDate = (dateString) => formatActivityDate(dateString)
 
     if (loading) {
         return (
-            <Box
-                sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    minHeight: '100vh',
-                    bgcolor: '#F0E7D6',
-                }}
-            >
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', bgcolor: '#e4eff6' }}>
                 <CircularProgress sx={{ color: '#3454D1' }} />
             </Box>
         )
@@ -155,267 +127,152 @@ function ActivityDetail() {
 
     if (!activity) {
         return (
-            <Box sx={{ minHeight: '100vh', bgcolor: '#F0E7D6', p: 3 }}>
+            <Box sx={{ minHeight: '100vh', bgcolor: '#e4eff6', p: 3 }}>
                 <Typography>Activité non trouvée</Typography>
             </Box>
         )
     }
 
+    const categoryImage = category ? getCategoryImage(category.description) : activity.photoUrl
+    const categoryName = category?.description || 'Autres'
+
     return (
-        <Box
-            sx={{
-                minHeight: '100vh',
-                bgcolor: '#F0E7D6',
-                pb: 10,
-            }}
-        >
+        <Box sx={{ minHeight: '100vh', bgcolor: '#e4eff6', pb: 10 }}>
             <AvatarPlaceholder />
-            {/* Header avec image */}
-            <Box
-                sx={{
-                    position: 'relative',
-                    height: 250,
-                    background: activity.photoUrl ? `url(${activity.photoUrl})` : 'linear-gradient(135deg, #3454D1 0%, #B2DDF7 100%)',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                }}
-            >
-                {/* Bouton retour */}
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: 16,
-                        left: 16,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        cursor: 'pointer',
-                    }}
-                    onClick={() => navigate(-1)}
-                >
-                    <MuiIcons.ArrowBack sx={{ color: 'white', fontSize: 24 }} />
-                    <Typography
-                        sx={{
-                            color: 'white',
-                            fontWeight: 600,
-                            fontSize: 18,
-                        }}
-                    >
-                        Back
-                    </Typography>
+
+            {/* En-tête hors image */}
+            <Box sx={{ px: 3, pt: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, cursor: 'pointer' }} onClick={() => navigate(-1)}>
+                    <MuiIcons.ArrowBack sx={{ color: '#3454D1', fontSize: 24 }} />
+                    <Typography sx={{ color: '#3454D1', fontWeight: 700, fontSize: 18 }}>Back</Typography>
                 </Box>
 
-                {/* Titre sur l'image */}
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        bottom: 16,
-                        left: 16,
-                        right: 16,
-                    }}
-                >
-                    <Typography
-                        variant="h4"
-                        sx={{
-                            color: 'white',
-                            fontWeight: 700,
-                            textShadow: '0 2px 4px rgba(0,0,0,0.3)',
-                        }}
-                    >
-                        {activity.title}
-                    </Typography>
-                </Box>
+                <Typography variant="h4" sx={{ fontWeight: 700, color: '#3454D1', mb: 2 }}>
+                    {activity.title}
+                </Typography>
             </Box>
 
-            {/* Contenu */}
-            <Box sx={{ px: 3, pt: 3 }}>
-                {/* Profil créateur */}
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                    <Avatar
-                        src={creator?.photoUrl}
-                        sx={{
-                            width: 56,
-                            height: 56,
-                            mr: 2,
-                            border: '2px solid #3454D1',
-                        }}
-                    />
-                    <Box>
-                        <Typography
-                            variant="h6"
-                            sx={{ fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
-                            onClick={() => navigate(`/user/profile/${creator?.id}`)}
-                        >
-                            {creator?.displayName || 'Utilisateur'}
-                        </Typography>
-                        <Typography
-                            variant="body2"
-                            sx={{ color: '#666', cursor: 'pointer' }}
-                            onClick={() => navigate(`/user/send-message/${creator?.id}`)}
-                        >
-                            Contact de l'organisateur
-                        </Typography>
-                    </Box>
+            {/* Box principale avec fond blanc */}
+            <Box
+                sx={{
+                    bgcolor: 'white',
+                    borderRadius: 3,
+                    mx: 2,
+                    overflow: 'hidden',
+                    boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                }}
+            >
+                {/* Image en haut de la box */}
+                <Box
+                    sx={{
+                        position: 'relative',
+                        height: 180,
+                        background: `url(${categoryImage}) center/cover no-repeat`,
+                    }}
+                >
+                    {/* Badge catégorie en haut à gauche */}
+                    {category && (
+                        <Chip
+                            icon={category.iconName ? React.createElement(MuiIcons[category.iconName]) : undefined}
+                            label={categoryName}
+                            sx={{
+                                position: 'absolute',
+                                top: 12,
+                                left: 12,
+                                bgcolor: category.color ? `${category.color}E6` : 'rgba(52, 84, 209, 0.9)',
+                                color: 'white',
+                                fontWeight: 600,
+                                fontSize: '0.9rem',
+                                height: 30,
+                                '& .MuiChip-label': { px: 1 },
+                                '& .MuiChip-icon': { color: 'white' },
+                            }}
+                        />
+                    )}
                 </Box>
 
-                {/* Section Informations */}
-                <Typography
-                    variant="h6"
+                {/* Contenu texte */}
+                <Box sx={{ p: 3 }}>
+                    {/* Profil organisateur */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                        <Avatar src={creator?.photoUrl} sx={{ width: 56, height: 56, mr: 2, border: '3px solid #3454D1' }} />
+                        <Box>
+                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                {creator?.displayName || 'Utilisateur'}
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: '#666' }}>
+                                Contacter l'organisateur
+                            </Typography>
+                        </Box>
+                    </Box>
+
+                    {/* Informations */}
+                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                        Informations
+                    </Typography>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+                        <MuiIcons.CalendarToday sx={{ fontSize: 18, color: '#ED6A5A', mr: 1 }} />
+                        <Typography>{formatDate(activity.date)}</Typography>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+                        <MuiIcons.LocationOn sx={{ fontSize: 18, color: '#ED6A5A', mr: 1 }} />
+                        <Typography>{activity.address?.street || activity.address?.city}</Typography>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <MuiIcons.Group sx={{ fontSize: 18, color: '#ED6A5A', mr: 1 }} />
+                        <Typography>
+                            {registeredCount}/{activity.participants || 0} participants
+                        </Typography>
+                    </Box>
+
+                    {/* Description */}
+                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                        Détail de l'annonce
+                    </Typography>
+                    <Typography sx={{ color: '#333', mb: 3 }}>{activity.description || 'Aucune description disponible.'}</Typography>
+                </Box>
+            </Box>
+            {/* Boutons */}
+            <Box sx={{ display: 'flex', gap: 2, mt: 5, px: 3 }}>
+                <Button
+                    fullWidth
+                    variant="outlined"
+                    startIcon={isFavorite ? <MuiIcons.Favorite /> : <MuiIcons.FavoriteBorder />}
+                    onClick={handleToggleFavorite}
+                    disabled={actionLoading}
                     sx={{
+                        borderColor: '#ED6A5A',
+                        color: '#ED6A5A',
+                        borderRadius: 3,
+                        py: 1,
                         fontWeight: 600,
-                        mb: 2,
-                        color: '#1a1a1a',
+                        textTransform: 'none',
                     }}
                 >
-                    Informations
-                </Typography>
+                    {isFavorite ? 'Retirer des envies' : 'Ajouter aux envies'}
+                </Button>
 
-                {/* Date et heure */}
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
-                    <Box
-                        sx={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: '50%',
-                            bgcolor: '#FFE5E5',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            mr: 2,
-                            flexShrink: 0,
-                        }}
-                    >
-                        <MuiIcons.CalendarToday sx={{ fontSize: 20, color: '#ED6A5A' }} />
-                    </Box>
-                    <Box>
-                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                            {formatDate(activity.date)}
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: '#666' }}>
-                            à {formatTime(activity.date)}
-                        </Typography>
-                    </Box>
-                </Box>
-
-                {/* Lieu */}
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
-                    <Box
-                        sx={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: '50%',
-                            bgcolor: '#FFE5E5',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            mr: 2,
-                            flexShrink: 0,
-                        }}
-                    >
-                        <MuiIcons.LocationOn sx={{ fontSize: 20, color: '#ED6A5A' }} />
-                    </Box>
-                    <Box>
-                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                            {activity.address?.street || activity.address?.city}
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: '#666' }}>
-                            {activity.address?.full || `${activity.address?.postalCode} ${activity.address?.city}`}
-                        </Typography>
-                    </Box>
-                </Box>
-
-                {/* Participants */}
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 3 }}>
-                    <Box
-                        sx={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: '50%',
-                            bgcolor: '#FFE5E5',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            mr: 2,
-                            flexShrink: 0,
-                        }}
-                    >
-                        <MuiIcons.Group sx={{ fontSize: 20, color: '#ED6A5A' }} />
-                    </Box>
-                    <Box>
-                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                            {activity.participants || 0} participants
-                        </Typography>
-                    </Box>
-                </Box>
-
-                {/* Détail de l'annonce */}
-                <Typography
-                    variant="h6"
+                <Button
+                    fullWidth
+                    variant="contained"
+                    startIcon={isRegistered ? <MuiIcons.CheckCircle /> : <MuiIcons.Check />}
+                    onClick={handleToggleRegistration}
+                    disabled={actionLoading}
                     sx={{
+                        bgcolor: isRegistered ? '#3454D1' : '#ED6A5A',
+                        color: 'white',
+                        borderRadius: 3,
+                        py: 1,
                         fontWeight: 600,
-                        mb: 2,
-                        color: '#1a1a1a',
+                        textTransform: 'none',
+                        '&:hover': { bgcolor: isRegistered ? '#2140ba' : '#d45a4a' },
                     }}
                 >
-                    Détail de l'annonce
-                </Typography>
-
-                <Typography
-                    variant="body1"
-                    sx={{
-                        color: '#333',
-                        lineHeight: 1.6,
-                        mb: 4,
-                    }}
-                >
-                    {activity.description || 'Aucune description disponible.'}
-                </Typography>
-
-                {/* Boutons d'action */}
-                <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-                    <Button
-                        fullWidth
-                        variant="outlined"
-                        startIcon={isFavorite ? <MuiIcons.Favorite /> : <MuiIcons.FavoriteBorder />}
-                        onClick={handleToggleFavorite}
-                        disabled={actionLoading}
-                        sx={{
-                            borderColor: '#ED6A5A',
-                            color: '#ED6A5A',
-                            borderRadius: 3,
-                            py: 1.5,
-                            fontWeight: 600,
-                            textTransform: 'none',
-                            '&:hover': {
-                                borderColor: '#ED6A5A',
-                                bgcolor: 'rgba(237, 106, 90, 0.05)',
-                            },
-                        }}
-                    >
-                        {isFavorite ? 'Retirer des envies' : 'Ajouter aux envies'}
-                    </Button>
-
-                    <Button
-                        fullWidth
-                        variant="contained"
-                        startIcon={isRegistered ? <MuiIcons.CheckCircle /> : <MuiIcons.Check />}
-                        onClick={handleToggleRegistration}
-                        disabled={actionLoading}
-                        sx={{
-                            bgcolor: isRegistered ? '#27AE60' : '#ED6A5A',
-                            color: 'white',
-                            borderRadius: 3,
-                            py: 1.5,
-                            fontWeight: 600,
-                            textTransform: 'none',
-                            '&:hover': {
-                                bgcolor: isRegistered ? '#229954' : '#d45a4a',
-                            },
-                        }}
-                    >
-                        {isRegistered ? 'Inscrit ✓' : "S'inscrire"}
-                    </Button>
-                </Box>
+                    {isRegistered ? 'Inscrit ✓' : "S'inscrire"}
+                </Button>
             </Box>
         </Box>
     )
