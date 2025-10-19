@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { Box, Paper, Typography, TextField, IconButton, Slider, Chip, Button, Slide, Fade } from '@mui/material'
 import * as MuiIcons from '@mui/icons-material'
 import { fetchCategoriesFromDB } from '../../services/categoriesService'
+import CityAutocomplete from '../google_api/CityAutoComplete'
 
 export default function Filtre({ onFilterChange, viewMode = 'map' }) {
     const [open, setOpen] = useState(false)
@@ -250,14 +251,13 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
                         {/* Localisation */}
                         <Box sx={{ mb: 3 }}>
                             <Typography sx={{ fontWeight: 600, color: '#f45b69', mb: 1 }}>Localisation</Typography>
-                            <TextField
-                                fullWidth
-                                size="small"
-                                placeholder="Ex: Lyon, Marseille..."
+                            <CityAutocomplete
                                 value={filters.location}
-                                onChange={handleLocationChange}
-                                InputProps={{
-                                    startAdornment: <MuiIcons.Search sx={{ mr: 1, color: '#999' }} />,
+                                onCitySelected={(cityData) => {
+                                    setFilters((prev) => ({
+                                        ...prev,
+                                        location: cityData.city || cityData.full,
+                                    }))
                                 }}
                                 sx={{
                                     '& .MuiOutlinedInput-root': {
@@ -330,7 +330,6 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
                             <Typography sx={{ fontWeight: 600, color: '#f45b69', mb: 1 }}>Type d'activité</Typography>
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                                 <Chip
-                                    icon={<MuiIcons.SelectAll sx={{ fontSize: 18 }} />}
                                     label="Tout"
                                     onClick={() => setFilters((prev) => ({ ...prev, categories: [] }))}
                                     sx={{
@@ -588,14 +587,14 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
                     {/* Localisation */}
                     <Box sx={{ mb: 3 }}>
                         <Typography sx={{ fontWeight: 600, color: '#f45b69', mb: 1 }}>Localisation</Typography>
-                        <TextField
-                            fullWidth
-                            size="small"
-                            placeholder="Ex: Lyon, Marseille..."
+
+                        <CityAutocomplete
                             value={filters.location}
-                            onChange={handleLocationChange}
-                            InputProps={{
-                                startAdornment: <MuiIcons.Search sx={{ mr: 1, color: '#999' }} />,
+                            onCitySelected={(city) => {
+                                setFilters((prev) => ({
+                                    ...prev,
+                                    location: city || '',
+                                }))
                             }}
                             sx={{
                                 '& .MuiOutlinedInput-root': {
@@ -668,7 +667,6 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
                         <Typography sx={{ fontWeight: 600, color: '#f45b69', mb: 1 }}>Type d'activité</Typography>
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                             <Chip
-                                icon={<MuiIcons.SelectAll sx={{ fontSize: 18 }} />}
                                 label="Tout"
                                 onClick={() => setFilters((prev) => ({ ...prev, categories: [] }))}
                                 sx={{
