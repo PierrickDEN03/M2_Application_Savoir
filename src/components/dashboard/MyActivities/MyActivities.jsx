@@ -41,7 +41,7 @@ export default function MyActivities({ userId }) {
     }
 
     return (
-        <Box sx={{ px: 2 }}>
+        <Box>
             <Typography
                 sx={{
                     color: 'white',
@@ -67,38 +67,36 @@ export default function MyActivities({ userId }) {
                     Aucune activité créée pour le moment.
                 </Typography>
             ) : (
-                <Grid
-                    container
-                    spacing={1}
+                <Box
                     sx={{
                         width: '100%',
-                        margin: 0,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 1, // équivalent du spacing={1}
+                        m: 0,
                     }}
                 >
                     {activities.map((activity) => (
-                        <Grid
-                            item
-                            xs={12}
-                            sm={12}
-                            md={12}
+                        <Box
                             key={activity.id}
                             sx={{
                                 display: 'flex',
                                 justifyContent: 'center',
-                                padding: '0px',
+                                width: '100%',
+                                p: 0,
                             }}
                         >
                             <Box
                                 sx={{
-                                    width: '100%', // occupe tout l'espace du Grid item
-                                    maxWidth: 600, // largeur maximale identique pour toutes les cartes
+                                    width: '100%',
+                                    maxWidth: 600,
                                 }}
                             >
                                 <ActivityCard activity={activity} />
                             </Box>
-                        </Grid>
+                        </Box>
                     ))}
-                </Grid>
+                </Box>
             )}
         </Box>
     )

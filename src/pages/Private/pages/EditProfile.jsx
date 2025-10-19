@@ -206,7 +206,7 @@ export default function EditProfile() {
                         rows={4}
                         value={formData.description}
                         onChange={handleChange('description')}
-                        placeholder="Actuellement en seconde année de droit à l’université, je souhaiterais rencontrer de nouvelles personnes..."
+                        placeholder="Aucune description pour le moment..."
                         sx={{
                             bgcolor: 'white',
                             borderRadius: 3,

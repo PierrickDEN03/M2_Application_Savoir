@@ -149,7 +149,6 @@ export default function UserProfile() {
                     {/* Boutons */}
                     {isOwnProfile ? (
                         <Stack direction="row" spacing={2}>
-                            <AvatarPlaceholder />
                             <Button
                                 variant="outlined"
                                 startIcon={<MuiIcons.Edit />}
@@ -171,23 +170,26 @@ export default function UserProfile() {
                             <LogOut />
                         </Stack>
                     ) : (
-                        <Button
-                            variant="contained"
-                            startIcon={<MuiIcons.Message />}
-                            onClick={() => navigate(`/user/send-message/${idUser}`)}
-                            sx={{
-                                bgcolor: '#ED6A5A',
-                                color: 'white',
-                                borderRadius: 3,
-                                textTransform: 'none',
-                                fontWeight: 600,
-                                '&:hover': {
-                                    bgcolor: '#d45a4a',
-                                },
-                            }}
-                        >
-                            Envoyer un message
-                        </Button>
+                        <Box>
+                            <AvatarPlaceholder />
+                            <Button
+                                variant="contained"
+                                startIcon={<MuiIcons.Message />}
+                                onClick={() => navigate(`/user/send-message/${idUser}`)}
+                                sx={{
+                                    bgcolor: '#ED6A5A',
+                                    color: 'white',
+                                    borderRadius: 3,
+                                    textTransform: 'none',
+                                    fontWeight: 600,
+                                    '&:hover': {
+                                        bgcolor: '#d45a4a',
+                                    },
+                                }}
+                            >
+                                Envoyer un message
+                            </Button>
+                        </Box>
                     )}
                 </Box>
 
