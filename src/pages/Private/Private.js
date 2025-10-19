@@ -55,11 +55,11 @@ export default function Private() {
     }
 
     // Pages où on cache le BottomNav
-    const hiddenNavRoutes = ['/user/interest']
+    const hiddenNavRoutes = ['/user/interest', '/user/modif-profile']
 
     return (
         <div>
-            {!hiddenNavRoutes.includes(location.pathname) && <BottomNav />}
+            {!hiddenNavRoutes.some((route) => location.pathname.startsWith(route)) && <BottomNav />}
             <Outlet context={{ user }} />
         </div>
     )

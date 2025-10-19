@@ -1,5 +1,4 @@
-// FILE: src/pages/EditProfile.jsx
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Box, Typography, TextField, Button, Avatar, Chip, CircularProgress, IconButton } from '@mui/material'
 import * as MuiIcons from '@mui/icons-material'
@@ -13,6 +12,7 @@ export default function EditProfile() {
     const currentUser = auth.currentUser
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+    const fileInputRef = useRef(null) // 🔹 référence pour le champ caché
 
     const [formData, setFormData] = useState({
         firstName: '',
@@ -22,7 +22,6 @@ export default function EditProfile() {
     const [interests, setInterests] = useState([])
     const [photoUrl, setPhotoUrl] = useState('')
 
-    // Vérifier que c'est bien le profil de l'utilisateur connecté
     useEffect(() => {
         if (!currentUser || currentUser.uid !== idUser) {
             navigate('/user/dashboard')
@@ -60,6 +59,22 @@ export default function EditProfile() {
         }))
     }
 
+    // 🔹 Gestion du changement de photo (sans upload)
+    const handlePhotoClick = () => {
+        fileInputRef.current.click() // Ouvre le sélecteur de fichier
+    }
+
+    const handlePhotoChange = (e) => {
+        const file = e.target.files[0]
+        if (file) {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                setPhotoUrl(reader.result) // 🔹 affiche l’image choisie en base64
+            }
+            reader.readAsDataURL(file)
+        }
+    }
+
     const handleSave = async () => {
         setSaving(true)
         try {
@@ -67,6 +82,7 @@ export default function EditProfile() {
                 firstName: formData.firstName,
                 description: formData.description,
                 email: formData.email,
+                // ⚠️ on ne sauvegarde pas photoUrl, c’est seulement local
             })
             navigate(`/user/profile/${idUser}`)
         } catch (error) {
@@ -89,7 +105,7 @@ export default function EditProfile() {
                     justifyContent: 'center',
                     alignItems: 'center',
                     minHeight: '100vh',
-                    bgcolor: '#F0E7D6',
+                    bgcolor: '#E4EFF6',
                 }}
             >
                 <CircularProgress sx={{ color: '#3454D1' }} />
@@ -98,13 +114,7 @@ export default function EditProfile() {
     }
 
     return (
-        <Box
-            sx={{
-                minHeight: '100vh',
-                bgcolor: '#F0E7D6',
-                pb: 10,
-            }}
-        >
+        <Box sx={{ minHeight: '100vh', bgcolor: '#E4EFF6', pb: 8 }}>
             {/* Header */}
             <Box sx={{ p: 3, pt: 4 }}>
                 <Box
@@ -119,13 +129,33 @@ export default function EditProfile() {
                 >
                     <Typography sx={{ fontWeight: 600, fontSize: 18 }}>Back</Typography>
                 </Box>
+
+                <Typography
+                    variant="h4"
+                    sx={{
+                        fontWeight: 700,
+                        color: '#3454D1',
+                        mt: 1,
+                        fontSize: 30,
+                    }}
+                >
+                    Edit profil
+                </Typography>
             </Box>
 
             {/* Avatar */}
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
                 <Box sx={{ position: 'relative' }}>
-                    <Avatar src={photoUrl || '/avatar_default.jpg'} sx={{ width: 100, height: 100, border: '4px solid white' }} />
+                    <Avatar
+                        src={photoUrl || '/avatar_default.jpg'}
+                        sx={{
+                            width: 100,
+                            height: 100,
+                            border: '4px solid white',
+                        }}
+                    />
                     <IconButton
+                        onClick={handlePhotoClick}
                         sx={{
                             position: 'absolute',
                             bottom: 0,
@@ -139,6 +169,9 @@ export default function EditProfile() {
                     >
                         <MuiIcons.Edit sx={{ fontSize: 18 }} />
                     </IconButton>
+
+                    {/* Champ fichier caché */}
+                    <input type="file" accept="image/*" ref={fileInputRef} onChange={handlePhotoChange} style={{ display: 'none' }} />
                 </Box>
             </Box>
 
@@ -146,25 +179,25 @@ export default function EditProfile() {
             <Box sx={{ px: 3 }}>
                 {/* Nom */}
                 <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 1, color: '#1a1a1a' }}>
+                    <Typography variant="body2" sx={{ fontWeight: 700, mb: 1, color: '#1a1a1a' }}>
                         Nom
                     </Typography>
                     <TextField
                         fullWidth
                         value={formData.firstName}
                         onChange={handleChange('firstName')}
-                        placeholder="Sarah"
+                        placeholder="Sarah Wilson"
                         sx={{
                             bgcolor: 'white',
-                            borderRadius: 2,
+                            borderRadius: 3,
                             '& .MuiOutlinedInput-root': { '& fieldset': { border: 'none' } },
                         }}
                     />
                 </Box>
 
-                {/* Description */}
+                {/* À propos de moi */}
                 <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 1, color: '#1a1a1a' }}>
+                    <Typography variant="body2" sx={{ fontWeight: 700, mb: 1, color: '#1a1a1a' }}>
                         À propos de moi
                     </Typography>
                     <TextField
@@ -173,10 +206,10 @@ export default function EditProfile() {
                         rows={4}
                         value={formData.description}
                         onChange={handleChange('description')}
-                        placeholder="J'adore transmettre mon savoir autour de rencontres..."
+                        placeholder="Actuellement en seconde année de droit à l’université, je souhaiterais rencontrer de nouvelles personnes..."
                         sx={{
                             bgcolor: 'white',
-                            borderRadius: 2,
+                            borderRadius: 3,
                             '& .MuiOutlinedInput-root': { '& fieldset': { border: 'none' } },
                         }}
                     />
@@ -184,7 +217,7 @@ export default function EditProfile() {
 
                 {/* Email */}
                 <Box sx={{ mb: 3 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 1, color: '#1a1a1a' }}>
+                    <Typography variant="body2" sx={{ fontWeight: 700, mb: 1, color: '#1a1a1a' }}>
                         Email
                     </Typography>
                     <TextField
@@ -192,34 +225,42 @@ export default function EditProfile() {
                         fullWidth
                         value={formData.email}
                         onChange={handleChange('email')}
-                        placeholder="sarah.d@univ-lyon2.fr"
-                        type="email"
+                        placeholder="sarah.wilson@gmail.com"
                         sx={{
                             bgcolor: 'white',
-                            borderRadius: 2,
+                            borderRadius: 3,
                             '& .MuiOutlinedInput-root': { '& fieldset': { border: 'none' } },
                         }}
                     />
                 </Box>
 
-                {/* Centres d'intérêts */}
-                <Box sx={{ mb: 3 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 1.5, color: '#1a1a1a' }}>
-                        Mes centres d'intérêts
+                {/* Passions */}
+                <Box sx={{ mb: 5 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 700, mb: 1.5, color: '#1a1a1a' }}>
+                        Mes passions
                     </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: 1,
+                            alignItems: 'center',
+                        }}
+                    >
                         {interests.map((interest) => {
-                            const IconComponent = MuiIcons[interest.iconName] || MuiIcons.ShoppingCart
+                            const IconComponent = MuiIcons[interest.iconName] || MuiIcons.Interests
                             return (
                                 <Chip
                                     key={interest.id}
-                                    icon={<IconComponent sx={{ fontSize: 18 }} />}
+                                    icon={<IconComponent sx={{ fontSize: 20, color: interest.color }} />}
                                     label={interest.description}
                                     sx={{
-                                        bgcolor: interest.color,
-                                        color: 'white',
+                                        bgcolor: 'white',
+                                        color: '#1a1a1a',
                                         fontWeight: 600,
-                                        '& .MuiChip-icon': { color: 'white' },
+                                        borderRadius: 3,
+                                        p: 1,
+                                        '& .MuiChip-icon': { color: interest.color },
                                     }}
                                 />
                             )
@@ -227,11 +268,12 @@ export default function EditProfile() {
                         <IconButton
                             onClick={handleGoToInterests}
                             sx={{
-                                bgcolor: '#B2DDF7',
+                                bgcolor: 'white',
                                 color: '#3454D1',
+                                border: '1px solid #B2DDF7',
                                 width: 32,
                                 height: 32,
-                                '&:hover': { bgcolor: '#a0d0f0' },
+                                '&:hover': { bgcolor: '#e7f4ff' },
                             }}
                         >
                             <MuiIcons.Add />
@@ -240,25 +282,28 @@ export default function EditProfile() {
                 </Box>
 
                 {/* Bouton Mettre à jour */}
-                <Button
-                    fullWidth
-                    variant="contained"
-                    endIcon={<MuiIcons.ArrowForward />}
-                    onClick={handleSave}
-                    disabled={saving}
-                    sx={{
-                        bgcolor: '#ED6A5A',
-                        color: 'white',
-                        py: 1.5,
-                        borderRadius: 3,
-                        textTransform: 'none',
-                        fontWeight: 600,
-                        fontSize: 16,
-                        '&:hover': { bgcolor: '#d45a4a' },
-                    }}
-                >
-                    {saving ? 'Enregistrement...' : 'Mettre à jour'}
-                </Button>
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 7 }}>
+                    <Button
+                        variant="contained"
+                        endIcon={<MuiIcons.ArrowForward />}
+                        onClick={handleSave}
+                        disabled={saving}
+                        sx={{
+                            width: '90%',
+                            maxWidth: 340,
+                            bgcolor: '#ED6A5A',
+                            color: 'white',
+                            py: 1.5,
+                            borderRadius: 4,
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            fontSize: 16,
+                            '&:hover': { bgcolor: '#d45a4a' },
+                        }}
+                    >
+                        {saving ? 'Enregistrement...' : 'Mettre à jour'}
+                    </Button>
+                </Box>
             </Box>
         </Box>
     )
