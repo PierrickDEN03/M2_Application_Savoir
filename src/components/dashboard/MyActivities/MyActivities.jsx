@@ -1,6 +1,6 @@
 // FILE: src/components/dashboard/MyActivities.jsx
 import React, { useState, useEffect } from 'react'
-import { Box, Typography, CircularProgress, Grid } from '@mui/material'
+import { Box, Typography, CircularProgress } from '@mui/material'
 import { fetchActivitiesByUser } from '../../../services/activitiesService'
 import { fetchCategoryById } from '../../../services/categoriesService'
 import ActivityCard from './MyActivityCard'

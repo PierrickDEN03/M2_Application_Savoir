@@ -17,10 +17,23 @@ export default function BottomNav() {
     const { currentUser } = useContext(UserContext)
 
     const getValueFromPath = (path) => {
-        if (path === '/user/map') return 1
-        if (path === '/user/profile') return 3
+        if (path === '/user/map' || path.startsWith('/user/activity')) return 1
         if (path === '/user/messagerie' || path.startsWith('/user/send-message')) return 4
         if (path === '/user/dashboard' || path === '/user/create-activity') return 0
+
+        // 🔹 Cas du profil
+        if (path.startsWith('/user/profile')) {
+            const segments = path.split('/')
+            const profileId = segments[segments.length - 1]
+
+            // Si c’est le profil du user connecté → activer l’onglet Profil
+            if (currentUser && profileId === currentUser.uid) {
+                return 3
+            } else {
+                return -1
+            }
+        }
+
         return 0
     }
 
@@ -28,7 +41,8 @@ export default function BottomNav() {
 
     useEffect(() => {
         setValue(getValueFromPath(location.pathname))
-    }, [location.pathname])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [location.pathname, currentUser])
 
     const handleChange = (event, newValue) => {
         if (newValue === 2) return
@@ -42,7 +56,7 @@ export default function BottomNav() {
                 navigate('/user/map')
                 break
             case 3:
-                navigate(`/user/profile/${currentUser.uid}`)
+                if (currentUser) navigate(`/user/profile/${currentUser.uid}`)
                 break
             case 4:
                 navigate('/user/messagerie')
@@ -100,7 +114,7 @@ export default function BottomNav() {
                 <BottomNavigation
                     value={value}
                     onChange={handleChange}
-                    showLabels={true}
+                    showLabels
                     sx={{
                         height: 'auto',
                         bgcolor: 'transparent',
@@ -116,20 +130,12 @@ export default function BottomNav() {
                             transition: 'all 0.2s ease',
                             flexDirection: 'column',
                             fontSize: '0.7rem',
-                            '&:hover': {
-                                color: '#3454D1',
-                            },
-                            '& .MuiSvgIcon-root': {
-                                fontSize: '24px',
-                                marginBottom: '2px',
-                            },
+                            '&:hover': { color: '#3454D1' },
+                            '& .MuiSvgIcon-root': { fontSize: '24px', marginBottom: '2px' },
                         },
                         '& .Mui-selected': {
                             color: '#3454D1 !important',
-                            bgcolor: 'transparent',
-                            '& .MuiSvgIcon-root': {
-                                fontSize: '28px',
-                            },
+                            '& .MuiSvgIcon-root': { fontSize: '28px' },
                         },
                     }}
                 >

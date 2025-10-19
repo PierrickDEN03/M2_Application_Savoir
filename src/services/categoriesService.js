@@ -119,7 +119,7 @@ export const getCategoryImage = (category) => {
     const imageMap = {
         Sport: 'https://images.pexels.com/photos/1127120/pexels-photo-1127120.jpeg',
         Musique: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
-        Natation: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
+        Natation: 'https://images.pexels.com/photos/8028662/pexels-photo-8028662.jpeg',
         Cuisine: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80',
         Astronomie: 'https://images.pexels.com/photos/920689/pexels-photo-920689.jpeg',
         Arts: 'https://images.pexels.com/photos/1646953/pexels-photo-1646953.jpeg',

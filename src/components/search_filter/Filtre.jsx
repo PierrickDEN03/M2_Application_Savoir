@@ -120,10 +120,6 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
         }
     }, [filters, currentUser?.uid, loading])
 
-    const handleLocationChange = (e) => {
-        setFilters((prev) => ({ ...prev, location: e.target.value }))
-    }
-
     const handleSearchChange = (e) => {
         setFilters((prev) => ({ ...prev, searchQuery: e.target.value }))
     }
