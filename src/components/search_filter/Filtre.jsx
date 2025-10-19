@@ -1,13 +1,17 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef, useContext } from 'react'
 import { Box, Paper, Typography, TextField, IconButton, Slider, Chip, Button, Slide, Fade } from '@mui/material'
 import * as MuiIcons from '@mui/icons-material'
 import { fetchCategoriesFromDB } from '../../services/categoriesService'
+import { saveUserFilters, loadUserFilters } from '../../services/filtresService'
 import CityAutocomplete from '../google_api/CityAutoComplete'
+import { UserContext } from '../../context/userContext'
 
 export default function Filtre({ onFilterChange, viewMode = 'map' }) {
     const [open, setOpen] = useState(false)
     const [categories, setCategories] = useState([])
+    const [loading, setLoading] = useState(true)
     const scrollContainerRef = useRef(null)
+    const { currentUser } = useContext(UserContext) // Récupérer l'utilisateur actuel
 
     const [filters, setFilters] = useState({
         location: '',
@@ -19,20 +23,31 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
         searchQuery: '',
     })
 
-    // Charger les catégories une seule fois
+    // Charger les catégories et les filtres sauvegardés
     useEffect(() => {
-        const loadCategories = async () => {
+        const loadData = async () => {
             try {
+                // Charger les catégories
                 const cats = await fetchCategoriesFromDB()
                 setCategories(cats)
+
+                // Charger les filtres sauvegardés si l'utilisateur est connecté
+                if (currentUser?.uid) {
+                    const savedFilters = await loadUserFilters(currentUser.uid)
+                    if (savedFilters) {
+                        setFilters(savedFilters)
+                    }
+                }
             } catch (error) {
-                console.error('Erreur chargement des catégories:', error)
+                console.error('Erreur chargement des données:', error)
+            } finally {
+                setLoading(false)
             }
         }
-        loadCategories()
-    }, [])
+        loadData()
+    }, [currentUser?.uid])
 
-    // ✅ Convertir l'option "date" en startDate/endDate
+    // Convertir l'option "date" en startDate/endDate
     const convertDateFilter = (dateString) => {
         const today = new Date()
         today.setHours(0, 0, 0, 0)
@@ -79,7 +94,7 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
         }
     }
 
-    // ✅ Envoyer les filtres au parent avec le bon format
+    // Envoyer les filtres au parent avec le bon format
     const sendFiltersToParent = useCallback(() => {
         const { startDate, endDate } = convertDateFilter(filters.date)
 
@@ -97,6 +112,13 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
     useEffect(() => {
         sendFiltersToParent()
     }, [sendFiltersToParent])
+
+    // Sauvegarder les filtres dans Firestore quand ils changent
+    useEffect(() => {
+        if (currentUser?.uid && !loading) {
+            saveUserFilters(currentUser.uid, filters)
+        }
+    }, [filters, currentUser?.uid, loading])
 
     const handleLocationChange = (e) => {
         setFilters((prev) => ({ ...prev, location: e.target.value }))
