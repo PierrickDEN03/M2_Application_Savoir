@@ -1,134 +1,183 @@
-// FILE: src/pages/ResearchActivity.jsx
-import React, { useState, useEffect } from 'react'
-import { Box, CircularProgress, Typography } from '@mui/material'
-import { fetchActivitiesFromDB, fetchCategoriesFromDB } from '../../../services/activitiesService'
+import React, { useCallback, useEffect, useState } from 'react'
+import { useLoadScript } from '@react-google-maps/api'
+import { Box, CircularProgress, Typography, Alert } from '@mui/material'
+import * as MuiIcons from '@mui/icons-material'
+import MapActivities from '../../../components/search_filter/MapActivities'
+import ListActivities from '../../../components/search_filter/ListActivities'
+import Filtre from '../../../components/search_filter/Filtre'
+import useActivitiesFilter from '../../../components/search_filter/useActivitiesFilter'
+import { fetchActivitiesFromDB } from '../../../services/activitiesService'
+import { verifyAddressWithId } from '../../../components/google_api/verifyAddressWithGoogle'
 import { auth } from '../../../firebase-config'
-import SearchBar from '../../../components/activities/SearchBar'
-import CategorySection from '../../../components/activities/CategorySection'
-import AvatarPlaceholder from '../../../components/utils/Avatar_Placeholder'
 
-function ResearchActivity() {
-    const currentUser = auth.currentUser
+const libraries = ['places', 'geometry']
+
+export default function ResearchActivity() {
+    // 🔹 Charger Google Maps d'abord
+    const { isLoaded: googleMapsLoaded, loadError: googleMapsError } = useLoadScript({
+        googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
+        libraries,
+    })
+
     const [activities, setActivities] = useState([])
-    const [categories, setCategories] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [searchQuery, setSearchQuery] = useState('')
+    const [filters, setFilters] = useState({
+        location: '',
+        distance: null,
+        startDate: null,
+        endDate: null,
+        categories: [],
+        userPosition: null,
+    })
 
+    const [loadingActivities, setLoadingActivities] = useState(true)
+    const [error, setError] = useState(null)
+    const [viewMode, setViewMode] = useState('map')
+
+    // 🔹 Charger les activités une fois Google Maps prêt
     useEffect(() => {
-        const loadData = async () => {
+        if (!googleMapsLoaded) return
+
+        const loadActivities = async () => {
             try {
-                const [activitiesData, categoriesData] = await Promise.all([fetchActivitiesFromDB(), fetchCategoriesFromDB()])
+                console.log('Fetching activities...')
+                setLoadingActivities(true)
+                setError(null)
 
-                // Filtrer les activités pour exclure celles créées par l'utilisateur courant et celles passées
+                const docs = await fetchActivitiesFromDB()
                 const now = new Date()
-                const filteredByUser = currentUser
-                    ? activitiesData.filter(
-                          (act) => act.createdBy !== currentUser.uid && act.userId !== currentUser.uid && new Date(act.date) > now
-                      )
-                    : activitiesData.filter((act) => new Date(act.date) > now)
+                const user = auth?.currentUser
 
-                setActivities(filteredByUser)
-                setCategories(categoriesData)
-            } catch (error) {
-                console.error('Erreur lors du chargement des données:', error)
+                const filteredDocs = user
+                    ? docs.filter((doc) => doc.createdBy !== user.uid && doc.userId !== user.uid && new Date(doc.date) > now)
+                    : docs.filter((doc) => new Date(doc.date) > now)
+
+                const verified = []
+                for (const doc of filteredDocs) {
+                    if (!doc.placeId) continue
+                    try {
+                        const pos = await verifyAddressWithId(doc.placeId)
+                        if (!pos?.position) continue
+                        verified.push({
+                            ...doc,
+                            position: pos.position,
+                            address: pos.address,
+                        })
+                    } catch (e) {
+                        console.warn('Impossible de géocoder', doc.title, e)
+                    }
+                }
+
+                setActivities(verified)
+            } catch (err) {
+                console.error(err)
+                setError('Impossible de charger les activités. Réessayez plus tard.')
             } finally {
-                setLoading(false)
+                setLoadingActivities(false)
             }
         }
 
-        loadData()
-    }, [currentUser])
+        loadActivities()
+    }, [googleMapsLoaded])
 
-    const isToday = (dateString) => {
-        if (!dateString) return false
-        const actDate = new Date(dateString)
-        const today = new Date()
-        return actDate.toDateString() === today.toDateString()
+    // 🔹 Appliquer les filtres
+    const filteredActivities = useActivitiesFilter(activities, filters)
+
+    // 🔹 Gestion des filtres
+    const handleFilterChange = useCallback((newFilters) => {
+        setFilters((prev) => ({ ...prev, ...newFilters }))
+    }, [])
+
+    // --- RENDER ---
+    if (googleMapsError) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', p: 2 }}>
+                <Alert severity="error" variant="filled">
+                    Erreur de chargement de Google Maps
+                </Alert>
+            </Box>
+        )
     }
 
-    // 🔹 Filtrage des activités selon la recherche
-    const filteredActivities = activities.filter((act) => {
-        const query = searchQuery.toLowerCase()
-        return (
-            act.title?.toLowerCase().includes(query) ||
-            act.description?.toLowerCase().includes(query) ||
-            act.city?.toLowerCase().includes(query)
-        )
-    })
-
-    // 🔹 Activités du jour
-    const todayActivities = filteredActivities.filter((act) => isToday(act.date))
-
-    // 🔹 Activités regroupées par catégorie (hors today)
-    const groupedActivities = categories.map((category) => ({
-        ...category,
-        activities: filteredActivities.filter((act) => act.categoryId === category.id && !isToday(act.date)),
-    }))
-
-    if (loading) {
+    if (!googleMapsLoaded || loadingActivities) {
         return (
             <Box
                 sx={{
                     display: 'flex',
+                    flexDirection: 'column',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    minHeight: '100vh',
-                    bgcolor: '#F0E7D6',
+                    height: '100vh',
+                    gap: 2,
                 }}
             >
                 <CircularProgress sx={{ color: '#3454D1' }} />
+                <Typography variant="body1" sx={{ color: '#3454D1', fontWeight: 500 }}>
+                    Chargement des activités...
+                </Typography>
             </Box>
         )
     }
 
     return (
-        <Box
-            sx={{
-                minHeight: '100vh',
-                bgcolor: '#F0E7D6',
-                pb: 10,
-            }}
-        >
-            <AvatarPlaceholder />
+        <Box sx={{ position: 'relative', width: '100%', height: '100vh' }}>
+            <Filtre onFilterChange={handleFilterChange} viewMode={viewMode} />
+            {/* --- VUE CARTE --- */}
+            {viewMode === 'map' && <MapActivities activities={filteredActivities} />}
 
-            {/* Header */}
+            {/* --- VUE LISTE --- */}
+            {viewMode === 'list' && <ListActivities activities={filteredActivities} />}
+
+            {/* --- TOGGLE CARTE/LISTE --- */}
             <Box
                 sx={{
-                    p: 3,
-                    pt: 4,
+                    position: 'fixed',
+                    bottom: 30,
+                    left: 20,
+                    zIndex: 100,
                     display: 'flex',
-                    alignItems: 'flex-start',
-                    justifyContent: 'space-between',
+                    gap: 2,
                 }}
             >
-                <Box>
-                    <Typography variant="h4" sx={{ color: '#3454D1', fontWeight: 700, lineHeight: 1.2 }}>
-                        Que veux
-                    </Typography>
-                    <Typography variant="h4" sx={{ color: '#3454D1', fontWeight: 700, lineHeight: 1.2 }}>
-                        tu faire today ?
-                    </Typography>
+                {/* Bouton Carte/Liste */}
+                <Box
+                    onClick={() => setViewMode(viewMode === 'map' ? 'list' : 'map')}
+                    sx={{
+                        position: 'fixed',
+                        bottom: 130,
+                        left: '50%',
+                        bgcolor: '#FFD166',
+                        borderRadius: '50px',
+                        transform: 'translateX(-50%)',
+                        boxShadow: 4,
+                        px: 2.5,
+                        py: 1.2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                    }}
+                >
+                    {viewMode === 'map' ? (
+                        <>
+                            <Typography sx={{ fontWeight: 600, color: '#000000', fontSize: 14 }}>Voir la liste</Typography>
+                            <MuiIcons.ViewList sx={{ fontSize: 20, color: '#000000' }} />
+                        </>
+                    ) : (
+                        <>
+                            <Typography sx={{ fontWeight: 600, color: '#000000', fontSize: 14 }}>Voir la carte</Typography>
+                            <MuiIcons.Map sx={{ fontSize: 20, color: '#000000' }} />
+                        </>
+                    )}
                 </Box>
             </Box>
 
-            {/* Barre de recherche */}
-            <SearchBar value={searchQuery} onChange={setSearchQuery} />
-
-            {/* Section Ce soir */}
-            {todayActivities.length > 0 && (
-                <CategorySection
-                    title="Ce soir"
-                    activities={todayActivities}
-                    category={categories.find((c) => todayActivities[0] && c.id === todayActivities[0].categoryId)}
-                />
+            {/* --- FILTRE (sur les deux vues) --- */}
+            {error && (
+                <Alert severity="error" sx={{ position: 'fixed', top: 20, right: 20, zIndex: 2000 }}>
+                    {error}
+                </Alert>
             )}
-
-            {/* Sections par catégorie */}
-            {groupedActivities.map((group) => (
-                <CategorySection key={group.id} title={group.description} activities={group.activities} category={group} />
-            ))}
         </Box>
     )
 }
-
-export default ResearchActivity

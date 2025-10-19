@@ -1,4 +1,3 @@
-// src/hooks/useActivitiesFilter.js
 import { useEffect, useState } from 'react'
 
 export default function useActivitiesFilter(activities, filters) {
@@ -11,6 +10,28 @@ export default function useActivitiesFilter(activities, filters) {
         }
 
         let base = [...activities]
+
+        // 🔹 FILTRE : recherche textuelle
+        if (filters.searchQuery && typeof filters.searchQuery === 'string') {
+            const query = filters.searchQuery.toLowerCase()
+            base = base.filter((a) => {
+                const title = a.title?.toLowerCase() || ''
+                const description = a.description?.toLowerCase() || ''
+                const city = a.address?.city?.toLowerCase() || ''
+                const fullAddress = a.address?.full?.toLowerCase() || ''
+                const street = a.address?.street?.toLowerCase() || ''
+                const postalCode = a.address?.postalCode?.toLowerCase() || ''
+
+                return (
+                    title.includes(query) ||
+                    description.includes(query) ||
+                    city.includes(query) ||
+                    fullAddress.includes(query) ||
+                    street.includes(query) ||
+                    postalCode.includes(query)
+                )
+            })
+        }
 
         // 🔹 FILTRE : recherche par lieu (texte)
         if (filters.location && typeof filters.location === 'string') {
