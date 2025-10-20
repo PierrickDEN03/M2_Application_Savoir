@@ -1,269 +1,77 @@
 // FILE: src/components/dashboard/MyInscriptions.jsx
 import React, { useEffect, useState } from 'react'
-import { Box, Typography, Collapse, IconButton, CircularProgress } from '@mui/material'
-import * as Icons from '@mui/icons-material'
+import {
+    Box,
+    Collapse,
+    Button,
+    CircularProgress,
+    Typography,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Snackbar,
+    Alert,
+    Rating,
+    TextField,
+} from '@mui/material'
+import * as MuiIcons from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
-import useLoadGooglePlaces from '../../google_api/useLoadGooglePlaces'
-import { getCategoryImage } from '../../../services/categoriesService'
-import { calculateDistance } from '../../../services/distanceService'
+import ActivityCard from '../../utils/ActivityCard'
 import { getUserReservations, removeReservation } from '../../../services/reservationsService'
 import { fetchActivityById } from '../../../services/activitiesService'
 import { fetchCategoryById } from '../../../services/categoriesService'
-
-const iconMap = {
-    SportsBaseball: Icons.SportsBaseball,
-    MusicNote: Icons.MusicNote,
-    EmojiPeople: Icons.EmojiPeople,
-    Restaurant: Icons.Restaurant,
-    Build: Icons.Build,
-    Palette: Icons.Palette,
-    MenuBook: Icons.MenuBook,
-    TheaterComedy: Icons.TheaterComedy,
-    DirectionsRun: Icons.DirectionsRun,
-    ShoppingCart: Icons.ShoppingCart,
-    VideogameAsset: Icons.VideogameAsset,
-    Hiking: Icons.Hiking,
-    Pool: Icons.Pool,
-    MoreHoriz: Icons.MoreHoriz,
-}
-
-function InscriptionCard({ reservation, onRemove }) {
-    const navigate = useNavigate()
-    const [expanded, setExpanded] = useState(false)
-    const [distance, setDistance] = useState('...')
-    const googleLoaded = useLoadGooglePlaces()
-
-    const activity = reservation.activity
-    const category = reservation.category
-    const categoryColor = category?.color || '#E74C3C'
-    const CategoryIcon = category?.iconName ? iconMap[category.iconName] : null
-
-    useEffect(() => {
-        if (googleLoaded && activity.address?.placeId) {
-            calculateDistance(activity.address.placeId, setDistance)
-        }
-    }, [googleLoaded, activity.address?.placeId])
-
-    const formatDate = (date) => {
-        if (!date) return ''
-        const d = new Date(date)
-        const options = { weekday: 'long', day: 'numeric', month: 'long' }
-        const formattedDate = d.toLocaleDateString('fr-FR', options)
-        const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-        return `${formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1)} • ${time}`
-    }
-
-    const handleToggle = (e) => {
-        e.stopPropagation()
-        setExpanded((prev) => !prev)
-    }
-
-    const onCardClick = () => {
-        setExpanded((prev) => !prev)
-    }
-
-    const handleRemoveInscription = async () => {
-        if (window.confirm('Êtes-vous sûr de vouloir annuler votre inscription ?')) {
-            try {
-                await removeReservation(reservation.id)
-                onRemove(reservation.id)
-            } catch (error) {
-                console.error('Erreur lors de la suppression:', error)
-            }
-        }
-    }
-
-    return (
-        <Box
-            sx={{
-                width: '100%',
-                borderRadius: 2,
-                bgcolor: 'white',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-                overflow: 'hidden',
-                mb: 1.5,
-            }}
-        >
-            {/* Partie principale cliquable */}
-            <Box
-                onClick={onCardClick}
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    p: 1.5,
-                    py: 2.2,
-                    minHeight: 125,
-                    width: '100%',
-                    position: 'relative',
-                    cursor: 'pointer',
-                    '&:hover': { transform: 'translateY(-1px)', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' },
-                    transition: 'all 200ms ease',
-                }}
-            >
-                {/* Image de catégorie */}
-                <Box
-                    sx={{
-                        width: 100,
-                        height: 130,
-                        borderRadius: 2,
-                        overflow: 'hidden',
-                        flexShrink: 0,
-                        mr: 2,
-                    }}
-                >
-                    <img
-                        src={getCategoryImage(category.description)}
-                        alt={activity.title}
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                        }}
-                        onError={(e) => {
-                            console.log(getCategoryImage(category.description))
-                            console.log(category.description)
-                            console.log(e)
-                            e.currentTarget.style.display = 'none'
-                            e.currentTarget.parentElement.style.backgroundColor = categoryColor
-                        }}
-                    />
-                </Box>
-
-                {/* Contenu texte */}
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography sx={{ color: '#666', fontSize: '0.9rem', fontWeight: 500, mb: 0.75 }}>
-                        {formatDate(activity.date)}
-                    </Typography>
-
-                    <Typography
-                        sx={{
-                            fontSize: '1.1rem',
-                            fontWeight: 700,
-                            color: '#111',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            mb: 0.75,
-                        }}
-                    >
-                        {activity.title}
-                    </Typography>
-
-                    {/* Ligne infos + badge */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <Icons.LocationOn sx={{ fontSize: 16, color: '#666' }} />
-                            <Typography sx={{ fontSize: '0.85rem', color: '#666' }}>
-                                {activity.address?.city || 'Lieu inconnu'} • {distance}
-                            </Typography>
-                        </Box>
-
-                        <Box
-                            component="span"
-                            sx={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                px: 1.5,
-                                py: 0.5,
-                                backgroundColor: categoryColor,
-                                color: 'white',
-                                borderRadius: '999px',
-                                fontSize: '0.75rem',
-                                fontWeight: 600,
-                                ml: 'auto',
-                                minWidth: 'fit-content',
-                            }}
-                        >
-                            {CategoryIcon && <CategoryIcon sx={{ fontSize: 16, mr: 0.5 }} />}
-                            {category?.description || 'Sport'}
-                        </Box>
-                    </Box>
-                </Box>
-
-                {/* Bouton menu */}
-                <IconButton
-                    onClick={handleToggle}
-                    sx={{
-                        p: 0.75,
-                        cursor: 'pointer',
-                        ml: -3,
-                        mr: 1.25,
-                        '&:hover': { bgcolor: 'rgba(0,0,0,0.04)' },
-                        flexShrink: 0,
-                    }}
-                >
-                    <Icons.Settings sx={{ fontSize: 20, color: '#666' }} />
-                </IconButton>
-            </Box>
-
-            {/* Menu déroulant */}
-            <Collapse in={expanded} timeout="auto" unmountOnExit>
-                <Box sx={{ width: '100%', bgcolor: 'white' }}>
-                    <Box
-                        onClick={() => {
-                            navigate(`/activity/${activity.id}/message`)
-                            setExpanded(false)
-                        }}
-                        sx={menuItemStyle}
-                    >
-                        <Icons.Message sx={{ fontSize: 20, color: '#666' }} />
-                        <Typography sx={menuTextStyle}>Envoyer un message à l'organisateur</Typography>
-                    </Box>
-
-                    <Box onClick={handleRemoveInscription} sx={menuItemStyle}>
-                        <Icons.Cancel sx={{ fontSize: 20, color: '#ff4444' }} />
-                        <Typography sx={menuTextStyle}>Annuler mon inscription</Typography>
-                    </Box>
-                </Box>
-            </Collapse>
-        </Box>
-    )
-}
+import { getAvisByActivityId, addAvis, updateAvis } from '../../../services/avisService'
 
 export default function MyInscriptions({ userId }) {
     const [reservations, setReservations] = useState([])
     const [loading, setLoading] = useState(true)
+    const [confirmOpen, setConfirmOpen] = useState(false)
+    const [pendingDeleteId, setPendingDeleteId] = useState(null)
+    const [snackbarOpen, setSnackbarOpen] = useState(false)
+    const [reviewMode, setReviewMode] = useState(null)
 
     useEffect(() => {
-        loadInscriptions()
+        if (userId) loadInscriptions()
     }, [userId])
 
     const loadInscriptions = async () => {
         try {
             setLoading(true)
             const userReservations = await getUserReservations(userId)
-            const enrichedReservations = []
+            const enriched = []
 
             for (const reservation of userReservations) {
                 const activity = await fetchActivityById(reservation.activityId)
-
-                if (activity) {
-                    const activityDate = new Date(activity.date)
-                    const today = new Date()
-                    today.setHours(0, 0, 0, 0)
-
-                    if (activityDate >= today) {
-                        const category = await fetchCategoryById(activity.categoryId)
-                        enrichedReservations.push({
-                            ...reservation,
-                            activity,
-                            category,
-                        })
-                    }
-                }
+                if (!activity) continue
+                const category = await fetchCategoryById(activity.categoryId)
+                enriched.push({ ...reservation, activity, category })
             }
 
-            setReservations(enrichedReservations)
-        } catch (error) {
-            console.error('Erreur lors du chargement des inscriptions:', error)
+            setReservations(enriched)
+        } catch (err) {
+            console.error('Erreur lors du chargement des inscriptions:', err)
         } finally {
             setLoading(false)
         }
     }
 
     const handleRemoveReservation = (reservationId) => {
-        setReservations(reservations.filter((r) => r.id !== reservationId))
+        setPendingDeleteId(reservationId)
+        setConfirmOpen(true)
+    }
+
+    const confirmRemove = async () => {
+        try {
+            await removeReservation(pendingDeleteId)
+            setReservations((prev) => prev.filter((r) => r.id !== pendingDeleteId))
+            setSnackbarOpen(true)
+        } catch (error) {
+            console.error('Erreur lors de la suppression:', error)
+        } finally {
+            setConfirmOpen(false)
+            setPendingDeleteId(null)
+        }
     }
 
     if (loading) {
@@ -277,33 +85,325 @@ export default function MyInscriptions({ userId }) {
     if (reservations.length === 0) {
         return (
             <Box sx={{ textAlign: 'center', py: 5 }}>
-                <Typography sx={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.95rem' }}>Aucune inscription pour le moment</Typography>
+                <p style={{ color: 'rgba(255,255,255,0.7)' }}>Aucune inscription pour le moment</p>
+            </Box>
+        )
+    }
+
+    if (reviewMode) {
+        return (
+            <ReviewInterface
+                reservation={reviewMode}
+                userId={userId}
+                onBack={() => setReviewMode(null)}
+                onReviewSaved={() => {
+                    setReviewMode(null)
+                    setSnackbarOpen(true)
+                }}
+            />
+        )
+    }
+
+    return (
+        <>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {reservations.map((r) => (
+                    <InscriptionItem
+                        key={r.id}
+                        reservation={r}
+                        onRemove={handleRemoveReservation}
+                        onReview={setReviewMode}
+                        userId={userId}
+                    />
+                ))}
+            </Box>
+
+            {/* ✅ Dialogue de confirmation */}
+            <Dialog
+                open={confirmOpen}
+                onClose={() => setConfirmOpen(false)}
+                PaperProps={{
+                    sx: { borderRadius: 3, p: 1, minWidth: 320 },
+                }}
+            >
+                <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center' }}>Annuler votre inscription ?</DialogTitle>
+                <DialogContent>
+                    <Typography sx={{ textAlign: 'center', color: 'text.secondary' }}>
+                        Êtes-vous sûr de vouloir annuler votre participation à cette activité ?
+                    </Typography>
+                </DialogContent>
+                <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
+                    <Button onClick={() => setConfirmOpen(false)} variant="outlined">
+                        Non
+                    </Button>
+                    <Button onClick={confirmRemove} variant="contained" color="error" startIcon={<MuiIcons.Cancel />}>
+                        Oui, annuler
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* ✅ Snackbar centrée en bas */}
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={4000}
+                onClose={() => setSnackbarOpen(false)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                sx={{
+                    bottom: 130,
+                }}
+            >
+                <Alert
+                    severity="success"
+                    onClose={() => setSnackbarOpen(false)}
+                    sx={{
+                        width: '320px',
+                        borderRadius: 2,
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                        textAlign: 'center',
+                    }}
+                >
+                    Action effectuée avec succès.
+                </Alert>
+            </Snackbar>
+        </>
+    )
+}
+
+/* -------------------------------------------------------------------------- */
+/* ✅ ITEM D'INSCRIPTION */
+/* -------------------------------------------------------------------------- */
+function InscriptionItem({ reservation, onRemove, onReview, userId }) {
+    const navigate = useNavigate()
+    const [expanded, setExpanded] = useState(false)
+    const [hasReview, setHasReview] = useState(false)
+
+    useEffect(() => {
+        checkUserReview()
+    }, [])
+
+    const checkUserReview = async () => {
+        const avis = await getAvisByActivityId(reservation.activity.id)
+        const userReview = avis.find((a) => a.idUser === userId)
+        setHasReview(!!userReview)
+    }
+
+    const handleCardClick = (e) => {
+        e.stopPropagation()
+        e.preventDefault()
+        setExpanded((prev) => !prev)
+    }
+
+    const activityDate = new Date(reservation.activity.date)
+    const today = new Date()
+    const isPast = activityDate < today.setHours(0, 0, 0, 0)
+
+    return (
+        <Box
+            sx={{
+                borderRadius: 2,
+                overflow: 'hidden',
+                boxShadow: expanded ? '0 4px 10px rgba(0,0,0,0.15)' : '0 2px 5px rgba(0,0,0,0.1)',
+                transition: 'box-shadow 0.2s ease',
+                backgroundColor: 'white',
+            }}
+        >
+            <div
+                onClick={handleCardClick}
+                style={{
+                    position: 'relative',
+                    cursor: 'pointer',
+                }}
+            >
+                <Box sx={{ pointerEvents: 'none' }}>
+                    <ActivityCard activity={reservation.activity} />
+                </Box>
+            </div>
+
+            <Collapse in={expanded} timeout="auto" unmountOnExit>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        backgroundColor: 'white',
+                        borderTop: '1px solid rgba(0,0,0,0.08)',
+                        p: 1,
+                    }}
+                >
+                    <ActionLine
+                        icon={<MuiIcons.Message fontSize="small" />}
+                        label="Envoyer un message à l’organisateur"
+                        onClick={() => navigate(`/activity/${reservation.activity.id}/message`)}
+                    />
+                    <ActionLine
+                        icon={<MuiIcons.Cancel color="error" fontSize="small" />}
+                        label="Annuler mon inscription"
+                        onClick={() => onRemove(reservation.id)}
+                    />
+                    {isPast && (
+                        <ActionLine
+                            icon={<MuiIcons.Star color="warning" fontSize="small" />}
+                            label={hasReview ? 'Modifier mon avis' : 'Laisser un avis'}
+                            onClick={() => onReview(reservation)}
+                        />
+                    )}
+                </Box>
+            </Collapse>
+        </Box>
+    )
+}
+
+/* -------------------------------------------------------------------------- */
+/* ✅ INTERFACE D’AJOUT / MODIF D’AVIS */
+/* -------------------------------------------------------------------------- */
+function ReviewInterface({ reservation, onBack, userId, onReviewSaved }) {
+    const [rating, setRating] = useState(0)
+    const [comment, setComment] = useState('')
+    const [loading, setLoading] = useState(true)
+    const [existingReview, setExistingReview] = useState(null)
+
+    useEffect(() => {
+        loadExistingReview()
+    }, [])
+
+    const loadExistingReview = async () => {
+        const avis = await getAvisByActivityId(reservation.activity.id)
+        const userReview = avis.find((a) => a.idUser === userId)
+        if (userReview) {
+            setExistingReview(userReview)
+            setRating(userReview.note)
+            setComment(userReview.comment || '')
+        }
+        setLoading(false)
+    }
+
+    const handleSubmit = async () => {
+        try {
+            if (existingReview) {
+                await updateAvis(existingReview.id, { note: rating, comment })
+            } else {
+                await addAvis({
+                    idActivity: reservation.activity.id,
+                    idUser: userId,
+                    note: rating,
+                    comment,
+                    createdAt: new Date(),
+                })
+            }
+            onReviewSaved()
+        } catch (e) {
+            console.error('Erreur lors de la sauvegarde de l’avis:', e)
+        }
+    }
+
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
+                <CircularProgress />
             </Box>
         )
     }
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {reservations.map((reservation) => (
-                <InscriptionCard key={reservation.id} reservation={reservation} onRemove={handleRemoveReservation} />
-            ))}
+        <Box
+            sx={{
+                backgroundColor: 'white',
+                borderRadius: 3,
+                p: 3,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                maxWidth: 500,
+                mx: 'auto',
+                mt: 4,
+            }}
+        >
+            <Typography variant="h5" sx={{ fontWeight: 700, color: '#1f4ed8', textAlign: 'center', mb: 2 }}>
+                {existingReview ? 'Modifier mon avis' : 'Laisser un avis'}
+            </Typography>
+
+            <ActivityCard activity={reservation.activity} />
+
+            <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600, color: '#333', textAlign: 'center' }}>
+                Qu’as-tu pensé de cette activité ?
+            </Typography>
+
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                <Rating value={rating} onChange={(e, newValue) => setRating(newValue)} size="large" />
+            </Box>
+
+            <TextField
+                fullWidth
+                multiline
+                rows={4}
+                placeholder="Ton avis..."
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                sx={{
+                    borderRadius: 2,
+                    backgroundColor: '#f9f9f9',
+                    '& .MuiOutlinedInput-root': { borderRadius: 2 },
+                }}
+            />
+
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3, gap: 2 }}>
+                <Button
+                    onClick={onBack}
+                    variant="outlined"
+                    sx={{
+                        borderRadius: '50px',
+                        textTransform: 'none',
+                        px: 3,
+                        py: 1,
+                        fontWeight: 600,
+                    }}
+                >
+                    Retour
+                </Button>
+
+                <Button
+                    variant="contained"
+                    startIcon={<MuiIcons.ArrowRightAlt />}
+                    onClick={handleSubmit}
+                    sx={{
+                        backgroundColor: '#F37C6B',
+                        color: 'white',
+                        borderRadius: '50px',
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        px: 3,
+                        py: 1,
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        '&:hover': {
+                            backgroundColor: '#f58f7f',
+                            boxShadow: '0 3px 6px rgba(0,0,0,0.15)',
+                        },
+                    }}
+                >
+                    Valider
+                </Button>
+            </Box>
         </Box>
     )
 }
 
-const menuItemStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 1.5,
-    px: 2,
-    py: 1.5,
-    cursor: 'pointer',
-    borderTop: '1px solid #f0f0f0',
-    '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' },
-}
-
-const menuTextStyle = {
-    fontSize: '0.9rem',
-    fontWeight: 500,
-    color: '#444',
+/* -------------------------------------------------------------------------- */
+function ActionLine({ icon, label, onClick }) {
+    return (
+        <Box
+            onClick={onClick}
+            sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+                p: 1,
+                borderRadius: 1,
+                transition: 'background-color 0.2s',
+                cursor: 'pointer',
+                '&:hover': { backgroundColor: 'rgba(0,0,0,0.05)' },
+            }}
+        >
+            {icon}
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                {label}
+            </Typography>
+        </Box>
+    )
 }
