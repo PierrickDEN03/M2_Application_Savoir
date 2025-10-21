@@ -20,7 +20,6 @@ export default function MyActivities({ userId }) {
                         return { ...activity, category }
                     })
                 )
-                console.log({ activities })
                 setActivities(activitiesWithCategories)
             } catch (error) {
                 console.error('Erreur lors du chargement des activités:', error)
