@@ -27,12 +27,12 @@ export default function MessageInput({ onSend, disabled = false }) {
                 bottom: 100,
                 left: 0,
                 right: 0,
-                bgcolor: '#F0E7D6',
+                bgcolor: '#B2DDF7',
                 p: 2,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 1.5,
-                borderTop: '1px solid rgba(0,0,0,0.1)',
+                mb: 2,
             }}
         >
             <TextField
@@ -59,12 +59,12 @@ export default function MessageInput({ onSend, disabled = false }) {
                 onClick={handleSend}
                 disabled={!message.trim() || disabled}
                 sx={{
-                    bgcolor: '#3454D1',
+                    bgcolor: '#ed6a51',
                     color: 'white',
                     width: 48,
                     height: 48,
                     '&:hover': {
-                        bgcolor: '#2a43a8',
+                        bgcolor: '#cc533bff',
                     },
                     '&.Mui-disabled': {
                         bgcolor: '#ccc',

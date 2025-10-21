@@ -192,7 +192,7 @@ export default function MyActivityCard({ activity }) {
             {/* Menu déroulant */}
             <Collapse in={expanded} timeout="auto" unmountOnExit>
                 <Box sx={{ width: '100%', bgcolor: 'white' }}>
-                    <Box onClick={() => navigate(`/activity/${activity.id}/message`)} sx={menuItemStyle}>
+                    <Box onClick={() => navigate(`/user/activity-message/${activity.id}`)} sx={menuItemStyle}>
                         <Icons.Message sx={{ fontSize: 20, color: '#666' }} />
                         <Typography sx={menuTextStyle}>Envoyer un message à tous les participants</Typography>
                     </Box>

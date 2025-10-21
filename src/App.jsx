@@ -16,7 +16,6 @@ import UserProfile from './pages/Private/pages/UserProfile'
 import EditProfile from './pages/Private/pages/EditProfile'
 import SendMessage from './pages/Private/pages/SendMessage'
 import Messagerie from './pages/Private/pages/Messagerie'
-import ReviewActivity from './pages/Private/pages/ReviewActivity'
 
 function App() {
     return (
@@ -47,8 +46,8 @@ function App() {
                 <Route path="/user/profile/:idUser" element={<UserProfile />} />
                 <Route path="/user/modif-profile/:idUser" element={<EditProfile />} />
                 <Route path="/user/send-message/:idUser" element={<SendMessage />} />
+                <Route path="/user/activity-message/:activityId/" element={<SendMessage />} />
                 <Route path="/user/messagerie" element={<Messagerie />} />
-                <Route path="/user/review-activity/:activityId" element={<ReviewActivity />} />
             </Route>
         </Routes>
     )

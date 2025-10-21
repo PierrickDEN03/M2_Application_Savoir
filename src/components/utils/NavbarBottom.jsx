@@ -17,8 +17,13 @@ export default function BottomNav() {
     const { currentUser } = useContext(UserContext)
 
     const getValueFromPath = (path) => {
+        // 🔹 IMPORTANT : Vérifier les messages AVANT /user/activity
+        if (path === '/user/messagerie' || path.startsWith('/user/send-message') || path.startsWith('/user/activity-message')) return 4
+
+        // 🔹 Carte et activités
         if (path === '/user/map' || path.startsWith('/user/activity')) return 1
-        if (path === '/user/messagerie' || path.startsWith('/user/send-message')) return 4
+
+        // 🔹 Dashboard et création
         if (path === '/user/dashboard' || path === '/user/create-activity') return 0
 
         // 🔹 Cas du profil
@@ -26,7 +31,7 @@ export default function BottomNav() {
             const segments = path.split('/')
             const profileId = segments[segments.length - 1]
 
-            // Si c’est le profil du user connecté → activer l’onglet Profil
+            // Si c'est le profil du user connecté → activer l'onglet Profil
             if (currentUser && profileId === currentUser.uid) {
                 return 3
             } else {
