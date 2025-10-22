@@ -36,22 +36,32 @@ export async function sendMessage(senderId, receiverId, text) {
 export function listenToMessages(userId1, userId2, callback) {
     const messagesRef = collection(db, 'messages')
 
+    // 🔥 FIX: Utiliser 'or' au lieu de 'in' pour respecter les règles de sécurité
     const q = query(
         messagesRef,
-        where('senderId', 'in', [userId1, userId2]),
-        where('receiverId', 'in', [userId1, userId2]),
+        or(
+            and(where('senderId', '==', userId1), where('receiverId', '==', userId2)),
+            and(where('senderId', '==', userId2), where('receiverId', '==', userId1))
+        ),
         orderBy('createdAt', 'asc')
     )
 
-    return onSnapshot(q, (snapshot) => {
-        const messages = snapshot.docs
-            .map((doc) => ({ id: doc.id, ...doc.data() }))
-            .filter(
-                (msg) =>
-                    (msg.senderId === userId1 && msg.receiverId === userId2) || (msg.senderId === userId2 && msg.receiverId === userId1)
-            )
-        callback(messages)
-    })
+    // 🔥 FIX: Gérer les erreurs de permission
+    return onSnapshot(
+        q,
+        (snapshot) => {
+            const messages = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            }))
+            callback(messages)
+        },
+        (error) => {
+            console.error('Erreur listener messages:', error)
+            // En cas d'erreur, renvoyer un tableau vide
+            callback([])
+        }
+    )
 }
 
 /**
@@ -76,11 +86,16 @@ export async function getMessages(userId1, userId2) {
         orderBy('createdAt', 'asc')
     )
 
-    const snapshot = await getDocs(q)
-    return snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-    }))
+    try {
+        const snapshot = await getDocs(q)
+        return snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+        }))
+    } catch (error) {
+        console.error('Erreur getMessages:', error)
+        return []
+    }
 }
 
 /**
@@ -95,24 +110,29 @@ export async function getConversations(userId) {
 
     const messagesRef = collection(db, 'messages')
 
-    // Messages envoyés
-    const sentQuery = query(messagesRef, where('senderId', '==', userId))
-    const sentSnapshot = await getDocs(sentQuery)
+    try {
+        // Messages envoyés
+        const sentQuery = query(messagesRef, where('senderId', '==', userId))
+        const sentSnapshot = await getDocs(sentQuery)
 
-    // Messages reçus
-    const receivedQuery = query(messagesRef, where('receiverId', '==', userId))
-    const receivedSnapshot = await getDocs(receivedQuery)
+        // Messages reçus
+        const receivedQuery = query(messagesRef, where('receiverId', '==', userId))
+        const receivedSnapshot = await getDocs(receivedQuery)
 
-    // Extraire les IDs uniques
-    const userIds = new Set()
+        // Extraire les IDs uniques
+        const userIds = new Set()
 
-    sentSnapshot.docs.forEach((doc) => {
-        userIds.add(doc.data().receiverId)
-    })
+        sentSnapshot.docs.forEach((doc) => {
+            userIds.add(doc.data().receiverId)
+        })
 
-    receivedSnapshot.docs.forEach((doc) => {
-        userIds.add(doc.data().senderId)
-    })
+        receivedSnapshot.docs.forEach((doc) => {
+            userIds.add(doc.data().senderId)
+        })
 
-    return Array.from(userIds)
+        return Array.from(userIds)
+    } catch (error) {
+        console.error('Erreur getConversations:', error)
+        return []
+    }
 }

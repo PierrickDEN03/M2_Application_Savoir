@@ -34,7 +34,7 @@ export default function MyActivities({ userId }) {
     if (loading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-                <CircularProgress sx={{ color: 'white' }} size={35} />
+                <CircularProgress sx={{ color: '#3454D1' }} size={35} />
             </Box>
         )
     }
@@ -43,7 +43,7 @@ export default function MyActivities({ userId }) {
         <Box>
             <Typography
                 sx={{
-                    color: 'white',
+                    color: '#1a1a1a',
                     fontSize: '1rem',
                     mb: 3,
                     fontWeight: 600,
@@ -56,7 +56,7 @@ export default function MyActivities({ userId }) {
             {activities.length === 0 ? (
                 <Typography
                     sx={{
-                        color: 'white',
+                        color: '#1a1a1a',
                         textAlign: 'center',
                         py: 6,
                         opacity: 0.7,

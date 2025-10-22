@@ -40,7 +40,7 @@ export default function MyFavorites() {
     if (loading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                <CircularProgress sx={{ color: 'white' }} />
+                <CircularProgress sx={{ color: '#3454D1' }} />
             </Box>
         )
     }
@@ -48,9 +48,7 @@ export default function MyFavorites() {
     if (favorites.length === 0) {
         return (
             <Box sx={{ textAlign: 'center', py: 5 }}>
-                <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem' }}>
-                    Aucune activité enregistrée dans vos favoris
-                </Typography>
+                <Typography sx={{ color: '#1a1a1a', fontSize: '0.95rem' }}>Aucune activité enregistrée dans vos favoris</Typography>
             </Box>
         )
     }

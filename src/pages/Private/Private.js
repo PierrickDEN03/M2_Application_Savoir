@@ -43,13 +43,13 @@ export default function Private() {
             <Box
                 sx={{
                     height: '100vh',
-                    bgcolor: '#3454D1',
+                    bgcolor: '#e4eff6',
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
                 }}
             >
-                <CircularProgress sx={{ color: '#FFD166' }} />
+                <CircularProgress sx={{ color: '#3454D1' }} />
             </Box>
         )
     }

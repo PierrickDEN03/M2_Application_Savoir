@@ -45,7 +45,13 @@ export default function MyInscriptions({ userId }) {
                 const activity = await fetchActivityById(reservation.activityId)
                 if (!activity) continue
                 const category = await fetchCategoryById(activity.categoryId)
-                enriched.push({ ...reservation, activity, category })
+                // Ajouter l'organisateur directement dans chaque réservation enrichie
+                enriched.push({
+                    ...reservation,
+                    activity,
+                    category,
+                    organisateurId: activity.createdBy ?? null,
+                })
             }
 
             setReservations(enriched)
@@ -77,7 +83,7 @@ export default function MyInscriptions({ userId }) {
     if (loading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                <CircularProgress sx={{ color: 'white' }} />
+                <CircularProgress sx={{ color: '#3454D1' }} />
             </Box>
         )
     }
@@ -85,7 +91,7 @@ export default function MyInscriptions({ userId }) {
     if (reservations.length === 0) {
         return (
             <Box sx={{ textAlign: 'center', py: 5 }}>
-                <p style={{ color: 'rgba(255,255,255,0.7)' }}>Aucune inscription pour le moment</p>
+                <p style={{ color: '#1a1a1a' }}>Aucune inscription pour le moment</p>
             </Box>
         )
     }
@@ -97,6 +103,8 @@ export default function MyInscriptions({ userId }) {
                 userId={userId}
                 onBack={() => setReviewMode(null)}
                 onReviewSaved={() => {
+                    // recharger la liste pour refléter le nouvel avis si besoin
+                    loadInscriptions()
                     setReviewMode(null)
                     setSnackbarOpen(true)
                 }}
@@ -118,7 +126,7 @@ export default function MyInscriptions({ userId }) {
                 ))}
             </Box>
 
-            {/* ✅ Dialogue de confirmation */}
+            {/* Dialogue de confirmation */}
             <Dialog
                 open={confirmOpen}
                 onClose={() => setConfirmOpen(false)}
@@ -142,7 +150,7 @@ export default function MyInscriptions({ userId }) {
                 </DialogActions>
             </Dialog>
 
-            {/* ✅ Snackbar centrée en bas */}
+            {/* Snackbar centrée en bas */}
             <Snackbar
                 open={snackbarOpen}
                 autoHideDuration={4000}
@@ -170,7 +178,7 @@ export default function MyInscriptions({ userId }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* ✅ ITEM D'INSCRIPTION */
+/* ITEM D'INSCRIPTION */
 /* -------------------------------------------------------------------------- */
 function InscriptionItem({ reservation, onRemove, onReview, userId }) {
     const navigate = useNavigate()
@@ -179,12 +187,17 @@ function InscriptionItem({ reservation, onRemove, onReview, userId }) {
 
     useEffect(() => {
         checkUserReview()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const checkUserReview = async () => {
-        const avis = await getAvisByActivityId(reservation.activity.id)
-        const userReview = avis.find((a) => a.idUser === userId)
-        setHasReview(!!userReview)
+        try {
+            const avis = await getAvisByActivityId(reservation.activity.id)
+            const userReview = avis.find((a) => a.idUser === userId)
+            setHasReview(!!userReview)
+        } catch (e) {
+            console.error('Erreur lors de la vérification des avis:', e)
+        }
     }
 
     const handleCardClick = (e) => {
@@ -195,7 +208,8 @@ function InscriptionItem({ reservation, onRemove, onReview, userId }) {
 
     const activityDate = new Date(reservation.activity.date)
     const today = new Date()
-    const isPast = activityDate < today.setHours(0, 0, 0, 0)
+    today.setHours(0, 0, 0, 0)
+    const isPast = activityDate < today
 
     return (
         <Box
@@ -232,7 +246,7 @@ function InscriptionItem({ reservation, onRemove, onReview, userId }) {
                     <ActionLine
                         icon={<MuiIcons.Message fontSize="small" />}
                         label="Envoyer un message à l’organisateur"
-                        onClick={() => navigate(`/activity/${reservation.activity.id}/message`)}
+                        onClick={() => navigate(`/user/send-message/${reservation.organisateurId ?? reservation.activity.createdBy ?? ''}`)}
                     />
                     <ActionLine
                         icon={<MuiIcons.Cancel color="error" fontSize="small" />}
@@ -253,7 +267,7 @@ function InscriptionItem({ reservation, onRemove, onReview, userId }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* ✅ INTERFACE D’AJOUT / MODIF D’AVIS */
+/* INTERFACE D’AJOUT / MODIF D’AVIS */
 /* -------------------------------------------------------------------------- */
 function ReviewInterface({ reservation, onBack, userId, onReviewSaved }) {
     const [rating, setRating] = useState(0)
@@ -263,17 +277,23 @@ function ReviewInterface({ reservation, onBack, userId, onReviewSaved }) {
 
     useEffect(() => {
         loadExistingReview()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const loadExistingReview = async () => {
-        const avis = await getAvisByActivityId(reservation.activity.id)
-        const userReview = avis.find((a) => a.idUser === userId)
-        if (userReview) {
-            setExistingReview(userReview)
-            setRating(userReview.note)
-            setComment(userReview.comment || '')
+        try {
+            const avis = await getAvisByActivityId(reservation.activity.id)
+            const userReview = avis.find((a) => a.idUser === userId)
+            if (userReview) {
+                setExistingReview(userReview)
+                setRating(userReview.note)
+                setComment(userReview.comment || '')
+            }
+        } catch (e) {
+            console.error('Erreur lors du chargement de l’avis existant:', e)
+        } finally {
+            setLoading(false)
         }
-        setLoading(false)
     }
 
     const handleSubmit = async () => {
@@ -286,10 +306,10 @@ function ReviewInterface({ reservation, onBack, userId, onReviewSaved }) {
                     idUser: userId,
                     note: rating,
                     comment,
-                    createdAt: new Date(),
                 })
             }
-            onReviewSaved()
+            // notifier le parent pour rechargement / snackbar
+            if (typeof onReviewSaved === 'function') onReviewSaved()
         } catch (e) {
             console.error('Erreur lors de la sauvegarde de l’avis:', e)
         }

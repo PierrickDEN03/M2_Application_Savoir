@@ -24,15 +24,17 @@ export default function MessageInput({ onSend, disabled = false }) {
         <Box
             sx={{
                 position: 'fixed',
-                bottom: 100,
+                bottom: 0,
                 left: 0,
                 right: 0,
-                bgcolor: '#B2DDF7',
+                bgcolor: '#ffffff',
                 p: 2,
+                pb: 15,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 1.5,
                 mb: 2,
+                zIndex: 10,
             }}
         >
             <TextField
@@ -50,11 +52,19 @@ export default function MessageInput({ onSend, disabled = false }) {
                     '& .MuiOutlinedInput-root': {
                         borderRadius: 3,
                         '& fieldset': {
-                            border: 'none',
+                            borderColor: '#1a1a1a',
+                            borderWidth: '2px',
+                        },
+                        '&:hover fieldset': {
+                            borderColor: '#3454D1',
+                        },
+                        '&.Mui-focused fieldset': {
+                            borderColor: '#3454D1',
                         },
                     },
                 }}
             />
+
             <IconButton
                 onClick={handleSend}
                 disabled={!message.trim() || disabled}

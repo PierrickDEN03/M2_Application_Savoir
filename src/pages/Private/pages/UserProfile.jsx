@@ -6,6 +6,7 @@ import { fetchUserById } from '../../../services/userService'
 import { getUserInterests } from '../../../services/categoriesService'
 import { fetchActivitiesFromDB } from '../../../services/activitiesService'
 import { getUserReservations } from '../../../services/reservationsService'
+import { getAverageNoteUser } from '../../../services/avisService'
 import { UserContext } from '../../../context/userContext'
 import AvatarPlaceholder from '../../../components/utils/Avatar_Placeholder'
 import ActivityCard from '../../../components/utils/ActivityCard'
@@ -22,6 +23,7 @@ export default function UserProfile() {
     const [upcomingActivities, setUpcomingActivities] = useState([])
     const [pastActivities, setPastActivities] = useState([])
     const [userReservations, setUserReservations] = useState(0)
+    const [averageNote, setAverageNote] = useState(null) // ✅ nouvelle donnée
     const [loading, setLoading] = useState(true)
 
     const isOwnProfile = currentUser && currentUser.uid === idUser
@@ -55,6 +57,10 @@ export default function UserProfile() {
                     const reservations = await getUserReservations(idUser)
                     setUserReservations(reservations.length)
                 }
+
+                // ✅ Calcul de la note moyenne de l’utilisateur
+                const note = await getAverageNoteUser(idUser)
+                setAverageNote(note.toFixed(1))
             } catch (error) {
                 console.error('Erreur lors du chargement du profil:', error)
             } finally {
@@ -91,6 +97,7 @@ export default function UserProfile() {
 
     return (
         <Box sx={{ minHeight: '100vh', bgcolor: '#E4EFF6', pb: 10 }}>
+            <AvatarPlaceholder />
             {/* Header */}
             <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <Box
@@ -114,12 +121,62 @@ export default function UserProfile() {
                             mb: 2,
                         }}
                     />
-                    <Typography variant="h4" sx={{ color: '#3454D1', fontWeight: 700, mb: 1, textAlign: 'center' }}>
+
+                    {/* Nom et ville + note moyenne */}
+                    <Typography
+                        variant="h4"
+                        sx={{
+                            color: '#3454D1',
+                            fontWeight: 700,
+                            mb: 0.5,
+                            textAlign: 'center',
+                        }}
+                    >
                         {user.displayName || user.firstName || 'Utilisateur'}
                     </Typography>
 
-                    {/* Stats utilisateur */}
-                    <Box sx={{ display: 'flex', gap: 2, mb: 2, justifyContent: 'center' }}>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 1.2,
+                        }}
+                    >
+                        {/* Ville */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <MuiIcons.LocationOn fontSize="small" sx={{ color: '#3454D1' }} />
+                            <Typography sx={{ color: '#555', fontWeight: 500 }}>{user.city || 'Ville non renseignée'}</Typography>
+                        </Box>
+
+                        {/* Note moyenne (badge rouge arrondi) */}
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 0.5,
+                                border: '1.5px solid #ED6A5A',
+                                borderRadius: '999px',
+                                px: 1.2,
+                                py: 0.2,
+                                backgroundColor: 'rgba(237,106,90,0.05)',
+                            }}
+                        >
+                            <MuiIcons.Star sx={{ color: '#ED6A5A', fontSize: 16 }} />
+                            <Typography
+                                sx={{
+                                    fontWeight: 600,
+                                    color: '#ED6A5A',
+                                    fontSize: 14,
+                                }}
+                            >
+                                {averageNote ? averageNote : '–'}
+                            </Typography>
+                        </Box>
+                    </Box>
+
+                    {/* Statistiques */}
+                    <Box sx={{ display: 'flex', gap: 2, mt: 2, justifyContent: 'center' }}>
                         <Box sx={{ textAlign: 'center' }}>
                             <Typography variant="h6" sx={{ fontWeight: 700, color: '#1a1a1a' }}>
                                 {userActivities.length}
@@ -136,42 +193,33 @@ export default function UserProfile() {
                                 rencontres
                             </Typography>
                         </Box>
-                        <Box sx={{ textAlign: 'center' }}>
-                            <Typography variant="h6" sx={{ fontWeight: 700, color: '#1a1a1a' }}>
-                                0
-                            </Typography>
-                            <Typography variant="caption" sx={{ color: '#666' }}>
-                                recommandations
-                            </Typography>
-                        </Box>
                     </Box>
 
                     {/* Boutons */}
-                    {isOwnProfile ? (
-                        <Stack direction="row" spacing={2}>
-                            <Button
-                                variant="outlined"
-                                startIcon={<MuiIcons.Edit />}
-                                onClick={() => navigate(`/user/modif-profile/${idUser}`)}
-                                sx={{
-                                    borderColor: '#3454D1',
-                                    color: '#3454D1',
-                                    borderRadius: 3,
-                                    textTransform: 'none',
-                                    fontWeight: 600,
-                                    '&:hover': {
+                    <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+                        {isOwnProfile ? (
+                            <>
+                                <Button
+                                    variant="outlined"
+                                    startIcon={<MuiIcons.Edit />}
+                                    onClick={() => navigate(`/user/modif-profile/${idUser}`)}
+                                    sx={{
                                         borderColor: '#3454D1',
-                                        bgcolor: 'rgba(52, 84, 209, 0.05)',
-                                    },
-                                }}
-                            >
-                                Modifier
-                            </Button>
-                            <LogOut />
-                        </Stack>
-                    ) : (
-                        <Box>
-                            <AvatarPlaceholder />
+                                        color: '#3454D1',
+                                        borderRadius: 3,
+                                        textTransform: 'none',
+                                        fontWeight: 600,
+                                        '&:hover': {
+                                            borderColor: '#3454D1',
+                                            bgcolor: 'rgba(52, 84, 209, 0.05)',
+                                        },
+                                    }}
+                                >
+                                    Modifier
+                                </Button>
+                                <LogOut />
+                            </>
+                        ) : (
                             <Button
                                 variant="contained"
                                 startIcon={<MuiIcons.Message />}
@@ -189,8 +237,8 @@ export default function UserProfile() {
                             >
                                 Envoyer un message
                             </Button>
-                        </Box>
-                    )}
+                        )}
+                    </Stack>
                 </Box>
 
                 {/* À propos de moi */}
@@ -238,34 +286,38 @@ export default function UserProfile() {
                     </Box>
                 </Box>
 
-                {/* Activités à venir */}
-                {upcomingActivities.length > 0 && (
+                {/* Activités */}
+                {(upcomingActivities.length > 0 || pastActivities.length > 0) && (
                     <Box sx={{ mb: 4 }}>
                         <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: '#3454D1' }}>
                             Activités
                         </Typography>
-                        <Typography variant="subtitle1" sx={{ color: '#1a1a1a', mb: 1 }}>
-                            Prochaines
-                        </Typography>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            {upcomingActivities.map((activity) => (
-                                <ActivityCard key={activity.id} activity={activity} />
-                            ))}
-                        </Box>
-                    </Box>
-                )}
 
-                {/* Activités passées */}
-                {pastActivities.length > 0 && (
-                    <Box sx={{ mb: 4 }}>
-                        <Typography variant="subtitle1" sx={{ color: '#1a1a1a', mb: 1 }}>
-                            Passées
-                        </Typography>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            {pastActivities.map((activity) => (
-                                <ActivityCard key={activity.id} activity={activity} />
-                            ))}
-                        </Box>
+                        {upcomingActivities.length > 0 && (
+                            <>
+                                <Typography variant="subtitle1" sx={{ color: '#1a1a1a', mb: 1 }}>
+                                    Prochaines
+                                </Typography>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
+                                    {upcomingActivities.map((activity) => (
+                                        <ActivityCard key={activity.id} activity={activity} />
+                                    ))}
+                                </Box>
+                            </>
+                        )}
+
+                        {pastActivities.length > 0 && (
+                            <>
+                                <Typography variant="subtitle1" sx={{ color: '#1a1a1a', mb: 1 }}>
+                                    Passées
+                                </Typography>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                    {pastActivities.map((activity) => (
+                                        <ActivityCard key={activity.id} activity={activity} />
+                                    ))}
+                                </Box>
+                            </>
+                        )}
                     </Box>
                 )}
             </Box>

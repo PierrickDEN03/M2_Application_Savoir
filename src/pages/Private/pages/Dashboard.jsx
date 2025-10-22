@@ -46,7 +46,7 @@ export default function Dashboard() {
                     justifyContent: 'center',
                     alignItems: 'center',
                     minHeight: '100vh',
-                    bgcolor: '#3454D1',
+                    bgcolor: '#e4eff6',
                 }}
             >
                 <CircularProgress sx={{ color: 'white' }} />
@@ -55,15 +55,15 @@ export default function Dashboard() {
     }
 
     return (
-        <Box sx={{ minHeight: '100vh', bgcolor: '#3454D1', pb: 10 }}>
+        <Box sx={{ minHeight: '100vh', bgcolor: '#e4eff6', pb: 10 }}>
             <AvatarPlaceholder />
 
             {/* Header */}
             <Box sx={{ p: 3, pt: 4, pb: 2 }}>
-                <Typography variant="h3" sx={{ color: 'white', fontWeight: 700, mb: 1 }}>
+                <Typography variant="h3" sx={{ color: '#3454D1', fontWeight: 700, mb: 1 }}>
                     Hello
                 </Typography>
-                <Typography variant="h3" sx={{ color: 'white', fontWeight: 700 }}>
+                <Typography variant="h3" sx={{ color: '#3454D1', fontWeight: 700 }}>
                     {userName}
                 </Typography>
             </Box>
@@ -90,7 +90,7 @@ export default function Dashboard() {
                             borderRadius: 2.5,
                             cursor: 'pointer',
                             bgcolor: currentTab === 'activities' ? '#FFD168' : 'transparent',
-                            color: currentTab === 'activities' ? '#1a1a1a' : 'white',
+                            color: '#1a1a1a',
                             fontWeight: 700,
                             fontSize: '0.8rem',
                             transition: 'all 0.3s ease',
@@ -112,7 +112,7 @@ export default function Dashboard() {
                             borderRadius: 2.5,
                             cursor: 'pointer',
                             bgcolor: currentTab === 'inscriptions' ? '#FFD168' : 'transparent',
-                            color: currentTab === 'inscriptions' ? '#1a1a1a' : 'white',
+                            color: '#1a1a1a',
                             fontWeight: 700,
                             fontSize: '0.8rem',
                             transition: 'all 0.3s ease',
@@ -134,7 +134,7 @@ export default function Dashboard() {
                             borderRadius: 2.5,
                             cursor: 'pointer',
                             bgcolor: currentTab === 'favorites' ? '#FFD168' : 'transparent',
-                            color: currentTab === 'favorites' ? '#1a1a1a' : 'white',
+                            color: '#1a1a1a',
                             fontWeight: 700,
                             fontSize: '0.8rem',
                             transition: 'all 0.3s ease',

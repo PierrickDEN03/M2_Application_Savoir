@@ -76,7 +76,7 @@ function Messagerie() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    backgroundColor: '#B2DDF7',
+                    backgroundColor: '#e4eff6',
                 }}
             >
                 <CircularProgress sx={{ color: '#3454D1' }} />
@@ -87,7 +87,7 @@ function Messagerie() {
     const hasNoConversations = privateContacts.length === 0 && groupConversations.length === 0
 
     return (
-        <Box sx={{ backgroundColor: '#B2DDF7', minHeight: '100vh', p: 3 }}>
+        <Box sx={{ backgroundColor: '#e4eff6', minHeight: '100vh', p: 3 }}>
             <AvatarPlaceholder />
 
             <Button
