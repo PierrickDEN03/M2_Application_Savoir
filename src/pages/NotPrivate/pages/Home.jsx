@@ -10,10 +10,11 @@ export default function Home() {
             sx={{
                 width: '100vw',
                 height: '100vh',
-                bgcolor: '#3454D1', // bleu principal
+                bgcolor: '#E7F2F8',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                px: 2,
             }}
         >
             <Box
@@ -22,63 +23,93 @@ export default function Home() {
                     flexDirection: 'column',
                     alignItems: 'center',
                     textAlign: 'center',
-                    px: 2,
                 }}
             >
                 {/* Logo / Nom de l’app */}
                 <Typography
-                    variant="h3"
-                    component="div"
                     sx={{
-                        fontWeight: 'bold',
-                        color: '#F0E7D6',
-                        mb: 1,
+                        fontSize: { xs: '3.5rem', sm: '5.5rem' },
+                        fontWeight: 700,
+                        color: '#3454D1',
                         fontFamily: 'Poppins, sans-serif',
+                        mb: 0.1,
+                        lineHeight: 1.1,
+                        letterSpacing: '-1px',
                     }}
                 >
                     echo
-                    <Box component="span" sx={{ color: '#ED6A5A' }}>
+                    <Box
+                        component="span"
+                        sx={{
+                            color: '#ED6A5A',
+                            fontSize: { xs: '3.8rem', sm: '5.8rem' },
+                            position: 'relative',
+                            top: '-2px',
+                        }}
+                    >
                         •
                     </Box>
                     ly
                 </Typography>
 
-                {/* Slogan */}
-                <Typography variant="subtitle1" sx={{ color: '#FFD166', mb: 6 }}>
+                <Typography
+                    sx={{
+                        color: '#ED6A5A',
+                        fontSize: { xs: '0.5rem', sm: '0.9rem' },
+                        mb: { xs: 9, sm: 25 },
+                        fontFamily: 'Poppins, sans-serif',
+                        fontWeight: 400,
+                    }}
+                >
                     Là où chaque rencontre résonne
                 </Typography>
 
-                {/* Bouton S'inscrire */}
+                {/* BOUTON CRÉER UN COMPTE */}
                 <Button
-                    variant="contained"
-                    size="large"
+                    variant="outlined"
+                    onClick={() => navigate('/register-profile')}
                     sx={{
                         bgcolor: '#ED6A5A',
-                        '&:hover': { bgcolor: '#B2DDF7', color: '#3454D1' },
-                        borderRadius: '1rem',
-                        px: 6,
+                        '&:hover': { bgcolor: '#d85a4c' },
+                        color: '#FFFFFF',
+                        borderRadius: '24px',
+                        px: 5,
                         py: 1.5,
-                        fontWeight: 'bold',
+                        fontWeight: 700,
+                        fontFamily: 'Poppins, sans-serif',
                         textTransform: 'uppercase',
-                        boxShadow: 3,
+                        fontSize: '0.9rem',
+                        boxShadow: '0px 4px 10px rgba(0,0,0,0.15)',
+                        mb: 2,
+                        width: '100%',
+                        maxWidth: 260,
                     }}
-                    onClick={() => navigate('/login')}
                 >
-                    S’inscrire
+                    CRÉER UN COMPTE
                 </Button>
 
-                {/* Lien Se connecter */}
-                <Typography variant="body2" sx={{ mt: 3, color: '#F0E7D6' }}>
-                    Déjà membre ?{' '}
-                    <Link
-                        component="button"
-                        onClick={() => navigate('/login')}
-                        underline="none"
-                        sx={{ color: '#B2DDF7', fontWeight: 'bold' }}
-                    >
-                        Se connecter
-                    </Link>
-                </Typography>
+                <Button
+                    variant="outlined"
+                    onClick={() => navigate('/login')}
+                    sx={{
+                        bgcolor: '#FFFFFF',
+                        color: '#3454D1',
+                        borderRadius: '24px',
+                        px: 5,
+                        py: 1.5,
+                        fontWeight: 700,
+                        fontFamily: 'Poppins, sans-serif',
+                        textTransform: 'uppercase',
+                        fontSize: '0.9rem',
+                        width: '100%',
+                        maxWidth: 260,
+                        boxShadow: '0px 4px 10px rgba(0,0,0,0.10)',
+                        '&:hover': { bgcolor: '#ED6A5A', color: 'white' },
+                    }}
+                >
+                    SE CONNECTER
+                </Button>
+
             </Box>
         </Box>
     )
