@@ -46,18 +46,26 @@ export const verifyAddressWithId = (placeId) => {
         service.getDetails(
             {
                 placeId,
-                fields: ['name', 'formatted_address', 'geometry', 'place_id'],
+                fields: ['name', 'formatted_address', 'geometry', 'place_id', 'address_components'],
             },
             (result, status) => {
                 if (status === window.google.maps.places.PlacesServiceStatus.OK && result?.geometry?.location) {
+                    // ✅ Extraire la ville
+                    const cityComponent = result.address_components?.find(
+                        (c) => c.types.includes('locality') || c.types.includes('administrative_area_level_2')
+                    )
+
                     resolve({
                         placeId: result.place_id,
-                        address: result.formatted_address,
+                        address: {
+                            full: result.formatted_address,
+                            city: cityComponent?.long_name || '',
+                            name: result.name,
+                        },
                         position: {
                             lat: result.geometry.location.lat(),
                             lng: result.geometry.location.lng(),
                         },
-                        name: result.name,
                     })
                 } else {
                     reject(new Error(`Impossible de récupérer le lieu pour ${placeId}`))

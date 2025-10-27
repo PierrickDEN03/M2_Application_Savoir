@@ -43,23 +43,23 @@ export default function Private() {
             <Box
                 sx={{
                     height: '100vh',
-                    bgcolor: '#3454D1',
+                    bgcolor: '#e4eff6',
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
                 }}
             >
-                <CircularProgress sx={{ color: '#FFD166' }} />
+                <CircularProgress sx={{ color: '#3454D1' }} />
             </Box>
         )
     }
 
     // Pages où on cache le BottomNav
-    const hiddenNavRoutes = ['/user/interest']
+    const hiddenNavRoutes = ['/user/interest', '/user/modif-profile']
 
     return (
         <div>
-            {!hiddenNavRoutes.includes(location.pathname) && <BottomNav />}
+            {!hiddenNavRoutes.some((route) => location.pathname.startsWith(route)) && <BottomNav />}
             <Outlet context={{ user }} />
         </div>
     )

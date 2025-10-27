@@ -1,14 +1,16 @@
-// FILE: src/pages/ActivityDetail.jsx
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Box, Typography, Avatar, Button, CircularProgress } from '@mui/material'
+import { Box, Typography, Avatar, Button, CircularProgress, Snackbar, Rating, Alert } from '@mui/material'
 import * as MuiIcons from '@mui/icons-material'
 import { fetchActivityById } from '../../../services/activitiesService'
 import { fetchUserById } from '../../../services/userService'
-import { fetchCategoryById } from '../../../services/categoriesService'
+import { fetchCategoryById, getCategoryImage } from '../../../services/categoriesService'
 import { checkReservation, addReservation, removeReservation } from '../../../services/reservationsService'
 import { checkFavorite, addFavorite, removeFavorite } from '../../../services/favorisService'
-import { auth } from '../../../firebase-config'
+import { getAvisByActivityId, getAverageNote } from '../../../services/avisService'
+import { auth, db } from '../../../firebase-config'
+import { collection, query, where, getDocs } from 'firebase/firestore'
+import { formatActivityDate } from '../../../components/utils/formatDate'
 import AvatarPlaceholder from '../../../components/utils/Avatar_Placeholder'
 
 function ActivityDetail() {
@@ -22,6 +24,15 @@ function ActivityDetail() {
     const [isFavorite, setIsFavorite] = useState(false)
     const [reservationId, setReservationId] = useState(null)
     const [favoriteId, setFavoriteId] = useState(null)
+    const [registeredCount, setRegisteredCount] = useState(0)
+    const [isPast, setIsPast] = useState(false)
+    const [isFull, setIsFull] = useState(false)
+    const [showAvis, setShowAvis] = useState(false)
+    const [avis, setAvis] = useState([])
+    const [averageNote, setAverageNote] = useState(0)
+    const [snackbarOpen, setSnackbarOpen] = useState(false)
+    const [snackbarMessage, setSnackbarMessage] = useState('')
+    const [snackbarSeverity, setSnackbarSeverity] = useState('success')
     const [actionLoading, setActionLoading] = useState(false)
 
     const currentUser = auth.currentUser
@@ -34,120 +45,127 @@ function ActivityDetail() {
                     return
                 }
 
-                // Récupérer l'activité
                 const activityData = await fetchActivityById(activityId)
                 if (!activityData) {
-                    console.error('Activité non trouvée')
                     navigate('/user/activity')
                     return
                 }
                 setActivity(activityData)
 
-                // Récupérer le créateur
                 const userData = await fetchUserById(activityData.userId || activityData.createdBy)
                 setCreator(userData)
 
-                // Récupérer la catégorie
                 const categoryData = await fetchCategoryById(activityData.categoryId)
                 setCategory(categoryData)
 
-                // Vérifier si l'utilisateur est déjà inscrit
+                const q = query(collection(db, 'reservations'), where('activityId', '==', activityId))
+                const querySnapshot = await getDocs(q)
+                setRegisteredCount(querySnapshot.size)
+
                 const resId = await checkReservation(currentUser.uid, activityId)
                 if (resId) {
                     setIsRegistered(true)
                     setReservationId(resId)
                 }
 
-                // Vérifier si l'activité est dans les favoris
                 const favId = await checkFavorite(currentUser.uid, activityId)
                 if (favId) {
                     setIsFavorite(true)
                     setFavoriteId(favId)
                 }
+
+                const activityDate = new Date(activityData.date)
+                setIsPast(activityDate < new Date())
+                setIsFull(querySnapshot.size >= activityData.participants)
             } catch (error) {
-                console.error('Erreur lors du chargement:', error)
+                console.error('Erreur chargement activité:', error)
             } finally {
                 setLoading(false)
             }
         }
 
-        if (activityId) {
-            loadActivityDetails()
-        }
+        if (activityId) loadActivityDetails()
     }, [activityId, navigate, currentUser])
 
-    const handleToggleRegistration = async () => {
-        if (!currentUser) return
-        setActionLoading(true)
+    useEffect(() => {
+        if (activityId) loadAvis()
+    }, [activityId])
 
+    const loadAvis = async () => {
         try {
-            if (isRegistered) {
-                // Désinscrire
-                await removeReservation(reservationId)
-                setIsRegistered(false)
-                setReservationId(null)
-            } else {
-                // Inscrire
-                const newResId = await addReservation(currentUser.uid, activityId)
-                setIsRegistered(true)
-                setReservationId(newResId)
-            }
-        } catch (error) {
-            console.error("Erreur lors de la gestion de l'inscription:", error)
-        } finally {
-            setActionLoading(false)
+            const avisData = await getAvisByActivityId(activityId)
+            const avisWithUsers = await Promise.all(
+                avisData.map(async (a) => {
+                    const user = await fetchUserById(a.idUser)
+                    return { ...a, user }
+                })
+            )
+            setAvis(avisWithUsers)
+            const moyenne = await getAverageNote(activityId)
+            setAverageNote(moyenne)
+        } catch (err) {
+            console.error('Erreur chargement avis', err)
         }
     }
 
     const handleToggleFavorite = async () => {
         if (!currentUser) return
         setActionLoading(true)
-
         try {
             if (isFavorite) {
-                // Retirer des favoris
                 await removeFavorite(favoriteId)
                 setIsFavorite(false)
                 setFavoriteId(null)
+                showSnackbar('Retiré des envies', 'info')
             } else {
-                // Ajouter aux favoris
                 const newFavId = await addFavorite(currentUser.uid, activityId)
                 setIsFavorite(true)
                 setFavoriteId(newFavId)
+                showSnackbar('Ajouté aux envies', 'success')
             }
         } catch (error) {
-            console.error('Erreur lors de la gestion des favoris:', error)
+            console.error('Erreur favoris:', error)
+            showSnackbar('Erreur favoris', 'error')
         } finally {
             setActionLoading(false)
         }
     }
 
-    const formatDate = (dateString) => {
-        if (!dateString) return ''
-        const date = new Date(dateString)
-        const options = { weekday: 'long', day: 'numeric', month: 'long' }
-        return date.toLocaleDateString('fr-FR', options)
+    const handleToggleRegistration = async () => {
+        if (!currentUser) return
+        setActionLoading(true)
+        try {
+            if (isRegistered) {
+                await removeReservation(reservationId)
+                setIsRegistered(false)
+                setRegisteredCount((prev) => Math.max(0, prev - 1))
+                showSnackbar('Réservation annulée', 'info')
+            } else {
+                const newResId = await addReservation(currentUser.uid, activityId)
+                setIsRegistered(true)
+                setReservationId(newResId)
+                setRegisteredCount((prev) => prev + 1)
+                showSnackbar('Inscription réussie', 'success')
+            }
+        } catch (error) {
+            console.error('Erreur réservation:', error)
+            showSnackbar('Erreur lors de la réservation', 'error')
+        } finally {
+            setActionLoading(false)
+        }
     }
 
-    const formatTime = (dateString) => {
-        if (!dateString) return ''
-        const date = new Date(dateString)
-        const hours = date.getHours().toString().padStart(2, '0')
-        const minutes = date.getMinutes().toString().padStart(2, '0')
-        return `${hours}h${minutes}`
+    const showSnackbar = (message, severity = 'success') => {
+        setSnackbarMessage(message)
+        setSnackbarSeverity(severity)
+        setSnackbarOpen(true)
     }
+
+    const formatDate = (dateString) => formatActivityDate(dateString)
 
     if (loading) {
         return (
-            <Box
-                sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    minHeight: '100vh',
-                    bgcolor: '#F0E7D6',
-                }}
-            >
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', bgcolor: '#e4eff6' }}>
                 <CircularProgress sx={{ color: '#3454D1' }} />
             </Box>
         )
@@ -155,268 +173,261 @@ function ActivityDetail() {
 
     if (!activity) {
         return (
-            <Box sx={{ minHeight: '100vh', bgcolor: '#F0E7D6', p: 3 }}>
+            <Box sx={{ minHeight: '100vh', bgcolor: '#e4eff6', p: 3 }}>
                 <Typography>Activité non trouvée</Typography>
             </Box>
         )
     }
 
+    const categoryImage = category ? getCategoryImage(category.description) : activity.photoUrl
+
     return (
-        <Box
-            sx={{
-                minHeight: '100vh',
-                bgcolor: '#F0E7D6',
-                pb: 10,
-            }}
-        >
+        <Box sx={{ minHeight: '100vh', bgcolor: '#e4eff6', p: 2 }}>
             <AvatarPlaceholder />
-            {/* Header avec image */}
+
+            {/* Back + Titre */}
+            <Box sx={{ maxWidth: 420, mx: 'auto', mb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', mb: 1 }} onClick={() => navigate(-1)}>
+                    <MuiIcons.ArrowBack sx={{ color: '#3454D1', fontSize: 24 }} />
+                    <Typography sx={{ color: '#3454D1', fontWeight: 700, fontSize: 18 }}>Back</Typography>
+                </Box>
+                <Typography variant="h4" sx={{ fontWeight: 700, color: '#3454D1' }}>
+                    {activity.title}
+                </Typography>
+            </Box>
+
+            {/* Conteneur principal */}
             <Box
                 sx={{
-                    position: 'relative',
-                    height: 250,
-                    background: activity.photoUrl ? `url(${activity.photoUrl})` : 'linear-gradient(135deg, #3454D1 0%, #B2DDF7 100%)',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
+                    maxWidth: 420,
+                    mx: 'auto',
+                    bgcolor: 'white',
+                    borderRadius: 4,
+                    overflow: 'hidden',
+                    boxShadow: 1,
                 }}
             >
-                {/* Bouton retour */}
+                {/* Image + bandeau terminé */}
                 <Box
                     sx={{
-                        position: 'absolute',
-                        top: 16,
-                        left: 16,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        cursor: 'pointer',
+                        position: 'relative',
+                        height: 180,
+                        background: `url(${categoryImage}) center/cover no-repeat`,
                     }}
-                    onClick={() => navigate(-1)}
                 >
-                    <MuiIcons.ArrowBack sx={{ color: 'white', fontSize: 24 }} />
-                    <Typography
-                        sx={{
-                            color: 'white',
-                            fontWeight: 600,
-                            fontSize: 18,
-                        }}
-                    >
-                        Back
-                    </Typography>
+                    {isPast && (
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                bgcolor: '#ED6A5A',
+                                color: 'white',
+                                textAlign: 'center',
+                                py: 1,
+                                fontWeight: 600,
+                            }}
+                        >
+                            Cette activité est terminée
+                        </Box>
+                    )}
+
+                    {!isPast && category && (
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                top: 12,
+                                left: 12,
+                                bgcolor: category.color || '#3454D1',
+                                color: 'white',
+                                fontWeight: 600,
+                                borderRadius: '8px',
+                                px: 2,
+                                py: 0.5,
+                                boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 1,
+                            }}
+                        >
+                            {/* Icône dynamique si présente */}
+                            {category.iconName &&
+                                React.createElement(MuiIcons[category.iconName], {
+                                    sx: { fontSize: 18, color: 'white' },
+                                    'aria-hidden': true,
+                                })}
+
+                            <Typography component="span" sx={{ fontSize: '0.9rem', lineHeight: 1 }}>
+                                {category.description}
+                            </Typography>
+                        </Box>
+                    )}
                 </Box>
 
-                {/* Titre sur l'image */}
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        bottom: 16,
-                        left: 16,
-                        right: 16,
-                    }}
-                >
-                    <Typography
-                        variant="h4"
-                        sx={{
-                            color: 'white',
-                            fontWeight: 700,
-                            textShadow: '0 2px 4px rgba(0,0,0,0.3)',
-                        }}
-                    >
-                        {activity.title}
+                {/* Contenu principal */}
+                <Box sx={{ p: 3 }}>
+                    {/* Profil */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                        <Avatar src={creator?.photoUrl} sx={{ width: 56, height: 56, mr: 2, border: '3px solid #3454D1' }} />
+                        <Box>
+                            <Typography
+                                variant="h6"
+                                sx={{ fontWeight: 600, cursor: 'pointer' }}
+                                onClick={() => navigate(`/user/profile/${creator?.id}`)}
+                            >
+                                {creator?.displayName || 'Utilisateur'}
+                            </Typography>
+                            <Typography
+                                variant="body2"
+                                sx={{ color: '#666', cursor: 'pointer' }}
+                                onClick={() => navigate(`/user/send-message/${creator?.id}`)}
+                            >
+                                Contacter l’organisateur
+                            </Typography>
+                        </Box>
+                    </Box>
+
+                    {/* Avis — uniquement si activité terminée */}
+                    {isPast && (
+                        <>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                <Typography variant="h5" sx={{ fontWeight: 700, color: '#ED6A5A', mr: 1 }}>
+                                    {averageNote.toFixed(1)}/5
+                                </Typography>
+                                <Rating value={averageNote} precision={0.5} readOnly />
+                                <Typography sx={{ ml: 1, color: '#555' }}>{avis.length} avis</Typography>
+                            </Box>
+
+                            <Button
+                                variant="contained"
+                                onClick={() => setShowAvis(!showAvis)}
+                                startIcon={<MuiIcons.RateReview />}
+                                sx={{
+                                    bgcolor: '#ED6A5A',
+                                    borderRadius: 3,
+                                    textTransform: 'none',
+                                    fontWeight: 600,
+                                    mb: 2,
+                                    '&:hover': { bgcolor: '#d45a4a' },
+                                }}
+                            >
+                                {showAvis ? 'Masquer les avis' : 'Voir les avis'}
+                            </Button>
+
+                            {showAvis && (
+                                <Box sx={{ mt: 1 }}>
+                                    {avis.length === 0 ? (
+                                        <Typography sx={{ color: '#777' }}>Aucun avis pour le moment.</Typography>
+                                    ) : (
+                                        avis.map((a) => (
+                                            <Box key={a.id} sx={{ mt: 2 }}>
+                                                <Box
+                                                    sx={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        mb: 0.5,
+                                                    }}
+                                                >
+                                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                        <Avatar src={a.user?.photoUrl} sx={{ width: 32, height: 32, mr: 1 }} />
+                                                        <Typography sx={{ fontWeight: 600 }}>
+                                                            {a.user?.displayName || 'Utilisateur'}
+                                                        </Typography>
+                                                    </Box>
+                                                    <Rating value={a.note} readOnly size="small" />
+                                                </Box>
+                                                {a.comment && <Typography sx={{ color: '#444' }}>{a.comment}</Typography>}
+                                            </Box>
+                                        ))
+                                    )}
+                                </Box>
+                            )}
+                        </>
+                    )}
+
+                    {/* Informations */}
+                    <Typography variant="h6" sx={{ fontWeight: 600, mt: 3, mb: 2 }}>
+                        Informations
                     </Typography>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+                        <MuiIcons.CalendarToday sx={{ fontSize: 18, color: '#ED6A5A', mr: 1 }} />
+                        <Typography>{formatDate(activity.date)}</Typography>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+                        <MuiIcons.LocationOn sx={{ fontSize: 18, color: '#ED6A5A', mr: 1 }} />
+                        <Typography>{activity.address?.street || activity.address?.city}</Typography>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <MuiIcons.Group sx={{ fontSize: 18, color: '#ED6A5A', mr: 1 }} />
+                        <Typography>
+                            {registeredCount}/{activity.participants || 0} participants
+                        </Typography>
+                    </Box>
+
+                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                        Détail de l'annonce
+                    </Typography>
+                    <Typography sx={{ color: '#333', mb: 3 }}>{activity.description || 'Aucune description disponible.'}</Typography>
                 </Box>
             </Box>
 
-            {/* Contenu */}
-            <Box sx={{ px: 3, pt: 3 }}>
-                {/* Profil créateur */}
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                    <Avatar
-                        src={creator?.photoUrl}
-                        sx={{
-                            width: 56,
-                            height: 56,
-                            mr: 2,
-                            border: '2px solid #3454D1',
-                        }}
-                    />
-                    <Box>
-                        <Typography
-                            variant="h6"
-                            sx={{ fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
-                            onClick={() => navigate(`/user/profile/${creator?.id}`)}
-                        >
-                            {creator?.displayName || 'Utilisateur'}
-                        </Typography>
-                        <Typography
-                            variant="body2"
-                            sx={{ color: '#666', cursor: 'pointer' }}
-                            onClick={() => navigate(`/user/send-message/${creator?.id}`)}
-                        >
-                            Contact de l'organisateur
-                        </Typography>
-                    </Box>
-                </Box>
-
-                {/* Section Informations */}
-                <Typography
-                    variant="h6"
+            {/* Boutons favoris / inscription */}
+            <Box sx={{ display: 'flex', gap: 2, mt: 3, mb: 15, maxWidth: 420, mx: 'auto' }}>
+                <Button
+                    fullWidth
+                    variant="outlined"
+                    startIcon={isFavorite ? <MuiIcons.Favorite /> : <MuiIcons.FavoriteBorder />}
+                    onClick={handleToggleFavorite}
+                    disabled={actionLoading}
                     sx={{
+                        borderColor: '#ED6A5A',
+                        color: '#ED6A5A',
+                        borderRadius: 3,
+                        py: 1,
                         fontWeight: 600,
-                        mb: 2,
-                        color: '#1a1a1a',
+                        textTransform: 'none',
                     }}
                 >
-                    Informations
-                </Typography>
+                    {isFavorite ? 'Retirer des envies' : 'Ajouter aux envies'}
+                </Button>
 
-                {/* Date et heure */}
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
-                    <Box
-                        sx={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: '50%',
-                            bgcolor: '#FFE5E5',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            mr: 2,
-                            flexShrink: 0,
-                        }}
-                    >
-                        <MuiIcons.CalendarToday sx={{ fontSize: 20, color: '#ED6A5A' }} />
-                    </Box>
-                    <Box>
-                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                            {formatDate(activity.date)}
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: '#666' }}>
-                            à {formatTime(activity.date)}
-                        </Typography>
-                    </Box>
-                </Box>
-
-                {/* Lieu */}
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
-                    <Box
-                        sx={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: '50%',
-                            bgcolor: '#FFE5E5',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            mr: 2,
-                            flexShrink: 0,
-                        }}
-                    >
-                        <MuiIcons.LocationOn sx={{ fontSize: 20, color: '#ED6A5A' }} />
-                    </Box>
-                    <Box>
-                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                            {activity.address?.street || activity.address?.city}
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: '#666' }}>
-                            {activity.address?.full || `${activity.address?.postalCode} ${activity.address?.city}`}
-                        </Typography>
-                    </Box>
-                </Box>
-
-                {/* Participants */}
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 3 }}>
-                    <Box
-                        sx={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: '50%',
-                            bgcolor: '#FFE5E5',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            mr: 2,
-                            flexShrink: 0,
-                        }}
-                    >
-                        <MuiIcons.Group sx={{ fontSize: 20, color: '#ED6A5A' }} />
-                    </Box>
-                    <Box>
-                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                            {activity.participants || 0} participants
-                        </Typography>
-                    </Box>
-                </Box>
-
-                {/* Détail de l'annonce */}
-                <Typography
-                    variant="h6"
+                <Button
+                    fullWidth
+                    variant="contained"
+                    startIcon={isRegistered ? <MuiIcons.CheckCircle /> : <MuiIcons.Check />}
+                    onClick={handleToggleRegistration}
+                    disabled={actionLoading || isPast || isFull}
                     sx={{
+                        bgcolor: isRegistered ? '#3454D1' : '#ED6A5A',
+                        color: 'white',
+                        borderRadius: 3,
+                        py: 1,
                         fontWeight: 600,
-                        mb: 2,
-                        color: '#1a1a1a',
+                        textTransform: 'none',
+                        '&:hover': { bgcolor: isRegistered ? '#2140ba' : '#d45a4a' },
                     }}
                 >
-                    Détail de l'annonce
-                </Typography>
-
-                <Typography
-                    variant="body1"
-                    sx={{
-                        color: '#333',
-                        lineHeight: 1.6,
-                        mb: 4,
-                    }}
-                >
-                    {activity.description || 'Aucune description disponible.'}
-                </Typography>
-
-                {/* Boutons d'action */}
-                <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-                    <Button
-                        fullWidth
-                        variant="outlined"
-                        startIcon={isFavorite ? <MuiIcons.Favorite /> : <MuiIcons.FavoriteBorder />}
-                        onClick={handleToggleFavorite}
-                        disabled={actionLoading}
-                        sx={{
-                            borderColor: '#ED6A5A',
-                            color: '#ED6A5A',
-                            borderRadius: 3,
-                            py: 1.5,
-                            fontWeight: 600,
-                            textTransform: 'none',
-                            '&:hover': {
-                                borderColor: '#ED6A5A',
-                                bgcolor: 'rgba(237, 106, 90, 0.05)',
-                            },
-                        }}
-                    >
-                        {isFavorite ? 'Retirer des envies' : 'Ajouter aux envies'}
-                    </Button>
-
-                    <Button
-                        fullWidth
-                        variant="contained"
-                        startIcon={isRegistered ? <MuiIcons.CheckCircle /> : <MuiIcons.Check />}
-                        onClick={handleToggleRegistration}
-                        disabled={actionLoading}
-                        sx={{
-                            bgcolor: isRegistered ? '#27AE60' : '#ED6A5A',
-                            color: 'white',
-                            borderRadius: 3,
-                            py: 1.5,
-                            fontWeight: 600,
-                            textTransform: 'none',
-                            '&:hover': {
-                                bgcolor: isRegistered ? '#229954' : '#d45a4a',
-                            },
-                        }}
-                    >
-                        {isRegistered ? 'Inscrit ✓' : "S'inscrire"}
-                    </Button>
-                </Box>
+                    {isPast ? 'Activité terminée' : isFull ? 'Complet' : isRegistered ? 'Inscrit ✓' : "S'inscrire"}
+                </Button>
             </Box>
+
+            {/* Snackbar */}
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={3000}
+                onClose={() => setSnackbarOpen(false)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                sx={{ mb: '130px' }}
+            >
+                <Alert severity={snackbarSeverity} sx={{ width: '100%' }}>
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
         </Box>
     )
 }

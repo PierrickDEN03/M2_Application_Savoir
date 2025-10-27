@@ -33,8 +33,8 @@ function ContactItem({ contactId, onClick }) {
     return (
         <Card
             sx={{
-                backgroundColor: '#3454D1',
-                color: '#F0E7D6',
+                backgroundColor: '#ffffff',
+                color: 'black',
                 borderRadius: 3,
                 boxShadow: 3,
             }}

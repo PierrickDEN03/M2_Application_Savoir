@@ -7,7 +7,6 @@ import Dashboard from './pages/Private/pages/Dashboard'
 import SignInMagic from './pages/NotPrivate/pages/SignIn'
 import AuthCallback from './pages/AuthCallback'
 import RegisterProfile from './pages/NotPrivate/pages/RegisterProfile'
-import Map from './pages/Private/pages/Map'
 import SwaggerUIComponent from './components/SwaggerDoc'
 import CreateActivityForm from './pages/Private/pages/CreateActivityForm'
 import ChooseInterest from './pages/Private/pages/ChooseInterst'
@@ -40,14 +39,14 @@ function App() {
                 <Route path="/user/*" element={<Dashboard />} />
                 <Route path="/user/" element={<Dashboard />} />
                 <Route path="/user/dashboard" element={<Dashboard />} />
-                <Route path="/user/map" element={<Map />}></Route>
+                <Route path="/user/map" element={<ResearchActivity />}></Route>
                 <Route path="/user/create-activity" element={<CreateActivityForm />}></Route>
                 <Route path="/user/interest" element={<ChooseInterest />}></Route>
-                <Route path="/user/search-activity" element={<ResearchActivity />}></Route>
                 <Route path="/user/activity/:activityId" element={<ActivityDetail />} />
                 <Route path="/user/profile/:idUser" element={<UserProfile />} />
                 <Route path="/user/modif-profile/:idUser" element={<EditProfile />} />
                 <Route path="/user/send-message/:idUser" element={<SendMessage />} />
+                <Route path="/user/activity-message/:activityId/" element={<SendMessage />} />
                 <Route path="/user/messagerie" element={<Messagerie />} />
             </Route>
         </Routes>

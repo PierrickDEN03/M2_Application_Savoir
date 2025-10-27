@@ -1,7 +1,8 @@
 import React, { useContext } from 'react'
 import { Button, Box } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
-import { UserContext } from '../context/userContext.js'
+import { Logout } from '@mui/icons-material'
+import { UserContext } from '../../context/userContext'
 
 export default function LogOut() {
     const navigate = useNavigate()
@@ -18,7 +19,22 @@ export default function LogOut() {
 
     return (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-            <Button variant="contained" color="error" onClick={handleLogout}>
+            <Button
+                variant="outlined"
+                startIcon={<Logout />} // icône de déconnexion
+                onClick={handleLogout}
+                sx={{
+                    borderColor: '#D32F2F',
+                    color: '#D32F2F',
+                    borderRadius: 3,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    '&:hover': {
+                        borderColor: '#D32F2F',
+                        bgcolor: 'rgba(211, 47, 47, 0.05)',
+                    },
+                }}
+            >
                 Déconnexion
             </Button>
         </Box>

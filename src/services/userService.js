@@ -25,22 +25,35 @@ export async function sendMagicLink(email) {
 export async function getAuthenticatedUser() {
     return new Promise((resolve, reject) => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            unsubscribe() // stop listening
+            unsubscribe()
 
             if (!user) {
-                resolve(null) // pas connecté
+                resolve(null)
                 return
             }
 
             try {
-                const userDocRef = doc(db, 'users', user.uid)
-                const snap = await getDoc(userDocRef)
+                // ⚠️ On attend que le token soit bien rafraîchi
+                await user.getIdToken(true)
 
-                if (!snap.exists()) {
-                    // connecté mais profil pas encore créé
-                    resolve({ uid: user.uid, email: user.email, registered: false })
-                } else {
-                    resolve({ uid: user.uid, email: user.email, registered: true, data: snap.data() })
+                const userDocRef = doc(db, 'users', user.uid)
+
+                // utiliser getDoc sans listener pour éviter l'erreur de permission
+                try {
+                    const snap = await getDoc(userDocRef)
+
+                    if (!snap.exists()) {
+                        resolve({ uid: user.uid, email: user.email, registered: false })
+                    } else {
+                        resolve({ uid: user.uid, email: user.email, registered: true, data: snap.data() })
+                    }
+                } catch (firestoreError) {
+                    // Si l'erreur est "permission-denied", l'utilisateur n'est pas enregistré
+                    if (firestoreError.code === 'permission-denied') {
+                        resolve({ uid: user.uid, email: user.email, registered: false })
+                    } else {
+                        throw firestoreError
+                    }
                 }
             } catch (err) {
                 console.error('Erreur getAuthenticatedUser:', err)
@@ -70,9 +83,17 @@ export async function completeSignInWithEmailLink(url) {
 // --- Profiles ---
 export async function profileExists(uid) {
     if (!uid) return false
-    const ref = doc(db, 'users', uid)
-    const snap = await getDoc(ref)
-    return snap.exists()
+    try {
+        const ref = doc(db, 'users', uid)
+        const snap = await getDoc(ref)
+        return snap.exists()
+    } catch (error) {
+        // Si permission denied, le profil n'existe pas
+        if (error.code === 'permission-denied') {
+            return false
+        }
+        throw error
+    }
 }
 
 export async function createProfile(uid, profileData = {}, photoFile = null) {
@@ -106,12 +127,17 @@ export async function updateUserProfile(uid, updates = {}) {
 
 export async function fetchUserById(userId) {
     if (!userId) return null
-    const docRef = doc(db, 'users', userId)
-    const docSnap = await getDoc(docRef)
-    if (docSnap.exists()) {
-        return { id: docSnap.id, ...docSnap.data() }
+    try {
+        const docRef = doc(db, 'users', userId)
+        const docSnap = await getDoc(docRef)
+        if (docSnap.exists()) {
+            return { id: docSnap.id, ...docSnap.data() }
+        }
+        return null
+    } catch (error) {
+        console.error('Erreur fetchUserById:', error)
+        return null
     }
-    return null
 }
 
 // --- Contacts ---
@@ -129,7 +155,8 @@ export async function fetchContact(contactId) {
         }
     } catch (error) {
         console.error('Erreur lors du chargement du contact :', error)
-        throw error
+        // Retourner un objet par défaut au lieu de throw
+        return { id: contactId, name: 'Utilisateur inconnu', avatar: null }
     }
 }
 

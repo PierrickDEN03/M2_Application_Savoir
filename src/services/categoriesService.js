@@ -17,6 +17,12 @@ const categories = [
     { description: 'Randonnées', iconName: 'Hiking', color: '#16A085' },
     { description: 'Natation', iconName: 'Pool', color: '#2874A6' },
     { description: 'Autres', iconName: 'MoreHoriz', color: '#7F8C8D' },
+    { description: 'Astronomie', iconName: 'Public', color: '#8E44AD' },
+    { description: 'Cinéma', iconName: 'Movie', color: '#8E44AD' },
+    { description: 'Lecture', iconName: 'MenuBook', color: '#2E86C1' },
+    { description: 'Yoga', iconName: 'SelfImprovement', color: '#27AE60' },
+    { description: 'Jeux de société', iconName: 'Extension', color: '#AF7AC5' },
+    { description: 'Photographie', iconName: 'PhotoCamera', color: '#5DADE2' },
 ]
 
 export const createCategories = async () => {
@@ -107,4 +113,31 @@ export const fetchCategoryById = async (categoryId) => {
         return { id: snap.id, ...snap.data() }
     }
     return null
+}
+
+export const getCategoryImage = (category) => {
+    const imageMap = {
+        Sport: 'https://images.pexels.com/photos/1127120/pexels-photo-1127120.jpeg',
+        Musique: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
+        Natation: 'https://images.pexels.com/photos/8028662/pexels-photo-8028662.jpeg',
+        Cuisine: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80',
+        Astronomie: 'https://images.pexels.com/photos/920689/pexels-photo-920689.jpeg',
+        Arts: 'https://images.pexels.com/photos/1646953/pexels-photo-1646953.jpeg',
+        Culture: 'https://images.pexels.com/photos/161251/senso-ji-temple-japan-kyoto-landmark-161251.jpeg',
+        Théâtre: 'https://images.pexels.com/photos/4722577/pexels-photo-4722577.jpeg',
+        Running: 'https://images.pexels.com/photos/8454917/pexels-photo-8454917.jpeg',
+        Shopping: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=800&q=80',
+        Cinéma: 'https://images.pexels.com/photos/3945313/pexels-photo-3945313.jpeg',
+        Danse: 'https://images.pexels.com/photos/175658/pexels-photo-175658.jpeg',
+        Randonnée: 'https://images.pexels.com/photos/34355900/pexels-photo-34355900.jpeg',
+        Lecture: 'https://images.pexels.com/photos/1148399/pexels-photo-1148399.jpeg',
+        Yoga: 'https://images.pexels.com/photos/3822622/pexels-photo-3822622.jpeg',
+        'Jeux de société': 'https://images.pexels.com/photos/29282821/pexels-photo-29282821.jpeg',
+        Photographie: 'https://images.pexels.com/photos/34364145/pexels-photo-34364145.jpeg',
+        Bricolage: 'https://images.pexels.com/photos/5974035/pexels-photo-5974035.jpeg',
+        'Jeux vidéo': 'https://images.pexels.com/photos/7862243/pexels-photo-7862243.jpeg',
+        Autres: 'https://images.pexels.com/photos/6558789/pexels-photo-6558789.jpeg',
+    }
+
+    return imageMap[category] || 'https://images.pexels.com/photos/6558789/pexels-photo-6558789.jpeg'
 }

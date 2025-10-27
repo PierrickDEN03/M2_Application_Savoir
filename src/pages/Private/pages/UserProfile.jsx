@@ -1,22 +1,29 @@
-// FILE: src/pages/UserProfile.jsx
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Box, Typography, Avatar, Chip, Button, CircularProgress } from '@mui/material'
+import { Box, Typography, Avatar, Chip, Button, CircularProgress, Stack } from '@mui/material'
 import * as MuiIcons from '@mui/icons-material'
-import { auth } from '../../../firebase-config'
 import { fetchUserById } from '../../../services/userService'
 import { getUserInterests } from '../../../services/categoriesService'
 import { fetchActivitiesFromDB } from '../../../services/activitiesService'
+import { getUserReservations } from '../../../services/reservationsService'
+import { getAverageNoteUser } from '../../../services/avisService'
+import { UserContext } from '../../../context/userContext'
 import AvatarPlaceholder from '../../../components/utils/Avatar_Placeholder'
+import ActivityCard from '../../../components/utils/ActivityCard'
+import LogOut from '../../../components/utils/LogOut'
 
 export default function UserProfile() {
     const { idUser } = useParams()
     const navigate = useNavigate()
-    const currentUser = auth.currentUser
+    const { currentUser } = useContext(UserContext)
 
     const [user, setUser] = useState(null)
     const [interests, setInterests] = useState([])
     const [userActivities, setUserActivities] = useState([])
+    const [upcomingActivities, setUpcomingActivities] = useState([])
+    const [pastActivities, setPastActivities] = useState([])
+    const [userReservations, setUserReservations] = useState(0)
+    const [averageNote, setAverageNote] = useState(null) // ✅ nouvelle donnée
     const [loading, setLoading] = useState(true)
 
     const isOwnProfile = currentUser && currentUser.uid === idUser
@@ -24,7 +31,6 @@ export default function UserProfile() {
     useEffect(() => {
         const loadUserProfile = async () => {
             try {
-                // Récupérer l'utilisateur
                 const userData = await fetchUserById(idUser)
                 if (!userData) {
                     console.error('Utilisateur non trouvé')
@@ -33,14 +39,28 @@ export default function UserProfile() {
                 }
                 setUser(userData)
 
-                // Centres d'intérêts
                 const userInterests = await getUserInterests(idUser)
                 setInterests(userInterests)
 
-                // Activités de l'utilisateur
                 const allActivities = await fetchActivitiesFromDB()
                 const activities = allActivities.filter((act) => act.createdBy === idUser || act.userId === idUser)
                 setUserActivities(activities)
+
+                const now = new Date()
+                const upcoming = activities.filter((act) => new Date(act.date) >= now).sort((a, b) => new Date(a.date) - new Date(b.date))
+                const past = activities.filter((act) => new Date(act.date) < now).sort((a, b) => new Date(b.date) - new Date(a.date))
+
+                setUpcomingActivities(upcoming)
+                setPastActivities(past)
+
+                if (currentUser && currentUser.uid === idUser) {
+                    const reservations = await getUserReservations(idUser)
+                    setUserReservations(reservations.length)
+                }
+
+                // ✅ Calcul de la note moyenne de l’utilisateur
+                const note = await getAverageNoteUser(idUser)
+                setAverageNote(note.toFixed(1))
             } catch (error) {
                 console.error('Erreur lors du chargement du profil:', error)
             } finally {
@@ -49,7 +69,7 @@ export default function UserProfile() {
         }
 
         if (idUser) loadUserProfile()
-    }, [idUser, navigate])
+    }, [idUser, navigate, currentUser])
 
     if (loading) {
         return (
@@ -59,82 +79,201 @@ export default function UserProfile() {
                     justifyContent: 'center',
                     alignItems: 'center',
                     minHeight: '100vh',
-                    bgcolor: isOwnProfile ? '#FFD166' : '#ED6A5A',
+                    bgcolor: '#E4EFF6',
                 }}
             >
-                <CircularProgress sx={{ color: 'white' }} />
+                <CircularProgress sx={{ color: '#3454D1' }} />
             </Box>
         )
     }
 
     if (!user) {
         return (
-            <Box sx={{ minHeight: '100vh', bgcolor: '#F0E7D6', p: 3 }}>
+            <Box sx={{ minHeight: '100vh', bgcolor: '#E4EFF6', p: 3 }}>
                 <Typography>Utilisateur non trouvé</Typography>
             </Box>
         )
     }
 
-    const bgColor = isOwnProfile ? '#FFD166' : '#ED6A5A'
-
     return (
-        <Box sx={{ minHeight: '100vh', bgcolor: bgColor, pb: 10 }}>
+        <Box sx={{ minHeight: '100vh', bgcolor: '#E4EFF6', pb: 10 }}>
+            <AvatarPlaceholder />
             {/* Header */}
-            <Box sx={{ p: 3, pt: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <Box onClick={() => navigate(-1)} sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', color: 'white' }}>
-                    <MuiIcons.ArrowBack />
+            <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <Box
+                    onClick={() => navigate(-1)}
+                    sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', color: '#3454D1' }}
+                >
+                    <MuiIcons.ArrowBack sx={{ fontSize: 24 }} />
                     <Typography sx={{ fontWeight: 600, fontSize: 18 }}>Back</Typography>
                 </Box>
-
-                {!isOwnProfile && <AvatarPlaceholder userId={idUser} />}
             </Box>
 
             {/* Profil utilisateur */}
-            <Box sx={{ px: 3, mb: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                    <Avatar src={user.photoUrl || '/avatar_default.jpg'} sx={{ width: 64, height: 64, border: '3px solid white' }} />
-                    <Box>
-                        <Typography variant="h5" sx={{ color: 'white', fontWeight: 700 }}>
-                            {user.displayName || user.firstName || 'Utilisateur'}
-                        </Typography>
-                        {isOwnProfile && (
-                            <Button
-                                variant="outlined"
-                                size="small"
-                                onClick={() => navigate(`/user/modif-profile/${idUser}`)}
+            <Box sx={{ px: 3 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+                    <Avatar
+                        src={user.photoUrl || '/avatar_default.jpg'}
+                        sx={{
+                            width: 100,
+                            height: 100,
+                            border: '4px solid #3454D1',
+                            mb: 2,
+                        }}
+                    />
+
+                    {/* Nom et ville + note moyenne */}
+                    <Typography
+                        variant="h4"
+                        sx={{
+                            color: '#3454D1',
+                            fontWeight: 700,
+                            mb: 0.5,
+                            textAlign: 'center',
+                        }}
+                    >
+                        {user.displayName || user.firstName || 'Utilisateur'}
+                    </Typography>
+
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 1.2,
+                        }}
+                    >
+                        {/* Ville */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <MuiIcons.LocationOn fontSize="small" sx={{ color: '#3454D1' }} />
+                            <Typography sx={{ color: '#555', fontWeight: 500 }}>{user.city || 'Ville non renseignée'}</Typography>
+                        </Box>
+
+                        {/* Note moyenne (badge rouge arrondi) */}
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 0.5,
+                                border: '1.5px solid #ED6A5A',
+                                borderRadius: '999px',
+                                px: 1.2,
+                                py: 0.2,
+                                backgroundColor: 'rgba(237,106,90,0.05)',
+                            }}
+                        >
+                            <MuiIcons.Star sx={{ color: '#ED6A5A', fontSize: 16 }} />
+                            <Typography
                                 sx={{
-                                    mt: 0.5,
-                                    color: 'white',
-                                    borderColor: 'white',
-                                    textTransform: 'none',
-                                    '&:hover': { borderColor: 'white', bgcolor: 'rgba(255,255,255,0.1)' },
+                                    fontWeight: 600,
+                                    color: '#ED6A5A',
+                                    fontSize: 14,
                                 }}
                             >
-                                Modifier
+                                {averageNote ? averageNote : '–'}
+                            </Typography>
+                        </Box>
+                    </Box>
+
+                    {/* Statistiques */}
+                    <Box sx={{ display: 'flex', gap: 2, mt: 2, justifyContent: 'center' }}>
+                        <Box sx={{ textAlign: 'center' }}>
+                            <Typography variant="h6" sx={{ fontWeight: 700, color: '#1a1a1a' }}>
+                                {userActivities.length}
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: '#666' }}>
+                                activités
+                            </Typography>
+                        </Box>
+                        <Box sx={{ textAlign: 'center' }}>
+                            <Typography variant="h6" sx={{ fontWeight: 700, color: '#1a1a1a' }}>
+                                {userReservations}
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: '#666' }}>
+                                rencontres
+                            </Typography>
+                        </Box>
+                    </Box>
+
+                    {/* Boutons */}
+                    <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+                        {isOwnProfile ? (
+                            <>
+                                <Button
+                                    variant="outlined"
+                                    startIcon={<MuiIcons.Edit />}
+                                    onClick={() => navigate(`/user/modif-profile/${idUser}`)}
+                                    sx={{
+                                        borderColor: '#3454D1',
+                                        color: '#3454D1',
+                                        borderRadius: 3,
+                                        textTransform: 'none',
+                                        fontWeight: 600,
+                                        '&:hover': {
+                                            borderColor: '#3454D1',
+                                            bgcolor: 'rgba(52, 84, 209, 0.05)',
+                                        },
+                                    }}
+                                >
+                                    Modifier
+                                </Button>
+                                <LogOut />
+                            </>
+                        ) : (
+                            <Button
+                                variant="contained"
+                                startIcon={<MuiIcons.Message />}
+                                onClick={() => navigate(`/user/send-message/${idUser}`)}
+                                sx={{
+                                    bgcolor: '#ED6A5A',
+                                    color: 'white',
+                                    borderRadius: 3,
+                                    textTransform: 'none',
+                                    fontWeight: 600,
+                                    '&:hover': {
+                                        bgcolor: '#d45a4a',
+                                    },
+                                }}
+                            >
+                                Envoyer un message
                             </Button>
                         )}
-                    </Box>
+                    </Stack>
                 </Box>
 
-                {/* Centres d'intérêts */}
-                <Box sx={{ bgcolor: 'white', borderRadius: 3, p: 2.5, mb: 2 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#1a1a1a' }}>
-                        Centre d'intérêts
+                {/* À propos de moi */}
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5, color: '#1a1a1a' }}>
+                        À propos de moi
                     </Typography>
+                    <Typography variant="body2" sx={{ color: '#1a1a1a', lineHeight: 1.6 }}>
+                        {user.description || 'Aucune description pour le moment...'}
+                    </Typography>
+                </Box>
+
+                {/* Centres d'intérêt */}
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5, color: '#1a1a1a' }}>
+                        Mes centres d'intérêt
+                    </Typography>
+
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                         {interests.length > 0 ? (
                             interests.map((interest) => {
-                                const IconComponent = MuiIcons[interest.iconName] || MuiIcons.ShoppingCart
+                                const IconComponent = MuiIcons[interest.iconName] || MuiIcons.Interests
                                 return (
                                     <Chip
                                         key={interest.id}
-                                        icon={<IconComponent sx={{ fontSize: 18 }} />}
+                                        icon={<IconComponent sx={{ fontSize: 20, color: interest.color }} />}
                                         label={interest.description}
                                         sx={{
-                                            bgcolor: interest.color,
-                                            color: 'white',
+                                            bgcolor: 'white',
+                                            color: '#1a1a1a',
                                             fontWeight: 600,
-                                            '& .MuiChip-icon': { color: 'white' },
+                                            borderRadius: 3,
+                                            border: 'none',
+                                            p: 1,
+                                            '& .MuiChip-icon': { color: interest.color },
                                         }}
                                     />
                                 )
@@ -147,71 +286,40 @@ export default function UserProfile() {
                     </Box>
                 </Box>
 
-                {/* Description */}
-                <Box sx={{ bgcolor: 'white', borderRadius: 3, p: 2.5, mb: 2 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1.5, color: '#1a1a1a' }}>
-                        Description
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#666', lineHeight: 1.6 }}>
-                        {user.description || 'Cet utilisateur n’a pas encore ajouté de description.'}
-                    </Typography>
-                </Box>
-
-                {/* Nombre d'activités */}
-                <Box sx={{ bgcolor: 'white', borderRadius: 3, p: 2.5, mb: 2 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1.5, color: '#1a1a1a' }}>
-                        Nombre d'activités proposées
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <MuiIcons.Event sx={{ fontSize: 24, color: bgColor }} />
-                        <Typography variant="h4" sx={{ fontWeight: 700, color: '#1a1a1a' }}>
-                            {userActivities.length}
+                {/* Activités */}
+                {(upcomingActivities.length > 0 || pastActivities.length > 0) && (
+                    <Box sx={{ mb: 4 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: '#3454D1' }}>
+                            Activités
                         </Typography>
+
+                        {upcomingActivities.length > 0 && (
+                            <>
+                                <Typography variant="subtitle1" sx={{ color: '#1a1a1a', mb: 1 }}>
+                                    Prochaines
+                                </Typography>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
+                                    {upcomingActivities.map((activity) => (
+                                        <ActivityCard key={activity.id} activity={activity} />
+                                    ))}
+                                </Box>
+                            </>
+                        )}
+
+                        {pastActivities.length > 0 && (
+                            <>
+                                <Typography variant="subtitle1" sx={{ color: '#1a1a1a', mb: 1 }}>
+                                    Passées
+                                </Typography>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                    {pastActivities.map((activity) => (
+                                        <ActivityCard key={activity.id} activity={activity} />
+                                    ))}
+                                </Box>
+                            </>
+                        )}
                     </Box>
-                </Box>
-
-                {/* Nombre de rencontres */}
-                <Box
-                    sx={{
-                        bgcolor: 'white',
-                        borderRadius: 3,
-                        p: 2.5,
-                        mb: 2,
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                    }}
-                >
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#1a1a1a' }}>
-                        Nombre de rencontres
-                    </Typography>
-                    <Chip
-                        icon={<MuiIcons.Group />}
-                        label="0"
-                        sx={{ bgcolor: bgColor, color: 'white', fontWeight: 600, '& .MuiChip-icon': { color: 'white' } }}
-                    />
-                </Box>
-
-                {/* Avis */}
-                <Box
-                    sx={{
-                        bgcolor: 'white',
-                        borderRadius: 3,
-                        p: 2.5,
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                    }}
-                >
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#1a1a1a' }}>
-                        Avis
-                    </Typography>
-                    <Chip
-                        icon={<MuiIcons.Star />}
-                        label="N/A"
-                        sx={{ bgcolor: '#f5f5f5', color: '#666', fontWeight: 600, '& .MuiChip-icon': { color: '#FFD166' } }}
-                    />
-                </Box>
+                )}
             </Box>
         </Box>
     )
