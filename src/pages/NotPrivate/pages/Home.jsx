@@ -32,7 +32,7 @@ export default function Home() {
                         fontWeight: 700,
                         color: '#3454D1',
                         fontFamily: 'Poppins, sans-serif',
-                        mb: 0.1,
+                        mb: -1,
                         lineHeight: 1.1,
                         letterSpacing: '-1px',
                     }}
@@ -67,7 +67,7 @@ export default function Home() {
                 {/* BOUTON CRÉER UN COMPTE */}
                 <Button
                     variant="outlined"
-                    onClick={() => navigate('/register-profile')}
+                    onClick={() => navigate('/signup')}
                     sx={{
                         bgcolor: '#ED6A5A',
                         '&:hover': { bgcolor: '#d85a4c' },

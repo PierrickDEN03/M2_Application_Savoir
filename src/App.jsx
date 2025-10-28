@@ -5,6 +5,7 @@ import Private from './pages/Private/Private'
 import NotPrivate from './pages/NotPrivate/NotPrivate'
 import Dashboard from './pages/Private/pages/Dashboard'
 import SignInMagic from './pages/NotPrivate/pages/SignIn'
+import Signup from './pages/NotPrivate/pages/Signup'
 import AuthCallback from './pages/AuthCallback'
 import RegisterProfile from './pages/NotPrivate/pages/RegisterProfile'
 import SwaggerUIComponent from './components/SwaggerDoc'
@@ -30,6 +31,8 @@ function App() {
                 <Route path="/" element={<Home />} />
                 {/* Connexion par lien magique */}
                 <Route path="/login" element={<SignInMagic />} />
+                {/* Inscription avec magic link */}
+                <Route path="/signup" element={<Signup />} />
                 {/* Complétion du profil après 1ère connexion */}
                 <Route path="/register-profile" element={<RegisterProfile />} />
             </Route>
