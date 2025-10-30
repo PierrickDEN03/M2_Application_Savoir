@@ -1,8 +1,9 @@
-// firebase-config.js
+// FILE: src/firebase-config.js
 import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
-import { getStorage } from 'firebase/storage' // <-- ajouter
+import { getStorage } from 'firebase/storage'
+import { getMessaging } from 'firebase/messaging'
 
 const firebaseConfig = {
     apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -14,10 +15,11 @@ const firebaseConfig = {
     appId: process.env.REACT_APP_FIREBASE_BASE_ID,
 }
 
-const app = initializeApp(firebaseConfig)
+export const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 export const db = getFirestore(app)
 export const storage = getStorage(app)
+export const messaging = getMessaging(app)
 
 export const actionCodeSettings = {
     url: `${process.env.REACT_APP_BASE_URL || 'http://localhost:3000'}/auth/callback`,

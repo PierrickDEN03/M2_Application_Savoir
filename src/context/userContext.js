@@ -4,6 +4,8 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '../firebase-config'
 import { sendMagicLink, completeSignInWithEmailLink, profileExists, createProfile, signOut } from '../services/userService'
 
+import { requestNotificationPermission, listenToForegroundMessages } from '../firebase-messaging'
+
 export const UserContext = createContext(null)
 
 export function UserContextProvider({ children }) {
@@ -11,10 +13,21 @@ export function UserContextProvider({ children }) {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        const unsub = onAuthStateChanged(auth, (user) => {
+        listenToForegroundMessages()
+
+        const unsub = onAuthStateChanged(auth, async (user) => {
             setCurrentUser(user)
             setLoading(false)
+
+            if (user) {
+                try {
+                    await requestNotificationPermission()
+                } catch (err) {
+                    console.error('Erreur lors de la demande de permission FCM:', err)
+                }
+            }
         })
+
         return unsub
     }, [])
 

@@ -285,7 +285,7 @@ export default function SendMessage() {
                     bgcolor: '#ffffff',
                     overflowY: 'auto',
                     overflowX: 'hidden',
-                    pb: 10,
+                    pb: 30,
                     // Style de scrollbar personnalisé (optionnel)
                     '&::-webkit-scrollbar': {
                         width: '8px',

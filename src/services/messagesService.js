@@ -1,12 +1,13 @@
 // FILE: src/services/messagesService.js
 import { db } from '../firebase-config'
 import { collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, getDocs, or, and } from 'firebase/firestore'
+import { getUserNotificationToken, sendNotification } from './notificationsService'
 
 /**
- * Envoie un message à un utilisateur
- * @param {string} senderId - ID de l'expéditeur
- * @param {string} receiverId - ID du destinataire
- * @param {string} text - Contenu du message
+ * Envoie un message à un utilisateur + notifie le destinataire
+ * @param {string} senderId
+ * @param {string} receiverId
+ * @param {string} text
  * @returns {Promise<string>} - ID du message créé
  */
 export async function sendMessage(senderId, receiverId, text) {
@@ -22,6 +23,24 @@ export async function sendMessage(senderId, receiverId, text) {
         createdAt: serverTimestamp(),
         read: false,
     })
+
+    // Tenter d'envoyer une notification au destinataire
+    try {
+        const token = await getUserNotificationToken(receiverId)
+        if (token) {
+            await sendNotification(token, {
+                title: 'Nouveau message 💬',
+                body: text.length > 50 ? text.slice(0, 50) + '...' : text,
+                url: `/messages/${senderId}`, // lien vers la conversation
+                senderId,
+                receiverId,
+            })
+        } else {
+            console.warn(`⚠️ Aucun token FCM trouvé pour l'utilisateur ${receiverId}`)
+        }
+    } catch (err) {
+        console.error('Erreur lors de l’envoi de la notification FCM:', err)
+    }
 
     return docRef.id
 }
