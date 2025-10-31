@@ -2,6 +2,7 @@
 import { db } from '../firebase-config'
 import { collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, getDocs, or, and } from 'firebase/firestore'
 import { getUserNotificationToken, sendNotification } from './notificationsService'
+import { fetchUserById } from './userService'
 
 /**
  * Envoie un message à un utilisateur + notifie le destinataire
@@ -24,14 +25,25 @@ export async function sendMessage(senderId, receiverId, text) {
         read: false,
     })
 
+    // Récupérer le nom de l'expéditeur avant d'envoyer la notification
+    let senderName = 'Nouveau message'
+    try {
+        const senderProfile = await fetchUserById(senderId)
+        if (senderProfile && senderProfile.displayName) {
+            senderName = senderProfile.displayName
+        }
+    } catch (e) {
+        console.warn('⚠️ Impossible de récupérer le nom de l’expéditeur, utilisation du texte par défaut.')
+    }
+
     // Tenter d'envoyer une notification au destinataire
     try {
         const token = await getUserNotificationToken(receiverId)
         if (token) {
             await sendNotification(token, {
-                title: 'Nouveau message 💬',
+                title: senderName, // 👈 Nom de l'expéditeur
                 body: text.length > 50 ? text.slice(0, 50) + '...' : text,
-                url: `/messages/${senderId}`, // lien vers la conversation
+                url: `/user/send-message/${senderId}`, // lien vers la conversation
                 senderId,
                 receiverId,
             })

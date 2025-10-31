@@ -20,6 +20,17 @@ export async function createActivity(uid, activityData = {}) {
     }
 
     const docRef = await addDoc(activitiesRef, payload)
+
+    // 🔔 Envoie une requête à la fonction notifyUsersWithSameInterest
+    await fetch('https://us-central1-m2applicationsavoir.cloudfunctions.net/notifyUsersWithSameInterest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            activityId: docRef.id,
+            categoryId: activityData.categoryId,
+        }),
+    })
+
     return docRef.id
 }
 

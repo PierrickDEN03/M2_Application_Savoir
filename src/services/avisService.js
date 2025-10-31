@@ -21,7 +21,31 @@ export async function getAverageNote(idActivity) {
 
 // 🔹 Ajouter un avis
 export async function addAvis({ idActivity, idUser, note, comment }) {
-    await addDoc(avisCollection, { idActivity, idUser, note, comment, createdAt: new Date() })
+    const docRef = await addDoc(avisCollection, {
+        idActivity,
+        idUser,
+        note,
+        comment,
+        createdAt: new Date(),
+    })
+
+    // 🔔 Envoi optionnel : déclencher manuellement la Cloud Function (utile pour tester localement)
+    try {
+        await fetch('https://us-central1-m2applicationsavoir.cloudfunctions.net/notifyActivityCreatorOnNewAvis', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                idActivity,
+                idUser,
+                note,
+                comment,
+            }),
+        })
+    } catch (err) {
+        console.error('⚠️ Erreur lors de la notification du créateur:', err)
+    }
+
+    return docRef.id
 }
 
 // 🔹 Mettre à jour un avis existant

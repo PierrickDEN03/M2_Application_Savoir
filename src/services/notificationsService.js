@@ -1,8 +1,6 @@
 // FILE: src/services/notificationsService.js
 import { db } from '../firebase-config'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
-import { getFunctions, httpsCallable } from 'firebase/functions'
-import { app } from '../firebase-config'
 
 /**
  * Sauvegarde le token FCM d'un utilisateur pour pouvoir lui envoyer des notifications plus tard
@@ -39,6 +37,11 @@ export async function getUserNotificationToken(userId) {
     }
 }
 
+/**
+ * Envoie une notification via la Cloud Function Pour les messages
+ * @param {string} token - Token FCM du destinataire
+ * @param {{ title: string, body: string, url?: string }} data - Données de notification
+ */
 export async function sendNotification(token, data) {
     try {
         const response = await fetch('https://us-central1-m2applicationsavoir.cloudfunctions.net/sendUserNotification', {
@@ -47,7 +50,7 @@ export async function sendNotification(token, data) {
             body: JSON.stringify({ token, ...data }),
         })
         const result = await response.json()
-        console.log('Réponse Cloud Function:', result)
+        console.log('✅ Réponse Cloud Function:', result)
     } catch (error) {
         console.error('Erreur Cloud Function sendNotification:', error)
     }
