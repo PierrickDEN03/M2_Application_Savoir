@@ -1,17 +1,5 @@
 import React, { useState, useContext, useEffect, useMemo } from 'react'
-import {
-    Box,
-    Container,
-    Typography,
-    TextField,
-    Button,
-    MenuItem,
-    Slider,
-    IconButton,
-    Snackbar,
-    Alert,
-    CircularProgress,
-} from '@mui/material'
+import { Box, Container, Typography, TextField, Button, MenuItem, Slider, Snackbar, Alert, CircularProgress } from '@mui/material'
 import { LocalizationProvider, DatePicker, TimePicker } from '@mui/x-date-pickers'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import frLocale from 'date-fns/locale/fr'
@@ -19,20 +7,24 @@ import * as MuiIcons from '@mui/icons-material'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { storage } from '../../../firebase-config'
 import { UserContext } from '../../../context/userContext'
-import { createActivity } from '../../../services/activitiesService'
+import { createActivity, fetchActivityById, updateActivity } from '../../../services/activitiesService'
 import { getUserInterests } from '../../../services/categoriesService'
 import AddressAutocomplete from '../../../components/google_api/AddressAutocomplete'
 import useLoadGooglePlaces from '../../../components/google_api/useLoadGooglePlaces'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 
 export default function CreateActivityForm() {
     const loaded = useLoadGooglePlaces()
     const { currentUser } = useContext(UserContext)
     const navigate = useNavigate()
+    const { activityId } = useParams()
+    const isEditMode = Boolean(activityId)
+    const [isLoadingActivity, setIsLoadingActivity] = useState(isEditMode)
 
     const [step, setStep] = useState(1)
     const [categories, setCategories] = useState([])
     const [selectedCategory, setSelectedCategory] = useState(null)
+    const [categoriesLoaded, setCategoriesLoaded] = useState(false)
 
     const [formData, setFormData] = useState({
         title: '',
@@ -43,6 +35,7 @@ export default function CreateActivityForm() {
         duration: 1,
         description: '',
         photoFile: null,
+        photoUrl: null,
     })
 
     const [previewUrl, setPreviewUrl] = useState(null)
@@ -50,31 +43,73 @@ export default function CreateActivityForm() {
     const [status, setStatus] = useState({ open: false, severity: 'info', message: '' })
     const [submitting, setSubmitting] = useState(false)
 
+    // Load categories
     useEffect(() => {
-        async function fetchCategories() {
-            if (!currentUser) return
-            try {
-                const cats = await getUserInterests(currentUser.uid)
+        if (!currentUser) return
+        getUserInterests(currentUser.uid)
+            .then((cats) => {
                 setCategories(cats || [])
-            } catch (err) {
+                setCategoriesLoaded(true)
+            })
+            .catch((err) => {
                 console.error('Erreur chargement catégories utilisateur', err)
-            }
-        }
-        fetchCategories()
+                setCategoriesLoaded(true)
+            })
     }, [currentUser])
 
+    // Load activity data if edit mode
     useEffect(() => {
-        if (!formData.photoFile) {
+        if (!isEditMode || !currentUser || !categoriesLoaded) return
+        const loadActivity = async () => {
+            setIsLoadingActivity(true)
+            try {
+                const activity = await fetchActivityById(activityId)
+                if (!activity) return
+
+                const date = activity.date ? new Date(activity.date) : new Date()
+                const time = date
+
+                setFormData({
+                    title: activity.title || '',
+                    date,
+                    time,
+                    address: activity.address || { street: '', city: '', postalCode: '', full: '', placeId: '' },
+                    participants: activity.participants || 4,
+                    duration: activity.duration || 1,
+                    description: activity.description || '',
+                    photoFile: null,
+                    photoUrl: activity.photoUrl || null,
+                })
+
+                const cat = categories.find((c) => c.id === activity.categoryId)
+                setSelectedCategory(cat || null)
+
+                if (activity.photoUrl) setPreviewUrl(activity.photoUrl)
+            } catch (err) {
+                console.error(err)
+                setStatus({ open: true, severity: 'error', message: "Erreur lors du chargement de l'activité." })
+            } finally {
+                setIsLoadingActivity(false)
+            }
+        }
+        loadActivity()
+    }, [activityId, isEditMode, currentUser, categories, categoriesLoaded])
+
+    // Photo preview logic
+    useEffect(() => {
+        // Ne rien faire si on est en édition et que l'activité n'est pas encore chargée
+        if (isEditMode && isLoadingActivity) return
+
+        if (formData.photoFile) {
+            const url = URL.createObjectURL(formData.photoFile)
+            setPreviewUrl(url)
+            return () => URL.revokeObjectURL(url)
+        } else if (formData.photoUrl) {
+            setPreviewUrl(formData.photoUrl)
+        } else {
             setPreviewUrl(null)
         }
-    }, [selectedCategory, formData.photoFile])
-
-    useEffect(() => {
-        if (!formData.photoFile) return
-        const url = URL.createObjectURL(formData.photoFile)
-        setPreviewUrl(url)
-        return () => URL.revokeObjectURL(url)
-    }, [formData.photoFile])
+    }, [formData.photoFile, formData.photoUrl, isEditMode, isLoadingActivity])
 
     const handleChangeField = (field) => (e) => {
         setFormData((s) => ({ ...s, [field]: e.target.value }))
@@ -150,7 +185,7 @@ export default function CreateActivityForm() {
 
         setSubmitting(true)
         try {
-            let photoUrl = null
+            let photoUrl = formData.photoUrl || null
             if (formData.photoFile) {
                 const storageRef = ref(storage, `activities/${currentUser.uid}/${Date.now()}_${formData.photoFile.name}`)
                 await uploadBytes(storageRef, formData.photoFile)
@@ -171,43 +206,54 @@ export default function CreateActivityForm() {
                 description: formData.description.trim(),
                 photoUrl,
                 placeId: formData.address.placeId || null,
-                createdAt: new Date().toISOString(),
                 userId: currentUser.uid,
             }
 
-            const activityId = await createActivity(currentUser.uid, payload)
-            setStatus({ open: true, severity: 'success', message: 'Activité créée avec succès !' })
-
-            setFormData({
-                title: '',
-                date: new Date(),
-                time: new Date(),
-                address: { street: '', city: '', postalCode: '', full: '', placeId: '' },
-                participants: 4,
-                duration: 1,
-                description: '',
-                photoFile: null,
-            })
-            setSelectedCategory(null)
-            setPreviewUrl(null)
-            setStep(1)
-            setErrors({})
+            if (isEditMode) {
+                await updateActivity(activityId, payload)
+                setStatus({ open: true, severity: 'success', message: 'Activité mise à jour !' })
+            } else {
+                await createActivity(currentUser.uid, payload)
+                setStatus({ open: true, severity: 'success', message: 'Activité créée !' })
+                setFormData({
+                    title: '',
+                    date: new Date(),
+                    time: new Date(),
+                    address: { street: '', city: '', postalCode: '', full: '', placeId: '' },
+                    participants: 4,
+                    duration: 1,
+                    description: '',
+                    photoFile: null,
+                    photoUrl: null,
+                })
+                setSelectedCategory(null)
+                setPreviewUrl(null)
+                setStep(1)
+                setErrors({})
+            }
         } catch (err) {
             console.error(err)
-            setStatus({ open: true, severity: 'error', message: err.message || 'Erreur lors de la création.' })
+            setStatus({ open: true, severity: 'error', message: err.message || 'Erreur lors de la sauvegarde.' })
         } finally {
             setSubmitting(false)
         }
     }
 
     const shouldRenderCategoryVisual = useMemo(() => {
-        return !formData.photoFile && selectedCategory
-    }, [formData.photoFile, selectedCategory])
+        // Ne pas afficher la catégorie visuelle si on charge l'activité ou les catégories
+        if (isEditMode && (isLoadingActivity || !categoriesLoaded)) return false
+        // Ne pas afficher si une photo a été uploadée
+        if (formData.photoFile) return false
+        // Ne pas afficher si on a déjà une photoUrl
+        if (previewUrl) return false
+        // Afficher seulement si une catégorie est sélectionnée
+        return !!selectedCategory
+    }, [formData.photoFile, selectedCategory, isEditMode, isLoadingActivity, categoriesLoaded, previewUrl])
 
     const renderCategoryVisual = () => {
         const color = selectedCategory?.color || '#D1388B'
         const IconName = selectedCategory?.iconName || 'MusicNote'
-        const IconComponent = MuiIcons[IconName] || MuiIcons.MusicNote
+        const IconComponent = MuiIcons[IconName]
 
         return (
             <Box
@@ -238,26 +284,67 @@ export default function CreateActivityForm() {
                         border: '2px solid white',
                     }}
                 >
-                    <MuiIcons.CheckCircle sx={{ fontSize: 32, color: '#3454D1' }} />
+                    <MuiIcons.Edit sx={{ fontSize: 18, color: '#3454D1' }} />
                 </Box>
             </Box>
         )
     }
 
     const renderPhotoPreview = () => {
-        if (previewUrl && formData.photoFile) {
+        // Si on charge l'activité en mode édition ou les catégories, afficher un loader
+        if (isEditMode && (isLoadingActivity || !categoriesLoaded)) {
             return (
                 <Box
-                    component="img"
-                    src={previewUrl}
-                    alt="Aperçu photo"
-                    sx={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 3 }}
-                />
+                    sx={{
+                        width: '100%',
+                        height: 160,
+                        borderRadius: 3,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: '#E5E7EB',
+                    }}
+                >
+                    <CircularProgress sx={{ color: '#3454D1' }} />
+                </Box>
             )
         }
-        if (shouldRenderCategoryVisual) {
-            return renderCategoryVisual()
+
+        // Si une photo a été uploadée ou existe déjà, l'afficher
+        if (previewUrl) {
+            return (
+                <Box sx={{ position: 'relative' }}>
+                    <Box
+                        component="img"
+                        src={previewUrl}
+                        alt="Aperçu photo"
+                        sx={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 3 }}
+                    />
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            right: 12,
+                            bottom: 12,
+                            bgcolor: 'white',
+                            width: 32,
+                            height: 32,
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: '2px solid white',
+                        }}
+                    >
+                        <MuiIcons.Edit sx={{ fontSize: 18, color: '#3454D1' }} />
+                    </Box>
+                </Box>
+            )
         }
+
+        // Si on doit afficher la catégorie visuelle
+        if (shouldRenderCategoryVisual) return renderCategoryVisual()
+
+        // Par défaut, afficher l'image placeholder
         return (
             <Box
                 sx={{
@@ -268,9 +355,27 @@ export default function CreateActivityForm() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     bgcolor: '#E5E7EB',
+                    position: 'relative',
                 }}
             >
                 <MuiIcons.Image sx={{ fontSize: 56, color: '#9CA3AF' }} />
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        right: 12,
+                        bottom: 12,
+                        bgcolor: 'white',
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '2px solid white',
+                    }}
+                >
+                    <MuiIcons.Edit sx={{ fontSize: 18, color: '#3454D1' }} />
+                </Box>
             </Box>
         )
     }
@@ -336,47 +441,53 @@ export default function CreateActivityForm() {
                             </Box>
 
                             {/* Title */}
-                            <TextField
-                                fullWidth
-                                label="Quelle activité proposes-tu ?"
-                                placeholder="Concert du Nouvel An"
-                                value={formData.title}
-                                onChange={handleChangeField('title')}
-                                error={!!errors.title}
-                                helperText={errors.title}
-                                sx={{
-                                    bgcolor: 'white',
-                                    borderRadius: 2,
-                                    '& .MuiOutlinedInput-root': { borderRadius: 2 },
-                                }}
-                            />
+                            <Box>
+                                <Typography sx={{ color: '#3454D1', fontWeight: 600, mb: 1, fontSize: '0.95rem' }}>
+                                    Quelle activité proposes-tu ?
+                                </Typography>
+                                <TextField
+                                    fullWidth
+                                    placeholder="Concert du Nouvel An"
+                                    value={formData.title}
+                                    onChange={handleChangeField('title')}
+                                    error={!!errors.title}
+                                    helperText={errors.title}
+                                    sx={{
+                                        bgcolor: 'white',
+                                        borderRadius: 2,
+                                        '& .MuiOutlinedInput-root': { borderRadius: 2 },
+                                    }}
+                                />
+                            </Box>
 
                             {/* Category */}
-                            <TextField
-                                select
-                                fullWidth
-                                label="Catégorie"
-                                value={selectedCategory?.id ?? ''}
-                                onChange={(e) => handleCategorySelect(e.target.value)}
-                                error={!!errors.category}
-                                helperText={errors.category}
-                                sx={{
-                                    bgcolor: 'white',
-                                    borderRadius: 2,
-                                    '& .MuiOutlinedInput-root': { borderRadius: 2 },
-                                }}
-                            >
-                                {categories.map((cat) => (
-                                    <MenuItem key={cat.id} value={cat.id}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            {React.createElement(MuiIcons[cat.iconName] || MuiIcons.MusicNote, {
-                                                sx: { color: cat.color || '#3454D1', fontSize: 20 },
-                                            })}
-                                            {cat.description}
-                                        </Box>
-                                    </MenuItem>
-                                ))}
-                            </TextField>
+                            <Box>
+                                <Typography sx={{ color: '#3454D1', fontWeight: 600, mb: 1, fontSize: '0.95rem' }}>Catégorie</Typography>
+                                <TextField
+                                    select
+                                    fullWidth
+                                    value={selectedCategory?.id ?? ''}
+                                    onChange={(e) => handleCategorySelect(e.target.value)}
+                                    error={!!errors.category}
+                                    helperText={errors.category}
+                                    sx={{
+                                        bgcolor: 'white',
+                                        borderRadius: 2,
+                                        '& .MuiOutlinedInput-root': { borderRadius: 2 },
+                                    }}
+                                >
+                                    {categories.map((cat) => (
+                                        <MenuItem key={cat.id} value={cat.id}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                {React.createElement(MuiIcons[cat.iconName] || MuiIcons.MusicNote, {
+                                                    sx: { color: cat.color || '#3454D1', fontSize: 20 },
+                                                })}
+                                                {cat.description}
+                                            </Box>
+                                        </MenuItem>
+                                    ))}
+                                </TextField>
+                            </Box>
 
                             {/* Address */}
                             <Box>
@@ -543,23 +654,26 @@ export default function CreateActivityForm() {
                             </Box>
 
                             {/* Description */}
-                            <TextField
-                                fullWidth
-                                multiline
-                                rows={5}
-                                label="Ton activité en quelques mots"
-                                placeholder="Je vous propose d'assister au concert du Nouvel An à l'Opéra de Lyon. Attention, il est nécessaire de réserver son billet en avance :
-https://www.opera-lyon.com/fr/programmation/saison-2024-2025/concert-nouvel-an-2"
-                                value={formData.description}
-                                onChange={handleChangeField('description')}
-                                error={!!errors.description}
-                                helperText={errors.description}
-                                sx={{
-                                    bgcolor: 'white',
-                                    borderRadius: 2,
-                                    '& .MuiOutlinedInput-root': { borderRadius: 2 },
-                                }}
-                            />
+                            <Box>
+                                <Typography sx={{ color: '#3454D1', fontWeight: 600, mb: 1, fontSize: '0.95rem' }}>
+                                    Ton activité en quelques mots
+                                </Typography>
+                                <TextField
+                                    fullWidth
+                                    multiline
+                                    rows={5}
+                                    placeholder="Je vous propose d'assister au concert du Nouvel An à l'Opéra de Lyon."
+                                    value={formData.description}
+                                    onChange={handleChangeField('description')}
+                                    error={!!errors.description}
+                                    helperText={errors.description}
+                                    sx={{
+                                        bgcolor: 'white',
+                                        borderRadius: 2,
+                                        '& .MuiOutlinedInput-root': { borderRadius: 2 },
+                                    }}
+                                />
+                            </Box>
 
                             <Button
                                 fullWidth

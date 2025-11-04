@@ -17,7 +17,7 @@ export const calculateDistance = async (placeId, onDistanceUpdate) => {
     try {
         // Vérifier que Google Maps est chargé
         if (!window.google?.maps) {
-            console.warn('Google Maps API non chargée')
+            //console.warn('Google Maps API non chargée')
             return
         }
 

@@ -41,6 +41,7 @@ function App() {
                 <Route path="/user/dashboard" element={<Dashboard />} />
                 <Route path="/user/map" element={<ResearchActivity />}></Route>
                 <Route path="/user/create-activity" element={<CreateActivityForm />}></Route>
+                <Route path="/user/activity-edit/:activityId" element={<CreateActivityForm />}></Route>
                 <Route path="/user/interest" element={<ChooseInterest />}></Route>
                 <Route path="/user/activity/:activityId" element={<ActivityDetail />} />
                 <Route path="/user/profile/:idUser" element={<UserProfile />} />
