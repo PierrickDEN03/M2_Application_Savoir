@@ -31,6 +31,7 @@ function SearchBar({ value, onChange, placeholder = 'Cuisine dans le 7e' }) {
                 placeholder={placeholder}
                 sx={{
                     bgcolor: '#FFD166',
+                    fontFamily: '"Nunito", sans-serif',
                     borderRadius: 2,
                     '& .MuiOutlinedInput-root': {
                         '& fieldset': { border: 'none' },

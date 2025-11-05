@@ -190,7 +190,8 @@ export default function SendMessage() {
                     onClick={() => navigate(-1)}
                     sx={{
                         cursor: 'pointer',
-                        color: '#1a1a1a',
+                        color: '#3454D1',
+                        fontFamily: '"All Round Gothic Semi", sans-serif',
                         fontWeight: 600,
                         fontSize: 16,
                     }}
@@ -215,10 +216,10 @@ export default function SendMessage() {
                     <>
                         <Avatar src={'/activity_group_icon.png'} sx={{ width: 48, height: 48, border: '2px solid #3454D1' }} />
                         <Box>
-                            <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                            <Typography variant="body1" sx={{ fontWeight: 600, fontFamily: '"Nunito", sans-serif' }}>
                                 {activity?.title || "Discussion de l'activité"}
                             </Typography>
-                            <Typography variant="caption" sx={{ color: '#666' }}>
+                            <Typography variant="caption" sx={{ color: '#666', fontFamily: '"Nunito", sans-serif' }}>
                                 {participants.length} participant{participants.length > 1 ? 's' : ''}
                             </Typography>
                         </Box>
@@ -239,7 +240,7 @@ export default function SendMessage() {
                                 }}
                                 onClick={() => navigate(`/user/profile/${idUser}`)}
                             >
-                                <Typography variant="body1" sx={{ fontWeight: 600, color: '#1a1a1a' }}>
+                                <Typography variant="body1" sx={{ fontWeight: 600, color: '#1a1a1a', fontFamily: '"Nunito", sans-serif' }}>
                                     {recipient?.displayName || recipient?.firstName || 'Utilisateur'}
                                 </Typography>
 
@@ -262,6 +263,7 @@ export default function SendMessage() {
                                             sx={{
                                                 fontWeight: 600,
                                                 color: '#f28b82',
+                                                fontFamily: '"All Round Gothic Semi", sans-serif',
                                             }}
                                         >
                                             {averageRating}
@@ -269,7 +271,7 @@ export default function SendMessage() {
                                     </Box>
                                 )}
                             </Box>
-                            <Typography variant="caption" sx={{ color: '#666' }}>
+                            <Typography variant="caption" sx={{ color: '#666', fontFamily: '"Nunito", sans-serif' }}>
                                 Conversation privée
                             </Typography>
                         </Box>
@@ -312,7 +314,7 @@ export default function SendMessage() {
                             p: 3,
                         }}
                     >
-                        <Typography variant="body2" sx={{ color: '#999', textAlign: 'center' }}>
+                        <Typography variant="body2" sx={{ color: '#999', textAlign: 'center', fontFamily: '"Nunito", sans-serif' }}>
                             Aucun message. Commencez la conversation !
                         </Typography>
                     </Box>

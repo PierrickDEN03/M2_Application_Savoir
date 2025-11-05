@@ -181,7 +181,7 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
                         position: 'sticky',
                         top: 0,
                         zIndex: 2000,
-                        bgcolor: '#F0E7D6',
+                        bgcolor: '#E4EFF6',
                         display: 'flex',
                         alignItems: 'center',
                         gap: 2,
@@ -199,6 +199,7 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
                         sx={{
                             flex: 1,
                             bgcolor: 'white',
+                            fontFamily: '"Nunito", sans-serif',
                             borderRadius: '50px',
                             '& .MuiOutlinedInput-root': {
                                 fieldset: {
@@ -258,9 +259,6 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
                                 mb: 3,
                             }}
                         >
-                            <Typography variant="h6" sx={{ color: '#3454D1', fontWeight: 700 }}>
-                                Filtres
-                            </Typography>
                             <IconButton onClick={() => setOpen(false)}>
                                 <MuiIcons.Close />
                             </IconButton>
@@ -268,7 +266,11 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
 
                         {/* Localisation */}
                         <Box sx={{ mb: 3 }}>
-                            <Typography sx={{ fontWeight: 600, color: '#f45b69', mb: 1 }}>Localisation</Typography>
+                            <Typography
+                                sx={{ fontWeight: 600, color: '#f45b69', mb: 1, fontFamily: '"All Round Gothic Semi", sans-serif' }}
+                            >
+                                Localisation
+                            </Typography>
                             <CityAutocomplete
                                 value={filters.location}
                                 onCitySelected={(cityData) => {
@@ -289,7 +291,9 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
 
                         {/* Distance */}
                         <Box sx={{ mb: 3 }}>
-                            <Typography sx={{ fontWeight: 600, color: '#f45b69', mb: 1 }}>
+                            <Typography
+                                sx={{ fontWeight: 600, color: '#f45b69', mb: 1, fontFamily: '"All Round Gothic Semi", sans-serif' }}
+                            >
                                 Distance : {filters.distance !== null ? `${filters.distance} km` : 'Pas de limite'}
                             </Typography>
                             <Box sx={{ px: 1 }}>
@@ -316,7 +320,11 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
 
                         {/* Date */}
                         <Box sx={{ mb: 3 }}>
-                            <Typography sx={{ fontWeight: 600, color: '#f45b69', mb: 1 }}>Date</Typography>
+                            <Typography
+                                sx={{ fontWeight: 600, color: '#f45b69', mb: 1, fontFamily: '"All Round Gothic Semi", sans-serif' }}
+                            >
+                                Date
+                            </Typography>
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                                 {dateOptions.map((opt) => (
                                     <Button
@@ -329,6 +337,7 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
                                             textTransform: 'none',
                                             bgcolor: filters.date === opt ? '#3454D1' : 'white',
                                             color: filters.date === opt ? 'white' : '#3454D1',
+                                            fontFamily: '"Nunito", sans-serif',
                                             borderColor: '#3454D1',
                                             fontWeight: filters.date === opt ? 600 : 400,
                                             transition: 'all 0.2s ease',
@@ -345,7 +354,11 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
 
                         {/* Type d'activité */}
                         <Box sx={{ mb: 3 }}>
-                            <Typography sx={{ fontWeight: 600, color: '#f45b69', mb: 1 }}>Type d'activité</Typography>
+                            <Typography
+                                sx={{ fontWeight: 600, color: '#f45b69', mb: 1, fontFamily: '"All Round Gothic Semi", sans-serif' }}
+                            >
+                                Type d'activité
+                            </Typography>
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                                 <Chip
                                     label="Tout"
@@ -354,6 +367,7 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
                                         bgcolor: filters.categories.length === 0 ? '#3454D1' : '#f5f5f5',
                                         color: filters.categories.length === 0 ? 'white' : '#555',
                                         fontWeight: filters.categories.length === 0 ? 600 : 400,
+                                        fontFamily: '"Nunito", sans-serif',
                                         transition: 'all 0.2s ease',
                                         cursor: 'pointer',
                                         '&:hover': {
@@ -375,6 +389,7 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
                                                 bgcolor: selected ? '#3454D1' : '#f5f5f5',
                                                 color: selected ? 'white' : '#555',
                                                 fontWeight: selected ? 600 : 400,
+                                                fontFamily: '"Nunito", sans-serif',
                                                 transition: 'all 0.2s ease',
                                                 cursor: 'pointer',
                                                 '&:hover': {
@@ -400,6 +415,7 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
                                     textTransform: 'none',
                                     color: '#666',
                                     borderColor: '#ccc',
+                                    fontFamily: '"Nunito", sans-serif',
                                     fontWeight: 500,
                                     transition: 'all 0.2s ease',
                                     '&:hover': {
@@ -460,6 +476,7 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
                     }}
                     sx={{
                         width: 300,
+                        fontFamily: '"Nunito", sans-serif',
                         '& .MuiOutlinedInput-root': {
                             fieldset: {
                                 border: 'none',
@@ -521,8 +538,9 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
                         label="Tout"
                         onClick={() => setFilters((prev) => ({ ...prev, categories: [] }))}
                         sx={{
-                            bgcolor: filters.categories.length === 0 ? '#3454D1' : '#f5f5f5',
-                            color: filters.categories.length === 0 ? 'white' : '#555',
+                            bgcolor: filters.categories.length === 0 ? '#FFD166' : '#f5f5f5',
+                            color: '#555',
+                            fontFamily: '"Nunito", sans-serif',
                             fontWeight: filters.categories.length === 0 ? 600 : 400,
                             flexShrink: 0,
                             p: 1,
@@ -545,8 +563,9 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
                                 label={cat.description}
                                 onClick={() => handleCategoryToggle(cat.id)}
                                 sx={{
-                                    bgcolor: selected ? cat.color || '#3454D1' : '#ffffff',
-                                    color: selected ? 'white' : '#555',
+                                    bgcolor: selected ? '#FFD166' || '#3454D1' : '#ffffff',
+                                    color: '#555',
+                                    fontFamily: '"Nunito", sans-serif',
                                     fontWeight: selected ? 600 : 400,
                                     flexShrink: 0,
                                     fontSize: 16,
@@ -590,13 +609,10 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
                         sx={{
                             display: 'flex',
                             justifyContent: 'space-between',
-                            alignItems: 'center',
+                            alignItems: 'right',
                             mb: 3,
                         }}
                     >
-                        <Typography variant="h6" sx={{ color: '#3454D1', fontWeight: 700 }}>
-                            Filtres
-                        </Typography>
                         <IconButton onClick={() => setOpen(false)}>
                             <MuiIcons.Close />
                         </IconButton>
@@ -604,7 +620,9 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
 
                     {/* Localisation */}
                     <Box sx={{ mb: 3 }}>
-                        <Typography sx={{ fontWeight: 600, color: '#f45b69', mb: 1 }}>Localisation</Typography>
+                        <Typography sx={{ fontWeight: 600, color: '#f45b69', mb: 1, fontFamily: '"All Round Gothic Semi", sans-serif' }}>
+                            Localisation
+                        </Typography>
 
                         <CityAutocomplete
                             value={filters.location}
@@ -626,7 +644,7 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
 
                     {/* Distance */}
                     <Box sx={{ mb: 3 }}>
-                        <Typography sx={{ fontWeight: 600, color: '#f45b69', mb: 1 }}>
+                        <Typography sx={{ fontWeight: 600, color: '#f45b69', mb: 1, fontFamily: '"All Round Gothic Semi", sans-serif' }}>
                             Distance : {filters.distance !== null ? `${filters.distance} km` : 'Pas de limite'}
                         </Typography>
                         <Box sx={{ px: 1 }}>
@@ -643,6 +661,7 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
                                 ]}
                                 sx={{
                                     color: '#3454D1',
+                                    fontFamily: '"Nunito", sans-serif',
                                     '& .MuiSlider-markLabel': {
                                         fontSize: 12,
                                     },
@@ -653,7 +672,9 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
 
                     {/* Date */}
                     <Box sx={{ mb: 3 }}>
-                        <Typography sx={{ fontWeight: 600, color: '#f45b69', mb: 1 }}>Date</Typography>
+                        <Typography sx={{ fontWeight: 600, color: '#f45b69', mb: 1, fontFamily: '"All Round Gothic Semi", sans-serif' }}>
+                            Date
+                        </Typography>
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                             {dateOptions.map((opt) => (
                                 <Button
@@ -682,7 +703,9 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
 
                     {/* Type d'activité */}
                     <Box sx={{ mb: 3 }}>
-                        <Typography sx={{ fontWeight: 600, color: '#f45b69', mb: 1 }}>Type d'activité</Typography>
+                        <Typography sx={{ fontWeight: 600, color: '#f45b69', mb: 1, fontFamily: '"All Round Gothic Semi", sans-serif' }}>
+                            Type d'activité
+                        </Typography>
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                             <Chip
                                 label="Tout"
@@ -712,6 +735,7 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
                                             bgcolor: selected ? '#3454D1' : '#f5f5f5',
                                             color: selected ? 'white' : '#555',
                                             fontWeight: selected ? 600 : 400,
+                                            fontFamily: '"Nunito", sans-serif',
                                             transition: 'all 0.2s ease',
                                             cursor: 'pointer',
                                             '&:hover': {
@@ -739,6 +763,7 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
                                 color: '#666',
                                 borderColor: '#ccc',
                                 fontWeight: 500,
+                                fontFamily: '"Nunito", sans-serif',
                                 transition: 'all 0.2s ease',
                                 '&:hover': {
                                     bgcolor: '#f5f5f5',

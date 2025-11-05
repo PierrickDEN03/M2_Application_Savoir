@@ -8,7 +8,7 @@ export default function ListActivities({ activities }) {
         <Box
             sx={{
                 height: '100vh',
-                bgcolor: '#F0E7D6',
+                bgcolor: '#E4EFF6',
                 overflowY: 'auto',
                 pb: 5,
             }}
@@ -20,15 +20,15 @@ export default function ListActivities({ activities }) {
                     pt: 4,
                     position: 'sticky',
                     top: 0,
-                    bgcolor: '#F0E7D6',
+                    bgcolor: '#E4EFF6',
                     zIndex: 10,
                     borderBottom: '1px solid #e0d5c7',
                 }}
             >
-                <Typography variant="h5" sx={{ color: '#3454D1', fontWeight: 700, mb: 2 }}>
+                <Typography variant="h5" sx={{ color: '#3454D1', fontWeight: 700, fontFamily: '"Nunito", sans-serif', mb: 2 }}>
                     Activités à proximité
                 </Typography>
-                <Typography variant="caption" sx={{ color: '#666' }}>
+                <Typography variant="caption" sx={{ color: '#666', fontFamily: '"Nunito", sans-serif' }}>
                     {activities.length} activité{activities.length !== 1 ? 's' : ''} trouvée{activities.length !== 1 ? 's' : ''}
                 </Typography>
             </Box>
@@ -44,7 +44,9 @@ export default function ListActivities({ activities }) {
                 ) : (
                     <Box sx={{ textAlign: 'center', py: 5 }}>
                         <MuiIcons.SearchOff sx={{ fontSize: 48, color: '#ccc', mb: 2 }} />
-                        <Typography sx={{ color: '#999', fontWeight: 500 }}>Aucune activité ne correspond à vos filtres</Typography>
+                        <Typography sx={{ color: '#999', fontWeight: 500, fontFamily: '"Nunito", sans-serif' }}>
+                            Aucune activité ne correspond à vos filtres
+                        </Typography>
                     </Box>
                 )}
             </Box>

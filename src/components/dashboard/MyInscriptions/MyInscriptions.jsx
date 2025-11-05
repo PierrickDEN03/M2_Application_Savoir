@@ -91,7 +91,7 @@ export default function MyInscriptions({ userId }) {
     if (reservations.length === 0) {
         return (
             <Box sx={{ textAlign: 'center', py: 5 }}>
-                <p style={{ color: '#1a1a1a' }}>Aucune inscription pour le moment</p>
+                <p style={{ color: '#1a1a1a', fontFamily: '"Nunito", sans-serif' }}>Aucune inscription pour le moment</p>
             </Box>
         )
     }
@@ -136,7 +136,7 @@ export default function MyInscriptions({ userId }) {
             >
                 <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center' }}>Annuler votre inscription ?</DialogTitle>
                 <DialogContent>
-                    <Typography sx={{ textAlign: 'center', color: 'text.secondary' }}>
+                    <Typography sx={{ textAlign: 'center', color: 'text.secondary', fontFamily: '"Nunito", sans-serif' }}>
                         Êtes-vous sûr de vouloir annuler votre participation à cette activité ?
                     </Typography>
                 </DialogContent>
@@ -168,6 +168,7 @@ export default function MyInscriptions({ userId }) {
                         borderRadius: 2,
                         boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
                         textAlign: 'center',
+                        fontFamily: '"Nunito", sans-serif',
                     }}
                 >
                     Action effectuée avec succès.
@@ -335,13 +336,26 @@ function ReviewInterface({ reservation, onBack, userId, onReviewSaved }) {
                 mt: 4,
             }}
         >
-            <Typography variant="h5" sx={{ fontWeight: 700, color: '#1f4ed8', textAlign: 'center', mb: 2 }}>
+            <Typography
+                variant="h5"
+                sx={{ fontWeight: 700, color: '#1f4ed8', textAlign: 'center', mb: 2, fontFamily: '"All Round Gothic Semi", sans-serif' }}
+            >
                 {existingReview ? 'Modifier mon avis' : 'Laisser un avis'}
             </Typography>
 
             <ActivityCard activity={reservation.activity} />
 
-            <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600, color: '#333', textAlign: 'center' }}>
+            <Typography
+                variant="subtitle1"
+                sx={{
+                    mt: 3,
+                    mb: 1,
+                    fontWeight: 600,
+                    color: '#3454D1',
+                    textAlign: 'center',
+                    fontFamily: '"All Round Gothic Semi", sans-serif',
+                }}
+            >
                 Qu’as-tu pensé de cette activité ?
             </Typography>
 
@@ -359,6 +373,7 @@ function ReviewInterface({ reservation, onBack, userId, onReviewSaved }) {
                 sx={{
                     borderRadius: 2,
                     backgroundColor: '#f9f9f9',
+                    fontFamily: '"Nunito", sans-serif',
                     '& .MuiOutlinedInput-root': { borderRadius: 2 },
                 }}
             />
@@ -373,6 +388,7 @@ function ReviewInterface({ reservation, onBack, userId, onReviewSaved }) {
                         px: 3,
                         py: 1,
                         fontWeight: 600,
+                        fontFamily: '"Nunito", sans-serif',
                     }}
                 >
                     Retour
@@ -388,6 +404,7 @@ function ReviewInterface({ reservation, onBack, userId, onReviewSaved }) {
                         borderRadius: '50px',
                         textTransform: 'none',
                         fontWeight: 600,
+                        fontFamily: '"Nunito", sans-serif',
                         px: 3,
                         py: 1,
                         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
@@ -421,7 +438,7 @@ function ActionLine({ icon, label, onClick }) {
             }}
         >
             {icon}
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            <Typography variant="body2" sx={{ fontWeight: 500, fontFamily: '"Nunito", sans-serif' }}>
                 {label}
             </Typography>
         </Box>

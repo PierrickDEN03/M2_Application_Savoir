@@ -48,6 +48,7 @@ export default function MessageInput({ onSend, disabled = false }) {
                 disabled={disabled}
                 sx={{
                     bgcolor: 'white',
+                    fontFamily: '"Nunito", sans-serif',
                     borderRadius: 3,
                     '& .MuiOutlinedInput-root': {
                         borderRadius: 3,

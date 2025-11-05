@@ -174,7 +174,7 @@ function ActivityDetail() {
     if (!activity) {
         return (
             <Box sx={{ minHeight: '100vh', bgcolor: '#e4eff6', p: 3 }}>
-                <Typography>Activité non trouvée</Typography>
+                <Typography sx={{ fontFamily: '"All Round Gothic Semi", sans-serif' }}>Activité non trouvée</Typography>
             </Box>
         )
     }
@@ -189,9 +189,11 @@ function ActivityDetail() {
             <Box sx={{ maxWidth: 420, mx: 'auto', mb: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', mb: 1 }} onClick={() => navigate(-1)}>
                     <MuiIcons.ArrowBack sx={{ color: '#3454D1', fontSize: 24 }} />
-                    <Typography sx={{ color: '#3454D1', fontWeight: 700, fontSize: 18 }}>Back</Typography>
+                    <Typography sx={{ color: '#3454D1', fontWeight: 700, fontSize: 18, fontFamily: '"All Round Gothic Semi", sans-serif' }}>
+                        Back
+                    </Typography>
                 </Box>
-                <Typography variant="h4" sx={{ fontWeight: 700, color: '#3454D1' }}>
+                <Typography variant="h4" sx={{ fontWeight: 700, color: '#3454D1', fontFamily: '"All Round Gothic Semi", sans-serif' }}>
                     {activity.title}
                 </Typography>
             </Box>
@@ -227,6 +229,7 @@ function ActivityDetail() {
                                 textAlign: 'center',
                                 py: 1,
                                 fontWeight: 600,
+                                fontFamily: '"Nunito", sans-serif',
                             }}
                         >
                             Cette activité est terminée
@@ -242,6 +245,7 @@ function ActivityDetail() {
                                 bgcolor: category.color || '#3454D1',
                                 color: 'white',
                                 fontWeight: 600,
+                                fontFamily: '"Nunito", sans-serif',
                                 borderRadius: '8px',
                                 px: 2,
                                 py: 0.5,
@@ -258,7 +262,7 @@ function ActivityDetail() {
                                     'aria-hidden': true,
                                 })}
 
-                            <Typography component="span" sx={{ fontSize: '0.9rem', lineHeight: 1 }}>
+                            <Typography component="span" sx={{ fontSize: '0.9rem', lineHeight: 1, fontFamily: '"Nunito", sans-serif' }}>
                                 {category.description}
                             </Typography>
                         </Box>
@@ -273,14 +277,14 @@ function ActivityDetail() {
                         <Box>
                             <Typography
                                 variant="h6"
-                                sx={{ fontWeight: 600, cursor: 'pointer' }}
+                                sx={{ fontWeight: 600, cursor: 'pointer', fontFamily: '"Nunito", sans-serif' }}
                                 onClick={() => navigate(`/user/profile/${creator?.id}`)}
                             >
                                 {creator?.displayName || 'Utilisateur'}
                             </Typography>
                             <Typography
                                 variant="body2"
-                                sx={{ color: '#666', cursor: 'pointer' }}
+                                sx={{ color: '#666', cursor: 'pointer', fontFamily: '"Nunito", sans-serif' }}
                                 onClick={() => navigate(`/user/send-message/${creator?.id}`)}
                             >
                                 Contacter l’organisateur
@@ -292,11 +296,16 @@ function ActivityDetail() {
                     {isPast && (
                         <>
                             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                <Typography variant="h5" sx={{ fontWeight: 700, color: '#ED6A5A', mr: 1 }}>
+                                <Typography
+                                    variant="h5"
+                                    sx={{ fontWeight: 700, color: '#ED6A5A', mr: 1, fontFamily: '"Nunito", sans-serif' }}
+                                >
                                     {averageNote.toFixed(1)}/5
                                 </Typography>
                                 <Rating value={averageNote} precision={0.5} readOnly />
-                                <Typography sx={{ ml: 1, color: '#555' }}>{avis.length} avis</Typography>
+                                <Typography sx={{ ml: 1, color: '#555', fontFamily: '"Nunito", sans-serif' }}>
+                                    {avis.length} avis
+                                </Typography>
                             </Box>
 
                             <Button
@@ -308,6 +317,7 @@ function ActivityDetail() {
                                     borderRadius: 3,
                                     textTransform: 'none',
                                     fontWeight: 600,
+                                    fontFamily: '"Nunito", sans-serif',
                                     mb: 2,
                                     '&:hover': { bgcolor: '#d45a4a' },
                                 }}
@@ -318,7 +328,9 @@ function ActivityDetail() {
                             {showAvis && (
                                 <Box sx={{ mt: 1 }}>
                                     {avis.length === 0 ? (
-                                        <Typography sx={{ color: '#777' }}>Aucun avis pour le moment.</Typography>
+                                        <Typography sx={{ color: '#777', fontFamily: '"Nunito", sans-serif' }}>
+                                            Aucun avis pour le moment.
+                                        </Typography>
                                     ) : (
                                         avis.map((a) => (
                                             <Box key={a.id} sx={{ mt: 2 }}>
@@ -332,13 +344,17 @@ function ActivityDetail() {
                                                 >
                                                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                                         <Avatar src={a.user?.photoUrl} sx={{ width: 32, height: 32, mr: 1 }} />
-                                                        <Typography sx={{ fontWeight: 600 }}>
+                                                        <Typography sx={{ fontWeight: 600, fontFamily: '"Nunito", sans-serif' }}>
                                                             {a.user?.displayName || 'Utilisateur'}
                                                         </Typography>
                                                     </Box>
                                                     <Rating value={a.note} readOnly size="small" />
                                                 </Box>
-                                                {a.comment && <Typography sx={{ color: '#444' }}>{a.comment}</Typography>}
+                                                {a.comment && (
+                                                    <Typography sx={{ color: '#444', fontFamily: '"Nunito", sans-serif' }}>
+                                                        {a.comment}
+                                                    </Typography>
+                                                )}
                                             </Box>
                                         ))
                                     )}
@@ -348,31 +364,35 @@ function ActivityDetail() {
                     )}
 
                     {/* Informations */}
-                    <Typography variant="h6" sx={{ fontWeight: 600, mt: 3, mb: 2 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, mt: 3, mb: 2, fontFamily: '"Nunito", sans-serif' }}>
                         Informations
                     </Typography>
 
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
                         <MuiIcons.CalendarToday sx={{ fontSize: 18, color: '#ED6A5A', mr: 1 }} />
-                        <Typography>{formatDate(activity.date)}</Typography>
+                        <Typography sx={{ fontFamily: '"Nunito", sans-serif' }}>{formatDate(activity.date)}</Typography>
                     </Box>
 
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
                         <MuiIcons.LocationOn sx={{ fontSize: 18, color: '#ED6A5A', mr: 1 }} />
-                        <Typography>{activity.address?.street || activity.address?.city}</Typography>
+                        <Typography sx={{ fontFamily: '"Nunito", sans-serif' }}>
+                            {activity.address?.street || activity.address?.city}
+                        </Typography>
                     </Box>
 
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                         <MuiIcons.Group sx={{ fontSize: 18, color: '#ED6A5A', mr: 1 }} />
-                        <Typography>
+                        <Typography sx={{ fontFamily: '"Nunito", sans-serif' }}>
                             {registeredCount}/{activity.participants || 0} participants
                         </Typography>
                     </Box>
 
-                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, fontFamily: '"Nunito", sans-serif' }}>
                         Détail de l'annonce
                     </Typography>
-                    <Typography sx={{ color: '#333', mb: 3 }}>{activity.description || 'Aucune description disponible.'}</Typography>
+                    <Typography sx={{ color: '#333', mb: 3, fontFamily: '"Nunito", sans-serif' }}>
+                        {activity.description || 'Aucune description disponible.'}
+                    </Typography>
                 </Box>
             </Box>
 
@@ -390,6 +410,7 @@ function ActivityDetail() {
                         borderRadius: 3,
                         py: 1,
                         fontWeight: 600,
+                        fontFamily: '"Nunito", sans-serif',
                         textTransform: 'none',
                     }}
                 >
@@ -408,6 +429,7 @@ function ActivityDetail() {
                         borderRadius: 3,
                         py: 1,
                         fontWeight: 600,
+                        fontFamily: '"Nunito", sans-serif',
                         textTransform: 'none',
                         '&:hover': { bgcolor: isRegistered ? '#2140ba' : '#d45a4a' },
                     }}
@@ -424,7 +446,7 @@ function ActivityDetail() {
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
                 sx={{ mb: '130px' }}
             >
-                <Alert severity={snackbarSeverity} sx={{ width: '100%' }}>
+                <Alert severity={snackbarSeverity} sx={{ width: '100%', fontFamily: '"Nunito", sans-serif' }}>
                     {snackbarMessage}
                 </Alert>
             </Snackbar>

@@ -90,7 +90,7 @@ export default function UserProfile() {
     if (!user) {
         return (
             <Box sx={{ minHeight: '100vh', bgcolor: '#E4EFF6', p: 3 }}>
-                <Typography>Utilisateur non trouvé</Typography>
+                <Typography sx={{ fontFamily: '"All Round Gothic Semi", sans-serif' }}>Utilisateur non trouvé</Typography>
             </Box>
         )
     }
@@ -105,7 +105,7 @@ export default function UserProfile() {
                     sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', color: '#3454D1' }}
                 >
                     <MuiIcons.ArrowBack sx={{ fontSize: 24 }} />
-                    <Typography sx={{ fontWeight: 600, fontSize: 18 }}>Back</Typography>
+                    <Typography sx={{ fontWeight: 600, fontSize: 18, fontFamily: '"All Round Gothic Semi", sans-serif' }}>Back</Typography>
                 </Box>
             </Box>
 
@@ -128,6 +128,7 @@ export default function UserProfile() {
                         sx={{
                             color: '#3454D1',
                             fontWeight: 700,
+                            fontFamily: '"All Round Gothic Semi", sans-serif',
                             mb: 0.5,
                             textAlign: 'center',
                         }}
@@ -146,7 +147,9 @@ export default function UserProfile() {
                         {/* Ville */}
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                             <MuiIcons.LocationOn fontSize="small" sx={{ color: '#3454D1' }} />
-                            <Typography sx={{ color: '#555', fontWeight: 500 }}>{user.city || 'Ville non renseignée'}</Typography>
+                            <Typography sx={{ color: '#555', fontWeight: 500, fontFamily: '"Nunito", sans-serif' }}>
+                                {user.city || 'Ville non renseignée'}
+                            </Typography>
                         </Box>
 
                         {/* Note moyenne (badge rouge arrondi) */}
@@ -162,12 +165,13 @@ export default function UserProfile() {
                                 backgroundColor: 'rgba(237,106,90,0.05)',
                             }}
                         >
-                            <MuiIcons.Star sx={{ color: '#ED6A5A', fontSize: 16 }} />
+                            <MuiIcons.Star sx={{ color: '#ED6A5A', fontSize: 16, fontFamily: '"Nunito", sans-serif' }} />
                             <Typography
                                 sx={{
                                     fontWeight: 600,
                                     color: '#ED6A5A',
                                     fontSize: 14,
+                                    fontFamily: '"All Round Gothic Semi", sans-serif',
                                 }}
                             >
                                 {averageNote ? averageNote : '–'}
@@ -178,18 +182,18 @@ export default function UserProfile() {
                     {/* Statistiques */}
                     <Box sx={{ display: 'flex', gap: 2, mt: 2, justifyContent: 'center' }}>
                         <Box sx={{ textAlign: 'center' }}>
-                            <Typography variant="h6" sx={{ fontWeight: 700, color: '#1a1a1a' }}>
+                            <Typography variant="h6" sx={{ fontWeight: 700, color: '#1a1a1a', fontFamily: '"Nunito", sans-serif' }}>
                                 {userActivities.length}
                             </Typography>
-                            <Typography variant="caption" sx={{ color: '#666' }}>
+                            <Typography variant="caption" sx={{ color: '#666', fontFamily: '"Nunito", sans-serif' }}>
                                 activités
                             </Typography>
                         </Box>
                         <Box sx={{ textAlign: 'center' }}>
-                            <Typography variant="h6" sx={{ fontWeight: 700, color: '#1a1a1a' }}>
+                            <Typography variant="h6" sx={{ fontWeight: 700, color: '#1a1a1a', fontFamily: '"Nunito", sans-serif' }}>
                                 {userReservations}
                             </Typography>
-                            <Typography variant="caption" sx={{ color: '#666' }}>
+                            <Typography variant="caption" sx={{ color: '#666', fontFamily: '"Nunito", sans-serif' }}>
                                 rencontres
                             </Typography>
                         </Box>
@@ -206,6 +210,7 @@ export default function UserProfile() {
                                     sx={{
                                         borderColor: '#3454D1',
                                         color: '#3454D1',
+                                        fontFamily: '"Nunito", sans-serif',
                                         borderRadius: 3,
                                         textTransform: 'none',
                                         fontWeight: 600,
@@ -230,6 +235,7 @@ export default function UserProfile() {
                                     borderRadius: 3,
                                     textTransform: 'none',
                                     fontWeight: 600,
+                                    fontFamily: '"Nunito", sans-serif',
                                     '&:hover': {
                                         bgcolor: '#d45a4a',
                                     },
@@ -243,7 +249,10 @@ export default function UserProfile() {
 
                 {/* À propos de moi */}
                 <Box sx={{ mb: 3 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5, color: '#1a1a1a' }}>
+                    <Typography
+                        variant="h6"
+                        sx={{ fontWeight: 700, mb: 1.5, color: '#1a1a1a', fontFamily: '"All Round Gothic Semi", sans-serif' }}
+                    >
                         À propos de moi
                     </Typography>
                     <Typography variant="body2" sx={{ color: '#1a1a1a', lineHeight: 1.6 }}>
@@ -253,7 +262,10 @@ export default function UserProfile() {
 
                 {/* Centres d'intérêt */}
                 <Box sx={{ mb: 3 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5, color: '#1a1a1a' }}>
+                    <Typography
+                        variant="h6"
+                        sx={{ fontWeight: 700, mb: 1.5, color: '#1a1a1a', fontFamily: '"All Round Gothic Semi", sans-serif' }}
+                    >
                         Mes centres d'intérêt
                     </Typography>
 
@@ -269,6 +281,7 @@ export default function UserProfile() {
                                         sx={{
                                             bgcolor: 'white',
                                             color: '#1a1a1a',
+                                            fontFamily: '"Nunito", sans-serif',
                                             fontWeight: 600,
                                             borderRadius: 3,
                                             border: 'none',
@@ -279,7 +292,7 @@ export default function UserProfile() {
                                 )
                             })
                         ) : (
-                            <Typography variant="body2" sx={{ color: '#666' }}>
+                            <Typography variant="body2" sx={{ color: '#666', fontFamily: '"Nunito", sans-serif' }}>
                                 Aucun centre d'intérêt défini
                             </Typography>
                         )}
@@ -289,13 +302,19 @@ export default function UserProfile() {
                 {/* Activités */}
                 {(upcomingActivities.length > 0 || pastActivities.length > 0) && (
                     <Box sx={{ mb: 4 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: '#3454D1' }}>
+                        <Typography
+                            variant="h6"
+                            sx={{ fontWeight: 700, mb: 2, color: '#3454D1', fontFamily: '"All Round Gothic Semi", sans-serif' }}
+                        >
                             Activités
                         </Typography>
 
                         {upcomingActivities.length > 0 && (
                             <>
-                                <Typography variant="subtitle1" sx={{ color: '#1a1a1a', mb: 1 }}>
+                                <Typography
+                                    variant="subtitle1"
+                                    sx={{ color: '#1a1a1a', mb: 1, fontFamily: '"All Round Gothic Semi", sans-serif' }}
+                                >
                                     Prochaines
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
@@ -308,7 +327,10 @@ export default function UserProfile() {
 
                         {pastActivities.length > 0 && (
                             <>
-                                <Typography variant="subtitle1" sx={{ color: '#1a1a1a', mb: 1 }}>
+                                <Typography
+                                    variant="subtitle1"
+                                    sx={{ color: '#1a1a1a', mb: 1, fontFamily: '"All Round Gothic Semi", sans-serif' }}
+                                >
                                     Passées
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

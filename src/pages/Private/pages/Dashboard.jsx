@@ -49,7 +49,7 @@ export default function Dashboard() {
                     bgcolor: '#e4eff6',
                 }}
             >
-                <CircularProgress sx={{ color: 'white' }} />
+                <CircularProgress sx={{ color: '#3454D1' }} />
             </Box>
         )
     }
@@ -60,10 +60,13 @@ export default function Dashboard() {
 
             {/* Header */}
             <Box sx={{ p: 3, pt: 4, pb: 2 }}>
-                <Typography variant="h3" sx={{ color: '#3454D1', fontWeight: 700, mb: 1 }}>
+                <Typography
+                    variant="h3"
+                    sx={{ color: '#3454D1', fontWeight: 700, fontFamily: '"All Round Gothic Semi", sans-serif', mb: 1 }}
+                >
                     Hello
                 </Typography>
-                <Typography variant="h3" sx={{ color: '#3454D1', fontWeight: 700 }}>
+                <Typography variant="h3" sx={{ color: '#3454D1', fontFamily: '"All Round Gothic Semi", sans-serif', fontWeight: 700 }}>
                     {userName}
                 </Typography>
             </Box>
@@ -92,6 +95,7 @@ export default function Dashboard() {
                             bgcolor: currentTab === 'activities' ? '#FFD168' : 'transparent',
                             color: '#1a1a1a',
                             fontWeight: 700,
+                            fontFamily: '"All Round Gothic Semi", sans-serif',
                             fontSize: '0.8rem',
                             transition: 'all 0.3s ease',
                             boxShadow: currentTab === 'activities' ? '0 4px 8px rgba(255, 209, 104, 0.3)' : 'none',
@@ -114,6 +118,7 @@ export default function Dashboard() {
                             bgcolor: currentTab === 'inscriptions' ? '#FFD168' : 'transparent',
                             color: '#1a1a1a',
                             fontWeight: 700,
+                            fontFamily: '"All Round Gothic Semi", sans-serif',
                             fontSize: '0.8rem',
                             transition: 'all 0.3s ease',
                             boxShadow: currentTab === 'inscriptions' ? '0 4px 8px rgba(130, 208, 247, 0.3)' : 'none',
@@ -137,6 +142,7 @@ export default function Dashboard() {
                             color: '#1a1a1a',
                             fontWeight: 700,
                             fontSize: '0.8rem',
+                            fontFamily: '"All Round Gothic Semi", sans-serif',
                             transition: 'all 0.3s ease',
                             boxShadow: currentTab === 'favorites' ? '0 4px 8px rgba(237, 138, 138, 0.3)' : 'none',
                             '&:hover': {

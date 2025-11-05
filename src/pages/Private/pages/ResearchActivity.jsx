@@ -160,12 +160,16 @@ export default function ResearchActivity() {
                 >
                     {viewMode === 'map' ? (
                         <>
-                            <Typography sx={{ fontWeight: 600, color: '#000000', fontSize: 14 }}>Voir la liste</Typography>
+                            <Typography sx={{ fontWeight: 600, color: '#000000', fontSize: 14, fontFamily: '"Nunito", sans-serif' }}>
+                                Voir la liste
+                            </Typography>
                             <MuiIcons.ViewList sx={{ fontSize: 20, color: '#000000' }} />
                         </>
                     ) : (
                         <>
-                            <Typography sx={{ fontWeight: 600, color: '#000000', fontSize: 14 }}>Voir la carte</Typography>
+                            <Typography sx={{ fontWeight: 600, color: '#000000', fontSize: 14, fontFamily: '"Nunito", sans-serif' }}>
+                                Voir la carte
+                            </Typography>
                             <MuiIcons.Map sx={{ fontSize: 20, color: '#000000' }} />
                         </>
                     )}

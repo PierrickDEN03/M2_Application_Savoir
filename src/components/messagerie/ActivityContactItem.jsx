@@ -39,7 +39,10 @@ function ActivityContactItem({ conversation, onClick }) {
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
                         {conversation.activityTitle || 'Activité'}
                     </Typography>
-                    <Typography variant="caption" sx={{ color: '#666', display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                    <Typography
+                        variant="caption"
+                        sx={{ color: '#666', display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5, fontFamily: '"Nunito", sans-serif' }}
+                    >
                         <GroupIcon sx={{ fontSize: 14 }} />
                         {conversation.participants?.length || 0} participant{conversation.participants?.length > 1 ? 's' : ''}
                     </Typography>
@@ -53,6 +56,7 @@ function ActivityContactItem({ conversation, onClick }) {
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap',
                                 maxWidth: '100%',
+                                fontFamily: '"Nunito", sans-serif',
                             }}
                         >
                             {conversation.lastMessage}

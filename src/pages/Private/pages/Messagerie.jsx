@@ -96,6 +96,7 @@ function Messagerie() {
                 sx={{
                     color: '#3454D1',
                     fontWeight: 600,
+                    fontFamily: '"All Round Gothic Semi", sans-serif',
                     textTransform: 'none',
                     mb: 2,
                 }}
@@ -108,6 +109,7 @@ function Messagerie() {
                 sx={{
                     color: '#3454D1',
                     fontWeight: 'bold',
+                    fontFamily: '"All Round Gothic Semi", sans-serif',
                     mb: 4,
                 }}
             >
@@ -120,6 +122,7 @@ function Messagerie() {
                         textAlign: 'center',
                         color: '#3454D1',
                         fontWeight: 500,
+                        fontFamily: '"Nunito", sans-serif',
                         mt: 8,
                     }}
                 >
@@ -137,6 +140,7 @@ function Messagerie() {
                                     fontWeight: 600,
                                     mb: 2,
                                     display: 'flex',
+                                    fontFamily: '"All Round Gothic Semi", sans-serif',
                                     alignItems: 'center',
                                     gap: 1,
                                 }}
@@ -162,6 +166,7 @@ function Messagerie() {
                                 variant="h6"
                                 sx={{
                                     color: '#3454D1',
+                                    fontFamily: '"All Round Gothic Semi", sans-serif',
                                     fontWeight: 600,
                                     mb: 2,
                                     display: 'flex',

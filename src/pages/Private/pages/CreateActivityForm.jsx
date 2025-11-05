@@ -394,6 +394,7 @@ export default function CreateActivityForm() {
                                     color: '#3454D1',
                                     fontWeight: 600,
                                     fontSize: '0.95rem',
+                                    fontFamily: '"All Round Gothic Semi", sans-serif',
                                     mb: 0.5,
                                     p: 0,
                                     minWidth: 'auto',
@@ -402,7 +403,11 @@ export default function CreateActivityForm() {
                             >
                                 Back
                             </Button>
-                            <Typography sx={{ color: '#3454D1', fontSize: 28, fontWeight: 700 }}>Ton activité</Typography>
+                            <Typography
+                                sx={{ color: '#3454D1', fontSize: 28, fontWeight: 700, fontFamily: '"All Round Gothic Semi", sans-serif' }}
+                            >
+                                Ton activité
+                            </Typography>
                         </>
                     ) : (
                         <Button
@@ -412,6 +417,7 @@ export default function CreateActivityForm() {
                                 color: '#3454D1',
                                 fontWeight: 600,
                                 fontSize: '0.95rem',
+                                fontFamily: '"Nunito", sans-serif',
                                 p: 0,
                                 minWidth: 'auto',
                                 '&:hover': { bgcolor: 'transparent' },
@@ -442,7 +448,15 @@ export default function CreateActivityForm() {
 
                             {/* Title */}
                             <Box>
-                                <Typography sx={{ color: '#3454D1', fontWeight: 600, mb: 1, fontSize: '0.95rem' }}>
+                                <Typography
+                                    sx={{
+                                        color: '#3454D1',
+                                        fontWeight: 600,
+                                        mb: 1,
+                                        fontSize: '0.95rem',
+                                        fontFamily: '"All Round Gothic Semi", sans-serif',
+                                    }}
+                                >
                                     Quelle activité proposes-tu ?
                                 </Typography>
                                 <TextField
@@ -455,6 +469,7 @@ export default function CreateActivityForm() {
                                     sx={{
                                         bgcolor: 'white',
                                         borderRadius: 2,
+                                        fontFamily: '"Nunito", sans-serif',
                                         '& .MuiOutlinedInput-root': { borderRadius: 2 },
                                     }}
                                 />
@@ -462,7 +477,17 @@ export default function CreateActivityForm() {
 
                             {/* Category */}
                             <Box>
-                                <Typography sx={{ color: '#3454D1', fontWeight: 600, mb: 1, fontSize: '0.95rem' }}>Catégorie</Typography>
+                                <Typography
+                                    sx={{
+                                        color: '#3454D1',
+                                        fontWeight: 600,
+                                        mb: 1,
+                                        fontSize: '0.95rem',
+                                        fontFamily: '"All Round Gothic Semi", sans-serif',
+                                    }}
+                                >
+                                    Catégorie
+                                </Typography>
                                 <TextField
                                     select
                                     fullWidth
@@ -480,7 +505,7 @@ export default function CreateActivityForm() {
                                         <MenuItem key={cat.id} value={cat.id}>
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                 {React.createElement(MuiIcons[cat.iconName] || MuiIcons.MusicNote, {
-                                                    sx: { color: cat.color || '#3454D1', fontSize: 20 },
+                                                    sx: { color: cat.color || '#3454D1', fontSize: 20, fontFamily: '"Nunito", sans-serif' },
                                                 })}
                                                 {cat.description}
                                             </Box>
@@ -491,7 +516,17 @@ export default function CreateActivityForm() {
 
                             {/* Address */}
                             <Box>
-                                <Typography sx={{ color: '#3454D1', fontWeight: 600, mb: 1, fontSize: '0.95rem' }}>Lieu</Typography>
+                                <Typography
+                                    sx={{
+                                        color: '#3454D1',
+                                        fontWeight: 600,
+                                        mb: 1,
+                                        fontSize: '0.95rem',
+                                        fontFamily: '"All Round Gothic Semi", sans-serif',
+                                    }}
+                                >
+                                    Lieu
+                                </Typography>
                                 {loaded ? (
                                     <AddressAutocomplete
                                         value={formData.address.full || ''}
@@ -506,7 +541,17 @@ export default function CreateActivityForm() {
 
                             {/* Date & Time */}
                             <Box>
-                                <Typography sx={{ color: '#3454D1', fontWeight: 600, mb: 1, fontSize: '0.95rem' }}>Date</Typography>
+                                <Typography
+                                    sx={{
+                                        color: '#3454D1',
+                                        fontWeight: 600,
+                                        mb: 1,
+                                        fontSize: '0.95rem',
+                                        fontFamily: '"All Round Gothic Semi", sans-serif',
+                                    }}
+                                >
+                                    Date
+                                </Typography>
                                 <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={frLocale}>
                                     <Box sx={{ display: 'flex', gap: 2 }}>
                                         <DatePicker
@@ -521,6 +566,7 @@ export default function CreateActivityForm() {
                                                         bgcolor: 'white',
                                                         borderRadius: 2,
                                                         flex: 1,
+                                                        fontFamily: '"Nunito", sans-serif',
                                                         '& .MuiOutlinedInput-root': { borderRadius: 2 },
                                                     },
                                                 },
@@ -538,6 +584,7 @@ export default function CreateActivityForm() {
                                                         bgcolor: 'white',
                                                         borderRadius: 2,
                                                         flex: 1,
+                                                        fontFamily: '"Nunito", sans-serif',
                                                         '& .MuiOutlinedInput-root': { borderRadius: 2 },
                                                     },
                                                 },
@@ -561,6 +608,7 @@ export default function CreateActivityForm() {
                                     py: 1.8,
                                     fontWeight: 700,
                                     fontSize: '1rem',
+                                    fontFamily: '"Nunito", sans-serif',
                                     boxShadow: '0 4px 12px rgba(255, 123, 108, 0.3)',
                                     '&:hover': { bgcolor: '#FF6B5A', boxShadow: '0 6px 16px rgba(255, 123, 108, 0.4)' },
                                 }}
@@ -574,7 +622,15 @@ export default function CreateActivityForm() {
                         <>
                             {/* Participants */}
                             <Box>
-                                <Typography sx={{ color: '#3454D1', fontWeight: 600, mb: 1.5, fontSize: '0.95rem' }}>
+                                <Typography
+                                    sx={{
+                                        color: '#3454D1',
+                                        fontWeight: 600,
+                                        mb: 1.5,
+                                        fontSize: '0.95rem',
+                                        fontFamily: '"All Round Gothic Semi", sans-serif',
+                                    }}
+                                >
                                     Nombre de participants
                                 </Typography>
                                 <Slider
@@ -607,7 +663,9 @@ export default function CreateActivityForm() {
                                     }}
                                 />
                                 {errors.participants && (
-                                    <Typography sx={{ color: 'error.main', fontSize: '0.85rem', mt: 0.5 }}>
+                                    <Typography
+                                        sx={{ color: 'error.main', fontSize: '0.85rem', mt: 0.5, fontFamily: '"Nunito", sans-serif' }}
+                                    >
                                         {errors.participants}
                                     </Typography>
                                 )}
@@ -615,7 +673,15 @@ export default function CreateActivityForm() {
 
                             {/* Duration */}
                             <Box>
-                                <Typography sx={{ color: '#3454D1', fontWeight: 600, mb: 1.5, fontSize: '0.95rem' }}>
+                                <Typography
+                                    sx={{
+                                        color: '#3454D1',
+                                        fontWeight: 600,
+                                        mb: 1.5,
+                                        fontSize: '0.95rem',
+                                        fontFamily: '"All Round Gothic Semi", sans-serif',
+                                    }}
+                                >
                                     Durée de l'activité
                                 </Typography>
                                 <Slider
@@ -655,7 +721,15 @@ export default function CreateActivityForm() {
 
                             {/* Description */}
                             <Box>
-                                <Typography sx={{ color: '#3454D1', fontWeight: 600, mb: 1, fontSize: '0.95rem' }}>
+                                <Typography
+                                    sx={{
+                                        color: '#3454D1',
+                                        fontWeight: 600,
+                                        mb: 1,
+                                        fontSize: '0.95rem',
+                                        fontFamily: '"All Round Gothic Semi", sans-serif',
+                                    }}
+                                >
                                     Ton activité en quelques mots
                                 </Typography>
                                 <TextField
@@ -670,6 +744,7 @@ export default function CreateActivityForm() {
                                     sx={{
                                         bgcolor: 'white',
                                         borderRadius: 2,
+                                        fontFamily: '"Nunito", sans-serif',
                                         '& .MuiOutlinedInput-root': { borderRadius: 2 },
                                     }}
                                 />
@@ -687,6 +762,7 @@ export default function CreateActivityForm() {
                                     py: 1.8,
                                     fontWeight: 700,
                                     fontSize: '1rem',
+                                    fontFamily: '"Nunito", sans-serif',
                                     boxShadow: '0 4px 12px rgba(255, 123, 108, 0.3)',
                                     '&:hover': { bgcolor: '#FF6B5A', boxShadow: '0 6px 16px rgba(255, 123, 108, 0.4)' },
                                 }}

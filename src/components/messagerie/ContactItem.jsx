@@ -50,7 +50,7 @@ function ContactItem({ contactId, onClick }) {
                     }}
                 />
                 <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, fontFamily: '"Nunito", sans-serif' }}>
                         {contact?.displayName || 'Utilisateur'}
                     </Typography>
                 </Box>

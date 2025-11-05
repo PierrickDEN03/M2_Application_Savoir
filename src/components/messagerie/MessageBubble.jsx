@@ -69,6 +69,7 @@ export default function MessageBubble({ message, isOwn, isGroupChat }) {
                             sx={{
                                 fontWeight: 600,
                                 color: '#1a1a1a',
+                                fontFamily: '"Nunito", sans-serif',
                             }}
                         >
                             {senderName}
@@ -78,6 +79,7 @@ export default function MessageBubble({ message, isOwn, isGroupChat }) {
                                 sx={{
                                     bgcolor: '#FFE4E1',
                                     color: '#FF6B6B',
+                                    fontFamily: '"Nunito", sans-serif',
                                     px: 1,
                                     py: 0.25,
                                     borderRadius: 2,
@@ -108,6 +110,7 @@ export default function MessageBubble({ message, isOwn, isGroupChat }) {
                         sx={{
                             wordBreak: 'break-word',
                             lineHeight: 1.5,
+                            fontFamily: '"Nunito", sans-serif',
                         }}
                     >
                         {message.text}
@@ -120,6 +123,7 @@ export default function MessageBubble({ message, isOwn, isGroupChat }) {
                     sx={{
                         color: '#999',
                         fontSize: '0.7rem',
+                        fontFamily: '"Nunito", sans-serif',
                         display: 'block',
                         mt: 0.5,
                         textAlign: isOwn ? 'right' : 'left',

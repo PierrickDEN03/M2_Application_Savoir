@@ -106,17 +106,18 @@ export default function ActivityCard({ activity }) {
                     right: 10,
                     bgcolor: categoryColor,
                     color: 'white',
-                    px: 1,
-                    py: 0.3,
+                    px: 1.5,
+                    py: 0.6,
                     borderRadius: 2,
-                    fontSize: '0.7rem',
+                    fontFamily: '"Nunito", sans-serif',
+                    fontSize: '0.8rem',
                     fontWeight: 600,
                     display: 'flex',
                     alignItems: 'center',
                     gap: 0.3,
                 }}
             >
-                {IconComponent && <IconComponent sx={{ fontSize: 12 }} />}
+                {IconComponent && <IconComponent sx={{ fontSize: 16 }} />}
                 {categoryName}
             </Box>
 
@@ -134,7 +135,7 @@ export default function ActivityCard({ activity }) {
                     gap: 0.4,
                 }}
             >
-                <Typography variant="caption" sx={{ color: '#777', fontWeight: 500 }}>
+                <Typography variant="caption" sx={{ color: '#3454D1', fontWeight: 500, fontFamily: '"All Round Gothic Semi", sans-serif' }}>
                     {formatActivityDate(activity.date)}
                 </Typography>
 
@@ -143,6 +144,7 @@ export default function ActivityCard({ activity }) {
                     sx={{
                         fontWeight: 700,
                         color: '#1a1a1a',
+                        fontFamily: '"All Round Gothic Semi", sans-serif',
                         lineHeight: 1.2,
                         display: '-webkit-box',
                         WebkitLineClamp: 2,
@@ -155,7 +157,7 @@ export default function ActivityCard({ activity }) {
 
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
                     <MuiIcons.LocationOn sx={{ fontSize: 14, color: '#999' }} />
-                    <Typography variant="caption" sx={{ color: '#666' }}>
+                    <Typography variant="caption" sx={{ color: '#666', fontFamily: '"Nunito", sans-serif' }}>
                         {activity.address?.city || 'Lieu non spécifié'}
                         {distance && ` • ${distance}`}
                     </Typography>

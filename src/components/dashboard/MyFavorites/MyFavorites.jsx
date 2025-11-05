@@ -48,7 +48,9 @@ export default function MyFavorites() {
     if (favorites.length === 0) {
         return (
             <Box sx={{ textAlign: 'center', py: 5 }}>
-                <Typography sx={{ color: '#1a1a1a', fontSize: '0.95rem' }}>Aucune activité enregistrée dans vos favoris</Typography>
+                <Typography sx={{ color: '#1a1a1a', fontSize: '0.95rem', fontFamily: '"Nunito", sans-serif' }}>
+                    Aucune activité enregistrée dans vos favoris
+                </Typography>
             </Box>
         )
     }

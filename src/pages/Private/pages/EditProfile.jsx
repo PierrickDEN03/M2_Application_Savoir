@@ -127,7 +127,7 @@ export default function EditProfile() {
                         color: '#3454D1',
                     }}
                 >
-                    <Typography sx={{ fontWeight: 600, fontSize: 18 }}>Back</Typography>
+                    <Typography sx={{ fontWeight: 600, fontSize: 18, fontFamily: '"All Round Gothic Semi", sans-serif' }}>Back</Typography>
                 </Box>
 
                 <Typography
@@ -137,6 +137,7 @@ export default function EditProfile() {
                         color: '#3454D1',
                         mt: 1,
                         fontSize: 30,
+                        fontFamily: '"All Round Gothic Semi", sans-serif',
                     }}
                 >
                     Edit profil
@@ -179,7 +180,10 @@ export default function EditProfile() {
             <Box sx={{ px: 3 }}>
                 {/* Nom */}
                 <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 700, mb: 1, color: '#1a1a1a' }}>
+                    <Typography
+                        variant="body2"
+                        sx={{ fontWeight: 700, mb: 1, color: '#3454D1', fontFamily: '"All Round Gothic Semi", sans-serif' }}
+                    >
                         Nom
                     </Typography>
                     <TextField
@@ -190,6 +194,7 @@ export default function EditProfile() {
                         sx={{
                             bgcolor: 'white',
                             borderRadius: 3,
+                            fontFamily: '"Nunito", sans-serif',
                             '& .MuiOutlinedInput-root': { '& fieldset': { border: 'none' } },
                         }}
                     />
@@ -197,7 +202,10 @@ export default function EditProfile() {
 
                 {/* À propos de moi */}
                 <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 700, mb: 1, color: '#1a1a1a' }}>
+                    <Typography
+                        variant="body2"
+                        sx={{ fontWeight: 700, mb: 1, color: '#3454D1', fontFamily: '"All Round Gothic Semi", sans-serif' }}
+                    >
                         À propos de moi
                     </Typography>
                     <TextField
@@ -210,6 +218,7 @@ export default function EditProfile() {
                         sx={{
                             bgcolor: 'white',
                             borderRadius: 3,
+                            fontFamily: '"Nunito", sans-serif',
                             '& .MuiOutlinedInput-root': { '& fieldset': { border: 'none' } },
                         }}
                     />
@@ -217,7 +226,10 @@ export default function EditProfile() {
 
                 {/* Email */}
                 <Box sx={{ mb: 3 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 700, mb: 1, color: '#1a1a1a' }}>
+                    <Typography
+                        variant="body2"
+                        sx={{ fontWeight: 700, mb: 1, color: '#3454D1', fontFamily: '"All Round Gothic Semi", sans-serif' }}
+                    >
                         Email
                     </Typography>
                     <TextField
@@ -229,6 +241,7 @@ export default function EditProfile() {
                         sx={{
                             bgcolor: 'white',
                             borderRadius: 3,
+                            fontFamily: '"Nunito", sans-serif',
                             '& .MuiOutlinedInput-root': { '& fieldset': { border: 'none' } },
                         }}
                     />
@@ -236,7 +249,7 @@ export default function EditProfile() {
 
                 {/* Passions */}
                 <Box sx={{ mb: 5 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 700, mb: 1.5, color: '#1a1a1a' }}>
+                    <Typography variant="body2" sx={{ fontWeight: 700, mb: 1.5, color: '#3454D1' }}>
                         Mes passions
                     </Typography>
                     <Box
@@ -258,6 +271,7 @@ export default function EditProfile() {
                                         bgcolor: 'white',
                                         color: '#1a1a1a',
                                         fontWeight: 600,
+                                        fontFamily: '"Nunito", sans-serif',
                                         borderRadius: 3,
                                         p: 1,
                                         '& .MuiChip-icon': { color: interest.color },
@@ -298,6 +312,7 @@ export default function EditProfile() {
                             textTransform: 'none',
                             fontWeight: 600,
                             fontSize: 16,
+                            fontFamily: '"Nunito", sans-serif',
                             '&:hover': { bgcolor: '#d45a4a' },
                         }}
                     >

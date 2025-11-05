@@ -47,6 +47,7 @@ export default function MyActivities({ userId }) {
                     fontSize: '1rem',
                     mb: 3,
                     fontWeight: 600,
+                    fontFamily: '"All Round Gothic Semi", sans-serif',
                     opacity: 0.9,
                 }}
             >
@@ -61,6 +62,7 @@ export default function MyActivities({ userId }) {
                         py: 6,
                         opacity: 0.7,
                         fontSize: '0.95rem',
+                        fontFamily: '"Nunito", sans-serif',
                     }}
                 >
                     Aucune activité créée pour le moment.

@@ -84,13 +84,12 @@ export default function MyActivityCard({ activity, onDeleted }) {
                             transform: 'translateY(-50%)',
                             zIndex: 10,
                             bgcolor: 'white',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                             width: 36,
                             height: 36,
                             '&:hover': { bgcolor: 'rgba(0,0,0,0.04)' },
                         }}
                     >
-                        <Icons.Settings sx={{ fontSize: 20, color: '#666' }} />
+                        <Icons.KeyboardArrowDown sx={{ fontSize: 25, color: '#666' }} />
                     </IconButton>
 
                     <Box sx={{ pointerEvents: 'none' }}>
@@ -150,4 +149,5 @@ const menuTextStyle = {
     fontSize: '0.9rem',
     fontWeight: 500,
     color: '#444',
+    fontFamily: '"Nunito", sans-serif',
 }
