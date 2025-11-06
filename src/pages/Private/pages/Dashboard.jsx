@@ -14,7 +14,6 @@ import MyFavorites from '../../../components/dashboard/MyFavorites/MyFavorites'
 export default function Dashboard() {
     const navigate = useNavigate()
     const currentUser = auth.currentUser
-    console.log(currentUser.uid)
 
     const [loading, setLoading] = useState(true)
     const [userName, setUserName] = useState('Utilisateur')
