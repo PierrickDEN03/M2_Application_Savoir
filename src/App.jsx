@@ -1,3 +1,5 @@
+import { useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 import Home from './pages/NotPrivate/pages/Home'
 import './styles/App.css'
 import { Routes, Route } from 'react-router-dom'
@@ -17,40 +19,53 @@ import EditProfile from './pages/Private/pages/EditProfile'
 import SendMessage from './pages/Private/pages/SendMessage'
 import Messagerie from './pages/Private/pages/Messagerie'
 
+function LastPathTracker() {
+    const location = useLocation()
+
+    useEffect(() => {
+        sessionStorage.setItem('lastPath', location.pathname)
+    }, [location.pathname])
+
+    return null
+}
+
 function App() {
     return (
-        <Routes>
-            <Route path="/auth/callback" element={<AuthCallback />} />
+        <>
+            <LastPathTracker />
+            <Routes>
+                <Route path="/auth/callback" element={<AuthCallback />} />
 
-            {/* Documentation Swagger */}
-            <Route path="/docs" element={<SwaggerUIComponent />} />
+                {/* Documentation Swagger */}
+                <Route path="/docs" element={<SwaggerUIComponent />} />
 
-            {/* Espace non privé */}
-            <Route path="/" element={<NotPrivate />}>
-                <Route path="/" element={<Home />} />
-                {/* Connexion par lien magique */}
-                <Route path="/login" element={<SignInMagic />} />
-                {/* Complétion du profil après 1ère connexion */}
-                <Route path="/register-profile" element={<RegisterProfile />} />
-            </Route>
+                {/* Espace non privé */}
+                <Route path="/" element={<NotPrivate />}>
+                    <Route path="/" element={<Home />} />
+                    {/* Connexion par lien magique */}
+                    <Route path="/login" element={<SignInMagic />} />
+                    {/* Complétion du profil après 1ère connexion */}
+                    <Route path="/register-profile" element={<RegisterProfile />} />
+                </Route>
 
-            {/* Espace privé */}
-            <Route path="/user" element={<Private />}>
-                <Route path="/user/*" element={<Dashboard />} />
-                <Route path="/user/" element={<Dashboard />} />
-                <Route path="/user/dashboard" element={<Dashboard />} />
-                <Route path="/user/map" element={<ResearchActivity />}></Route>
-                <Route path="/user/create-activity" element={<CreateActivityForm />}></Route>
-                <Route path="/user/activity-edit/:activityId" element={<CreateActivityForm />}></Route>
-                <Route path="/user/interest" element={<ChooseInterest />}></Route>
-                <Route path="/user/activity/:activityId" element={<ActivityDetail />} />
-                <Route path="/user/profile/:idUser" element={<UserProfile />} />
-                <Route path="/user/modif-profile/:idUser" element={<EditProfile />} />
-                <Route path="/user/send-message/:idUser" element={<SendMessage />} />
-                <Route path="/user/activity-message/:activityId/" element={<SendMessage />} />
-                <Route path="/user/messagerie" element={<Messagerie />} />
-            </Route>
-        </Routes>
+                {/* Espace privé */}
+                <Route path="/user" element={<Private />}>
+                    <Route path="/user/*" element={<Dashboard />} />
+                    <Route path="/user/" element={<Dashboard />} />
+                    <Route path="/user/dashboard" element={<Dashboard />} />
+                    <Route path="/user/map" element={<ResearchActivity />}></Route>
+                    <Route path="/user/create-activity" element={<CreateActivityForm />}></Route>
+                    <Route path="/user/activity-edit/:activityId" element={<CreateActivityForm />}></Route>
+                    <Route path="/user/interest" element={<ChooseInterest />}></Route>
+                    <Route path="/user/activity/:activityId" element={<ActivityDetail />} />
+                    <Route path="/user/profile/:idUser" element={<UserProfile />} />
+                    <Route path="/user/modif-profile/:idUser" element={<EditProfile />} />
+                    <Route path="/user/send-message/:idUser" element={<SendMessage />} />
+                    <Route path="/user/activity-message/:activityId/" element={<SendMessage />} />
+                    <Route path="/user/messagerie" element={<Messagerie />} />
+                </Route>
+            </Routes>
+        </>
     )
 }
 

@@ -134,18 +134,63 @@ export default function MyInscriptions({ userId }) {
                     sx: { borderRadius: 3, p: 1, minWidth: 320 },
                 }}
             >
-                <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center' }}>Annuler votre inscription ?</DialogTitle>
+                <DialogTitle
+                    sx={{ fontWeight: 'bold', textAlign: 'center', color: '#3454D1', fontFamily: '"All Round Gothic Semi", sans-serif' }}
+                >
+                    Annuler votre inscription ?
+                </DialogTitle>
                 <DialogContent>
-                    <Typography sx={{ textAlign: 'center', color: 'text.secondary', fontFamily: '"Nunito", sans-serif' }}>
+                    <Typography
+                        sx={{
+                            textAlign: 'center',
+                            color: '#1a1a1a',
+                            fontFamily: '"Nunito", sans-serif',
+                            fontWeight: 500,
+                        }}
+                    >
                         Êtes-vous sûr de vouloir annuler votre participation à cette activité ?
                     </Typography>
                 </DialogContent>
-                <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
-                    <Button onClick={() => setConfirmOpen(false)} variant="outlined">
-                        Non
-                    </Button>
-                    <Button onClick={confirmRemove} variant="contained" color="error" startIcon={<MuiIcons.Cancel />}>
+
+                <DialogActions sx={{ justifyContent: 'center', pb: 3, gap: 1 }}>
+                    <Button
+                        onClick={confirmRemove}
+                        variant="contained"
+                        color="error"
+                        startIcon={<MuiIcons.Cancel />}
+                        sx={{
+                            bgcolor: '#ED6A5A',
+                            color: '#1a1a1a',
+                            fontFamily: '"Nunito", sans-serif',
+                            fontWeight: 700,
+                            textTransform: 'none',
+                            borderRadius: 5,
+                            '&:hover': {
+                                bgcolor: '#f16b6b',
+                            },
+                            transition: 'all 0.3s ease',
+                        }}
+                    >
                         Oui, annuler
+                    </Button>
+                    <Button
+                        onClick={() => setConfirmOpen(false)}
+                        variant="outlined"
+                        sx={{
+                            color: '#3454D1',
+                            borderColor: '#3454D1',
+                            fontFamily: '"Nunito", sans-serif',
+                            fontWeight: 700,
+                            textTransform: 'none',
+                            borderRadius: 5,
+                            '&:hover': {
+                                bgcolor: 'rgba(52, 84, 209, 0.1)',
+                                borderColor: '#3454D1',
+                            },
+                            transition: 'all 0.3s ease',
+                        }}
+                    >
+                        Non
                     </Button>
                 </DialogActions>
             </Dialog>

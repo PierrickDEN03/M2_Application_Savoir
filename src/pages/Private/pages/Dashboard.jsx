@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Typography, CircularProgress } from '@mui/material'
 import { auth } from '../../../firebase-config'
 import { fetchUserById } from '../../../services/userService'
+import { hasNoActivitiesOrReservations } from '../../../services/userActivityUtils'
 import BottomNav from '../../../components/utils/NavbarBottom'
 import AvatarPlaceholder from '../../../components/utils/Avatar_Placeholder'
 import MyActivities from '../../../components/dashboard/MyActivities/MyActivities'
@@ -13,10 +14,29 @@ import MyFavorites from '../../../components/dashboard/MyFavorites/MyFavorites'
 export default function Dashboard() {
     const navigate = useNavigate()
     const currentUser = auth.currentUser
+    console.log(currentUser.uid)
 
     const [loading, setLoading] = useState(true)
     const [userName, setUserName] = useState('Utilisateur')
-    const [currentTab, setCurrentTab] = useState('activities') // 'activities', 'inscriptions', 'favorites'
+    const [currentTab, setCurrentTab] = useState('activities')
+
+    // Redirection depuis certaines pages et si aucune inscription et création d'activités
+    useEffect(() => {
+        const redirectIfNeeded = async () => {
+            const lastPath = sessionStorage.getItem('lastPath')
+            const notPrivatePaths = ['/', '/login', '/register-profile', '/auth/callback']
+
+            if (!currentUser) return
+            console.log(hasNoActivitiesOrReservations(currentUser.uid))
+            const noActivitiesOrReservations = await hasNoActivitiesOrReservations(currentUser.uid)
+
+            if (lastPath && notPrivatePaths.some((p) => lastPath.includes(p)) && noActivitiesOrReservations) {
+                navigate('/user/map', { replace: true })
+            }
+        }
+
+        redirectIfNeeded()
+    }, [currentUser, navigate])
 
     useEffect(() => {
         const loadUserData = async () => {
@@ -55,20 +75,39 @@ export default function Dashboard() {
     }
 
     return (
-        <Box sx={{ minHeight: '100vh', bgcolor: '#e4eff6', pb: 10 }}>
+        <Box sx={{ minHeight: '100vh', bgcolor: '#e4eff6', pb: 10, pt: 5 }}>
             <AvatarPlaceholder />
 
-            {/* Header */}
-            <Box sx={{ p: 3, pt: 4, pb: 2 }}>
-                <Typography
-                    variant="h3"
-                    sx={{ color: '#3454D1', fontWeight: 700, fontFamily: '"All Round Gothic Semi", sans-serif', mb: 1 }}
-                >
-                    Hello
-                </Typography>
-                <Typography variant="h3" sx={{ color: '#3454D1', fontFamily: '"All Round Gothic Semi", sans-serif', fontWeight: 700 }}>
-                    {userName}
-                </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', p: 3, pt: 4, pb: 2 }}>
+                {/* Texte */}
+                <Box>
+                    <Typography
+                        variant="h3"
+                        sx={{
+                            color: '#3454D1',
+                            fontWeight: 700,
+                            fontFamily: '"All Round Gothic Semi", sans-serif',
+                            mb: 1,
+                            fontSize: '2rem', // réduit la taille
+                        }}
+                    >
+                        Hello
+                    </Typography>
+                    <Typography
+                        variant="h3"
+                        sx={{
+                            color: '#3454D1',
+                            fontFamily: '"All Round Gothic Semi", sans-serif',
+                            fontWeight: 700,
+                            fontSize: '2rem', // réduit la taille
+                        }}
+                    >
+                        {userName}
+                    </Typography>
+                </Box>
+
+                {/* SVG */}
+                <Box component="img" src="/assets/Mascotte.svg" alt="Mascotte" sx={{ ml: 3, height: 70, width: 'auto' }} />
             </Box>
 
             {/* Tabs */}
