@@ -202,46 +202,50 @@ export default function MapActivities({ activities = [] }) {
             {/* Carrousel */}
             {selectedIndex !== null && (
                 <Box
-                    ref={scrollContainerRef}
-                    onScroll={handleScroll}
                     sx={{
                         position: 'fixed',
                         bottom: 190,
                         left: '50%',
                         transform: 'translateX(-50%)',
                         zIndex: 1500,
-                        display: 'flex',
-                        gap: 2,
-                        overflowX: 'auto',
-                        scrollSnapType: 'x mandatory',
-                        width: 'calc(100vw - 32px)',
-                        maxWidth: '400px',
-                        borderRadius: 2,
-                        '&::-webkit-scrollbar': { display: 'none' },
-                        scrollbarWidth: 'none',
-                        msOverflowStyle: 'none',
                     }}
                 >
-                    {activities.map((activity, index) => (
-                        <Box
-                            key={activity.id}
-                            sx={{
-                                scrollSnapAlign: 'center',
-                                flexShrink: 0,
-                                borderRadius: 2,
-                                width: '100%',
-                                overflow: 'visible', // important pour que l'ombre ne soit pas rognée
-                                transform: selectedIndex === index ? 'scale(1.03)' : 'scale(0.95)',
-                                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                                boxShadow: '0 12px 30px rgba(0, 0, 0, 0.45)', // ombre profonde sur l’actif
-                                border: selectedIndex === index ? '1px solid rgba(255, 255, 255, 0.2)' : 'none',
-                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                backdropFilter: 'blur(6px)',
-                            }}
-                        >
-                            <ActivityCard activity={activity} />
-                        </Box>
-                    ))}
+                    <Box
+                        ref={scrollContainerRef}
+                        onScroll={handleScroll}
+                        sx={{
+                            display: 'flex',
+                            gap: 2,
+                            overflowX: 'auto',
+                            overflowY: 'visible',
+                            scrollSnapType: 'x mandatory',
+                            width: 'calc(100vw - 32px)',
+                            maxWidth: '400px',
+                            borderRadius: 2,
+                            '&::-webkit-scrollbar': { display: 'none' },
+                        }}
+                    >
+                        {activities.map((activity, index) => (
+                            <Box
+                                key={activity.id}
+                                sx={{
+                                    scrollSnapAlign: 'center',
+                                    flexShrink: 0,
+                                    borderRadius: 2,
+                                    width: '100%',
+                                    overflow: 'visible',
+                                    transform: selectedIndex === index ? 'scale(1.03)' : 'scale(0.95)',
+                                    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                                    boxShadow: selectedIndex === index ? '0 12px 30px rgba(0, 0, 0, 0.45)' : 'none',
+                                    border: selectedIndex === index ? '1px solid rgba(255, 255, 255, 0.2)' : 'none',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                    backdropFilter: 'blur(6px)',
+                                }}
+                            >
+                                <ActivityCard activity={activity} />
+                            </Box>
+                        ))}
+                    </Box>
                 </Box>
             )}
         </Box>

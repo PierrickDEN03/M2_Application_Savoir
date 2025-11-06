@@ -25,7 +25,10 @@ export default function ListActivities({ activities }) {
                     borderBottom: '1px solid #e0d5c7',
                 }}
             >
-                <Typography variant="h5" sx={{ color: '#3454D1', fontWeight: 700, fontFamily: '"Nunito", sans-serif', mb: 2 }}>
+                <Typography
+                    variant="h5"
+                    sx={{ color: '#3454D1', fontWeight: 700, fontFamily: '"All Round Gothic Semi", sans-serif', mb: 2 }}
+                >
                     Activités à proximité
                 </Typography>
                 <Typography variant="caption" sx={{ color: '#666', fontFamily: '"Nunito", sans-serif' }}>

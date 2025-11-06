@@ -11,42 +11,48 @@ export default function useActivitiesFilter(activities, filters) {
 
         let base = [...activities]
 
-        // 🔹 FILTRE : recherche textuelle
+        // --- Recherche textuelle
         if (filters.searchQuery && typeof filters.searchQuery === 'string') {
-            const query = filters.searchQuery.toLowerCase()
+            const q = filters.searchQuery.toLowerCase()
             base = base.filter((a) => {
-                const title = a.title?.toLowerCase() || ''
-                const description = a.description?.toLowerCase() || ''
-                const city = a.address?.city?.toLowerCase() || ''
-                const fullAddress = a.address?.full?.toLowerCase() || ''
-                const street = a.address?.street?.toLowerCase() || ''
-                const postalCode = a.address?.postalCode?.toLowerCase() || ''
-
-                return (
-                    title.includes(query) ||
-                    description.includes(query) ||
-                    city.includes(query) ||
-                    fullAddress.includes(query) ||
-                    street.includes(query) ||
-                    postalCode.includes(query)
+                const fields = [a.title, a.description, a?.address?.city, a?.address?.full, a?.address?.street, a?.address?.postalCode].map(
+                    (s) => (s ? s.toLowerCase() : '')
                 )
+
+                return fields.some((f) => f.includes(q))
             })
         }
 
-        // 🔹 FILTRE : recherche par lieu (texte)
+        // --- Recherche par lieu
         if (filters.location && typeof filters.location === 'string') {
             const term = filters.location.toLowerCase()
             base = base.filter((a) => {
-                const city = a.address?.city?.toLowerCase() || ''
-                const full = a.address?.full?.toLowerCase() || ''
+                const city = a?.address?.city?.toLowerCase() || ''
+                const full = a?.address?.full?.toLowerCase() || ''
                 return city.includes(term) || full.includes(term)
             })
         }
 
-        // 🔹 FILTRE : intervalle de dates
-        if (filters.startDate && filters.endDate) {
+        // --- Dates sélectionnées individuellement (prioritaire)
+        if (Array.isArray(filters.selectedDates) && filters.selectedDates.length > 0) {
+            base = base.filter((a) => {
+                if (!a.date) return false
+
+                const itemDate = new Date(a.date)
+                itemDate.setHours(0, 0, 0, 0)
+                const itemISO = itemDate.toISOString()
+
+                return filters.selectedDates.some((sel) => {
+                    const d = new Date(sel)
+                    d.setHours(0, 0, 0, 0)
+                    return d.toISOString() === itemISO
+                })
+            })
+        } else if (filters.startDate && filters.endDate) {
+            // --- Filtre par intervalle de dates (fallback)
             const start = new Date(filters.startDate)
             const end = new Date(filters.endDate)
+
             base = base.filter((a) => {
                 if (!a.date) return false
                 const d = new Date(a.date)
@@ -54,20 +60,19 @@ export default function useActivitiesFilter(activities, filters) {
             })
         }
 
-        // 🔹 FILTRE : catégories sélectionnées
+        // --- Catégories
         if (filters.categories?.length > 0) {
             base = base.filter((a) => filters.categories.includes(a.categoryId))
         }
 
-        // 🔹 FILTRE : distance géographique
+        // --- Distance géographique
         const applyDistance = async () => {
-            // aucun filtre de distance => on garde ce qu'on a
             if (!filters.distance) {
                 setFiltered(base)
                 return
             }
 
-            // si on a une position utilisateur déjà connue dans filters
+            // Position utilisateur déjà connue
             if (filters.userPosition && window.google?.maps?.geometry && base.some((a) => a.position)) {
                 const userPos = new window.google.maps.LatLng(filters.userPosition.lat, filters.userPosition.lng)
 
@@ -75,29 +80,29 @@ export default function useActivitiesFilter(activities, filters) {
                     if (!a.position) return false
                     const actPos = new window.google.maps.LatLng(a.position.lat, a.position.lng)
                     const meters = window.google.maps.geometry.spherical.computeDistanceBetween(userPos, actPos)
-                    const km = meters / 1000
-                    return km <= filters.distance
+                    return meters / 1000 <= filters.distance
                 })
+
                 setFiltered(nearby)
                 return
             }
 
-            // sinon, tenter de géolocaliser une fois (pas à chaque render)
+            // Sinon tentative de géolocalisation
             if (window.google?.maps?.geometry && navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (pos) => {
                         const userPos = new window.google.maps.LatLng(pos.coords.latitude, pos.coords.longitude)
+
                         const nearby = base.filter((a) => {
                             if (!a.position) return false
                             const actPos = new window.google.maps.LatLng(a.position.lat, a.position.lng)
                             const meters = window.google.maps.geometry.spherical.computeDistanceBetween(userPos, actPos)
-                            const km = meters / 1000
-                            return km <= filters.distance
+                            return meters / 1000 <= filters.distance
                         })
+
                         setFiltered(nearby)
                     },
-                    (err) => {
-                        console.warn('Geolocation failed, fallback to base:', err)
+                    () => {
                         setFiltered(base)
                     },
                     { enableHighAccuracy: true, timeout: 10000 }
