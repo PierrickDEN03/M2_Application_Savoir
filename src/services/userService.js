@@ -160,6 +160,28 @@ export async function fetchContact(contactId) {
     }
 }
 
+/**
+ * Génère une URL d'avatar réaliste basée sur l'UID de l'utilisateur
+ * @param {string} uid - UID de l'utilisateur
+ * @param {string} gender - 'men' ou 'women' (optionnel, par défaut aléatoire mais fixe selon UID)
+ * @returns {string} URL de l'image
+ */
+export function getUserAvatarUrl(uid) {
+    if (!uid) return 'https://randomuser.me/api/portraits/lego/1.jpg'
+
+    // Hash simple pour obtenir un index entre 0 et 99
+    let hash = 0
+    for (let i = 0; i < uid.length; i++) {
+        hash = uid.charCodeAt(i) + ((hash << 5) - hash)
+    }
+    const index = Math.abs(hash % 100)
+
+    // Déterminer le genre de manière fixe selon hash
+    const gender = hash % 2 === 0 ? 'men' : 'women'
+
+    return `https://randomuser.me/api/portraits/${gender}/${index}.jpg`
+}
+
 // --- Auth utils ---
 export const signOut = () => firebaseSignOut(auth)
 export const subscribeToAuth = (callback) => onAuthStateChanged(auth, callback)

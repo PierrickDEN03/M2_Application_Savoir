@@ -1,58 +1,50 @@
-// FILE: src/components/ContactItem.jsx
+// FILE: src/components/messagerie/ContactItem.jsx
 import React, { useEffect, useState } from 'react'
 import { Card, CardActionArea, Avatar, Typography, Box } from '@mui/material'
-import { fetchUserById } from '../../services/userService'
+import { fetchUserById, getUserAvatarUrl } from '../../services/userService'
+import { formatActivityDate } from '../../components/utils/formatDate'
 
-function ContactItem({ contactId, onClick }) {
+function ContactItem({ contactId, onClick, lastMessage, lastMessageDate }) {
     const [contact, setContact] = useState(null)
 
     useEffect(() => {
         const loadContact = async () => {
             try {
                 const user = await fetchUserById(contactId)
-                if (user) {
-                    setContact(user)
-                } else {
-                    setContact({
-                        displayName: 'Utilisateur inconnu',
-                        photoUrl: null,
-                    })
-                }
+                if (user) setContact(user)
+                else setContact({ displayName: 'Utilisateur inconnu', photoUrl: null })
             } catch (error) {
                 console.error('Erreur lors du chargement du contact :', error)
-                setContact({
-                    displayName: 'Erreur de chargement',
-                    photoUrl: null,
-                })
+                setContact({ displayName: 'Erreur de chargement', photoUrl: null })
             }
         }
-
         loadContact()
     }, [contactId])
 
     return (
-        <Card
-            sx={{
-                backgroundColor: '#ffffff',
-                color: 'black',
-                borderRadius: 3,
-                boxShadow: 3,
-            }}
-        >
+        <Card sx={{ backgroundColor: '#ffffff', color: 'black', borderRadius: 3, boxShadow: 3 }}>
             <CardActionArea onClick={onClick} sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Avatar
-                    src={contact?.photoUrl && contact.photoUrl !== '/avatar_default.jpg' ? contact.photoUrl : '/avatar_default.jpg'}
+                    src={contact?.photoUrl && contact.photoUrl !== '/avatar_default.jpg' ? contact.photoUrl : getUserAvatarUrl(contactId)}
                     alt={contact?.displayName || 'Contact'}
-                    sx={{
-                        width: 56,
-                        height: 56,
-                        border: '2px solid #F0E7D6',
-                    }}
+                    sx={{ width: 56, height: 56, border: '2px solid #F0E7D6' }}
                 />
-                <Box>
+                <Box sx={{ flex: 1 }}>
                     <Typography variant="h6" sx={{ fontWeight: 600, fontFamily: '"Nunito", sans-serif' }}>
                         {contact?.displayName || 'Utilisateur'}
                     </Typography>
+                    {lastMessage && (
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.5 }}>
+                            <Typography variant="body2" sx={{ color: '#555', fontFamily: '"Nunito", sans-serif' }}>
+                                {lastMessage}
+                            </Typography>
+                            {lastMessageDate && (
+                                <Typography variant="caption" sx={{ color: '#555', fontFamily: '"Nunito", sans-serif' }}>
+                                    {formatActivityDate(lastMessageDate)}
+                                </Typography>
+                            )}
+                        </Box>
+                    )}
                 </Box>
             </CardActionArea>
         </Card>

@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useMemo } from 'react'
+import React, { useState, useContext, useEffect } from 'react'
 import { Box, Container, Typography, TextField, Button, MenuItem, Slider, Snackbar, Alert, CircularProgress } from '@mui/material'
 import { LocalizationProvider, DatePicker, TimePicker } from '@mui/x-date-pickers'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
@@ -95,18 +95,17 @@ export default function CreateActivityForm() {
         loadActivity()
     }, [activityId, isEditMode, currentUser, categories, categoriesLoaded])
 
-    // Photo preview logic
+    // Photo preview logic - VERSION STABILISÉE
     useEffect(() => {
-        // Ne rien faire si on est en édition et que l'activité n'est pas encore chargée
         if (isEditMode && isLoadingActivity) return
 
         if (formData.photoFile) {
             const url = URL.createObjectURL(formData.photoFile)
             setPreviewUrl(url)
             return () => URL.revokeObjectURL(url)
-        } else if (formData.photoUrl) {
+        } else if (formData.photoUrl && !previewUrl) {
             setPreviewUrl(formData.photoUrl)
-        } else {
+        } else if (!formData.photoFile && !formData.photoUrl && previewUrl) {
             setPreviewUrl(null)
         }
     }, [formData.photoFile, formData.photoUrl, isEditMode, isLoadingActivity])
@@ -212,86 +211,21 @@ export default function CreateActivityForm() {
             if (isEditMode) {
                 await updateActivity(activityId, payload)
                 setStatus({ open: true, severity: 'success', message: 'Activité mise à jour !' })
+                setTimeout(() => navigate(-1), 1500)
             } else {
                 await createActivity(currentUser.uid, payload)
                 setStatus({ open: true, severity: 'success', message: 'Activité créée !' })
-                setFormData({
-                    title: '',
-                    date: new Date(),
-                    time: new Date(),
-                    address: { street: '', city: '', postalCode: '', full: '', placeId: '' },
-                    participants: 4,
-                    duration: 1,
-                    description: '',
-                    photoFile: null,
-                    photoUrl: null,
-                })
-                setSelectedCategory(null)
-                setPreviewUrl(null)
-                setStep(1)
-                setErrors({})
+                setTimeout(() => navigate(-1), 1500)
             }
         } catch (err) {
             console.error(err)
             setStatus({ open: true, severity: 'error', message: err.message || 'Erreur lors de la sauvegarde.' })
-        } finally {
             setSubmitting(false)
         }
     }
 
-    const shouldRenderCategoryVisual = useMemo(() => {
-        // Ne pas afficher la catégorie visuelle si on charge l'activité ou les catégories
-        if (isEditMode && (isLoadingActivity || !categoriesLoaded)) return false
-        // Ne pas afficher si une photo a été uploadée
-        if (formData.photoFile) return false
-        // Ne pas afficher si on a déjà une photoUrl
-        if (previewUrl) return false
-        // Afficher seulement si une catégorie est sélectionnée
-        return !!selectedCategory
-    }, [formData.photoFile, selectedCategory, isEditMode, isLoadingActivity, categoriesLoaded, previewUrl])
-
-    const renderCategoryVisual = () => {
-        const color = selectedCategory?.color || '#D1388B'
-        const IconName = selectedCategory?.iconName || 'MusicNote'
-        const IconComponent = MuiIcons[IconName]
-
-        return (
-            <Box
-                sx={{
-                    width: '100%',
-                    height: 160,
-                    borderRadius: 3,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    bgcolor: color,
-                    position: 'relative',
-                }}
-            >
-                <IconComponent sx={{ fontSize: 64, color: 'white' }} />
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        right: 12,
-                        bottom: 12,
-                        bgcolor: 'white',
-                        width: 32,
-                        height: 32,
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        border: '2px solid white',
-                    }}
-                >
-                    <MuiIcons.Edit sx={{ fontSize: 18, color: '#3454D1' }} />
-                </Box>
-            </Box>
-        )
-    }
-
+    // VERSION SIMPLIFIÉE ET STABLE DU RENDU DE PREVIEW
     const renderPhotoPreview = () => {
-        // Si on charge l'activité en mode édition ou les catégories, afficher un loader
         if (isEditMode && (isLoadingActivity || !categoriesLoaded)) {
             return (
                 <Box
@@ -310,55 +244,50 @@ export default function CreateActivityForm() {
             )
         }
 
-        // Si une photo a été uploadée ou existe déjà, l'afficher
-        if (previewUrl) {
-            return (
-                <Box sx={{ position: 'relative' }}>
+        const hasPhoto = previewUrl || formData.photoUrl
+        const showCategory = !hasPhoto && selectedCategory && !formData.photoFile
+
+        return (
+            <Box sx={{ position: 'relative' }}>
+                {hasPhoto ? (
                     <Box
                         component="img"
-                        src={previewUrl}
+                        src={previewUrl || formData.photoUrl}
                         alt="Aperçu photo"
                         sx={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 3 }}
                     />
+                ) : showCategory ? (
                     <Box
                         sx={{
-                            position: 'absolute',
-                            right: 12,
-                            bottom: 12,
-                            bgcolor: 'white',
-                            width: 32,
-                            height: 32,
-                            borderRadius: '50%',
+                            width: '100%',
+                            height: 160,
+                            borderRadius: 3,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            border: '2px solid white',
+                            bgcolor: selectedCategory?.color || '#D1388B',
                         }}
                     >
-                        <MuiIcons.Edit sx={{ fontSize: 18, color: '#3454D1' }} />
+                        {React.createElement(MuiIcons[selectedCategory?.iconName] || MuiIcons.MusicNote, {
+                            sx: { fontSize: 64, color: 'white' },
+                        })}
                     </Box>
-                </Box>
-            )
-        }
+                ) : (
+                    <Box
+                        sx={{
+                            width: '100%',
+                            height: 160,
+                            borderRadius: 3,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            bgcolor: '#E5E7EB',
+                        }}
+                    >
+                        <MuiIcons.Image sx={{ fontSize: 56, color: '#9CA3AF' }} />
+                    </Box>
+                )}
 
-        // Si on doit afficher la catégorie visuelle
-        if (shouldRenderCategoryVisual) return renderCategoryVisual()
-
-        // Par défaut, afficher l'image placeholder
-        return (
-            <Box
-                sx={{
-                    width: '100%',
-                    height: 160,
-                    borderRadius: 3,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    bgcolor: '#E5E7EB',
-                    position: 'relative',
-                }}
-            >
-                <MuiIcons.Image sx={{ fontSize: 56, color: '#9CA3AF' }} />
                 <Box
                     sx={{
                         position: 'absolute',
@@ -383,7 +312,6 @@ export default function CreateActivityForm() {
     return (
         <Box sx={{ minHeight: '100vh', bgcolor: '#D6E9F8', py: 3 }}>
             <Container maxWidth="sm" sx={{ px: 2 }}>
-                {/* Header */}
                 <Box sx={{ mb: 3 }}>
                     {step === 1 ? (
                         <>
@@ -428,25 +356,23 @@ export default function CreateActivityForm() {
                     )}
                 </Box>
 
-                {/* Form body */}
+                {/* SUPPRESSION DE LA KEY PROBLÉMATIQUE */}
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
                     {step === 1 && (
                         <>
-                            {/* Photo preview */}
-                            <Box sx={{ position: 'relative', cursor: 'pointer' }}>
-                                <label htmlFor="photo-upload" style={{ cursor: 'pointer', display: 'block' }}>
+                            <Box sx={{ position: 'relative' }}>
+                                <Box sx={{ cursor: 'pointer' }} onClick={() => document.getElementById('photo-upload')?.click()}>
                                     {renderPhotoPreview()}
-                                    <input
-                                        id="photo-upload"
-                                        type="file"
-                                        accept="image/*"
-                                        style={{ display: 'none' }}
-                                        onChange={handlePhotoUpload}
-                                    />
-                                </label>
+                                </Box>
+                                <input
+                                    id="photo-upload"
+                                    type="file"
+                                    accept="image/*"
+                                    style={{ display: 'none' }}
+                                    onChange={handlePhotoUpload}
+                                />
                             </Box>
 
-                            {/* Title */}
                             <Box>
                                 <Typography
                                     sx={{
@@ -475,7 +401,6 @@ export default function CreateActivityForm() {
                                 />
                             </Box>
 
-                            {/* Category */}
                             <Box>
                                 <Typography
                                     sx={{
@@ -505,7 +430,7 @@ export default function CreateActivityForm() {
                                         <MenuItem key={cat.id} value={cat.id}>
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                 {React.createElement(MuiIcons[cat.iconName] || MuiIcons.MusicNote, {
-                                                    sx: { color: cat.color || '#3454D1', fontSize: 20, fontFamily: '"Nunito", sans-serif' },
+                                                    sx: { color: cat.color || '#3454D1', fontSize: 20 },
                                                 })}
                                                 {cat.description}
                                             </Box>
@@ -514,7 +439,6 @@ export default function CreateActivityForm() {
                                 </TextField>
                             </Box>
 
-                            {/* Address */}
                             <Box>
                                 <Typography
                                     sx={{
@@ -539,7 +463,6 @@ export default function CreateActivityForm() {
                                 )}
                             </Box>
 
-                            {/* Date & Time */}
                             <Box>
                                 <Typography
                                     sx={{
@@ -620,7 +543,6 @@ export default function CreateActivityForm() {
 
                     {step === 2 && (
                         <>
-                            {/* Participants */}
                             <Box>
                                 <Typography
                                     sx={{
@@ -671,7 +593,6 @@ export default function CreateActivityForm() {
                                 )}
                             </Box>
 
-                            {/* Duration */}
                             <Box>
                                 <Typography
                                     sx={{
@@ -715,11 +636,14 @@ export default function CreateActivityForm() {
                                     }}
                                 />
                                 {errors.duration && (
-                                    <Typography sx={{ color: 'error.main', fontSize: '0.85rem', mt: 0.5 }}>{errors.duration}</Typography>
+                                    <Typography
+                                        sx={{ color: 'error.main', fontSize: '0.85rem', mt: 0.5, fontFamily: '"Nunito", sans-serif' }}
+                                    >
+                                        {errors.duration}
+                                    </Typography>
                                 )}
                             </Box>
 
-                            {/* Description */}
                             <Box>
                                 <Typography
                                     sx={{

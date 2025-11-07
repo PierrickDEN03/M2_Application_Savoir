@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Box, Typography, Avatar, Chip, Button, CircularProgress, Stack } from '@mui/material'
 import * as MuiIcons from '@mui/icons-material'
-import { fetchUserById } from '../../../services/userService'
+import { fetchUserById, getUserAvatarUrl } from '../../../services/userService'
 import { getUserInterests } from '../../../services/categoriesService'
 import { fetchActivitiesFromDB } from '../../../services/activitiesService'
 import { getUserReservations } from '../../../services/reservationsService'
@@ -113,7 +113,7 @@ export default function UserProfile() {
             <Box sx={{ px: 3 }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
                     <Avatar
-                        src={user.photoUrl || '/avatar_default.jpg'}
+                        src={getUserAvatarUrl(idUser)}
                         sx={{
                             width: 100,
                             height: 100,

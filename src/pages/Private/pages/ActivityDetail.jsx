@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Box, Typography, Avatar, Button, CircularProgress, Snackbar, Rating, Alert } from '@mui/material'
 import * as MuiIcons from '@mui/icons-material'
 import { fetchActivityById } from '../../../services/activitiesService'
-import { fetchUserById } from '../../../services/userService'
+import { fetchUserById, getUserAvatarUrl } from '../../../services/userService'
 import { fetchCategoryById, getCategoryImage } from '../../../services/categoriesService'
 import { checkReservation, addReservation, removeReservation } from '../../../services/reservationsService'
 import { checkFavorite, addFavorite, removeFavorite } from '../../../services/favorisService'
@@ -16,26 +16,33 @@ import AvatarPlaceholder from '../../../components/utils/Avatar_Placeholder'
 function ActivityDetail() {
     const { activityId } = useParams()
     const navigate = useNavigate()
+
+    const currentUser = auth.currentUser
+
     const [activity, setActivity] = useState(null)
     const [creator, setCreator] = useState(null)
     const [category, setCategory] = useState(null)
     const [loading, setLoading] = useState(true)
-    const [isRegistered, setIsRegistered] = useState(false)
-    const [isFavorite, setIsFavorite] = useState(false)
-    const [reservationId, setReservationId] = useState(null)
-    const [favoriteId, setFavoriteId] = useState(null)
+
+    const [participantsList, setParticipantsList] = useState([])
     const [registeredCount, setRegisteredCount] = useState(0)
+    const [isRegistered, setIsRegistered] = useState(false)
+    const [reservationId, setReservationId] = useState(null)
+
+    const [isFavorite, setIsFavorite] = useState(false)
+    const [favoriteId, setFavoriteId] = useState(null)
+
     const [isPast, setIsPast] = useState(false)
     const [isFull, setIsFull] = useState(false)
-    const [showAvis, setShowAvis] = useState(false)
+
     const [avis, setAvis] = useState([])
     const [averageNote, setAverageNote] = useState(0)
+    const [showAvis, setShowAvis] = useState(false)
+
+    const [actionLoading, setActionLoading] = useState(false)
     const [snackbarOpen, setSnackbarOpen] = useState(false)
     const [snackbarMessage, setSnackbarMessage] = useState('')
     const [snackbarSeverity, setSnackbarSeverity] = useState('success')
-    const [actionLoading, setActionLoading] = useState(false)
-
-    const currentUser = auth.currentUser
 
     useEffect(() => {
         const loadActivityDetails = async () => {
@@ -45,6 +52,7 @@ function ActivityDetail() {
                     return
                 }
 
+                // Récupération de l'activité
                 const activityData = await fetchActivityById(activityId)
                 if (!activityData) {
                     navigate('/user/activity')
@@ -52,31 +60,39 @@ function ActivityDetail() {
                 }
                 setActivity(activityData)
 
-                const userData = await fetchUserById(activityData.userId || activityData.createdBy)
-                setCreator(userData)
+                // Créateur
+                const creatorData = await fetchUserById(activityData.userId || activityData.createdBy)
+                setCreator(creatorData)
 
+                // Catégorie
                 const categoryData = await fetchCategoryById(activityData.categoryId)
                 setCategory(categoryData)
 
+                // Participants
                 const q = query(collection(db, 'reservations'), where('activityId', '==', activityId))
-                const querySnapshot = await getDocs(q)
-                setRegisteredCount(querySnapshot.size)
+                const snapshot = await getDocs(q)
+                const uids = snapshot.docs.map((doc) => doc.data().userId)
+                setParticipantsList(uids)
+                setRegisteredCount(uids.length)
 
+                // Check réservation de l'utilisateur
                 const resId = await checkReservation(currentUser.uid, activityId)
                 if (resId) {
                     setIsRegistered(true)
                     setReservationId(resId)
                 }
 
+                // Check favoris
                 const favId = await checkFavorite(currentUser.uid, activityId)
                 if (favId) {
                     setIsFavorite(true)
                     setFavoriteId(favId)
                 }
 
+                // Date et statut
                 const activityDate = new Date(activityData.date)
                 setIsPast(activityDate < new Date())
-                setIsFull(querySnapshot.size >= activityData.participants)
+                setIsFull(uids.length >= (activityData.participants || 0))
             } catch (error) {
                 console.error('Erreur chargement activité:', error)
             } finally {
@@ -88,25 +104,25 @@ function ActivityDetail() {
     }, [activityId, navigate, currentUser])
 
     useEffect(() => {
-        if (activityId) loadAvis()
-    }, [activityId])
-
-    const loadAvis = async () => {
-        try {
-            const avisData = await getAvisByActivityId(activityId)
-            const avisWithUsers = await Promise.all(
-                avisData.map(async (a) => {
-                    const user = await fetchUserById(a.idUser)
-                    return { ...a, user }
-                })
-            )
-            setAvis(avisWithUsers)
-            const moyenne = await getAverageNote(activityId)
-            setAverageNote(moyenne)
-        } catch (err) {
-            console.error('Erreur chargement avis', err)
+        const loadAvis = async () => {
+            if (!activityId) return
+            try {
+                const avisData = await getAvisByActivityId(activityId)
+                const avisWithUsers = await Promise.all(
+                    avisData.map(async (a) => {
+                        const user = await fetchUserById(a.idUser)
+                        return { ...a, user }
+                    })
+                )
+                setAvis(avisWithUsers)
+                const moyenne = await getAverageNote(activityId)
+                setAverageNote(moyenne)
+            } catch (err) {
+                console.error('Erreur chargement avis', err)
+            }
         }
-    }
+        loadAvis()
+    }, [activityId])
 
     const handleToggleFavorite = async () => {
         if (!currentUser) return
@@ -138,12 +154,14 @@ function ActivityDetail() {
             if (isRegistered) {
                 await removeReservation(reservationId)
                 setIsRegistered(false)
+                setParticipantsList((prev) => prev.filter((uid) => uid !== currentUser.uid))
                 setRegisteredCount((prev) => Math.max(0, prev - 1))
                 showSnackbar('Réservation annulée', 'info')
             } else {
                 const newResId = await addReservation(currentUser.uid, activityId)
                 setIsRegistered(true)
                 setReservationId(newResId)
+                setParticipantsList((prev) => [...prev, currentUser.uid])
                 setRegisteredCount((prev) => prev + 1)
                 showSnackbar('Inscription réussie', 'success')
             }
@@ -199,24 +217,9 @@ function ActivityDetail() {
             </Box>
 
             {/* Conteneur principal */}
-            <Box
-                sx={{
-                    maxWidth: 420,
-                    mx: 'auto',
-                    bgcolor: 'white',
-                    borderRadius: 4,
-                    overflow: 'hidden',
-                    boxShadow: 1,
-                }}
-            >
-                {/* Image + bandeau terminé */}
-                <Box
-                    sx={{
-                        position: 'relative',
-                        height: 180,
-                        background: `url(${categoryImage}) center/cover no-repeat`,
-                    }}
-                >
+            <Box sx={{ maxWidth: 420, mx: 'auto', bgcolor: 'white', borderRadius: 4, overflow: 'hidden', boxShadow: 1 }}>
+                {/* Image + bandeau */}
+                <Box sx={{ position: 'relative', height: 180, background: `url(${categoryImage}) center/cover no-repeat` }}>
                     {isPast && (
                         <Box
                             sx={{
@@ -235,7 +238,6 @@ function ActivityDetail() {
                             Cette activité est terminée
                         </Box>
                     )}
-
                     {!isPast && category && (
                         <Box
                             sx={{
@@ -255,13 +257,11 @@ function ActivityDetail() {
                                 gap: 1,
                             }}
                         >
-                            {/* Icône dynamique si présente */}
                             {category.iconName &&
                                 React.createElement(MuiIcons[category.iconName], {
                                     sx: { fontSize: 18, color: 'white' },
                                     'aria-hidden': true,
                                 })}
-
                             <Typography component="span" sx={{ fontSize: '0.9rem', lineHeight: 1, fontFamily: '"Nunito", sans-serif' }}>
                                 {category.description}
                             </Typography>
@@ -271,9 +271,9 @@ function ActivityDetail() {
 
                 {/* Contenu principal */}
                 <Box sx={{ p: 3 }}>
-                    {/* Profil */}
+                    {/* Profil créateur */}
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                        <Avatar src={creator?.photoUrl} sx={{ width: 56, height: 56, mr: 2, border: '3px solid #3454D1' }} />
+                        <Avatar src={getUserAvatarUrl(creator.id)} sx={{ width: 56, height: 56, mr: 2, border: '3px solid #3454D1' }} />
                         <Box>
                             <Typography
                                 variant="h6"
@@ -282,15 +282,62 @@ function ActivityDetail() {
                             >
                                 {creator?.displayName || 'Utilisateur'}
                             </Typography>
-                            <Typography
-                                variant="body2"
-                                sx={{ color: '#666', cursor: 'pointer', fontFamily: '"Nunito", sans-serif' }}
+                            <Button
+                                fullWidth
+                                variant="contained"
+                                startIcon={<MuiIcons.Message />}
                                 onClick={() => navigate(`/user/send-message/${creator?.id}`)}
+                                sx={{
+                                    bgcolor: '#FFD186',
+                                    color: 'white',
+                                    borderRadius: 3,
+                                    py: 1,
+                                    fontWeight: 600,
+                                    fontFamily: '"Nunito", sans-serif',
+                                    textTransform: 'none',
+                                    '&:hover': '#e7b667ff',
+                                }}
                             >
-                                Contacter l’organisateur
-                            </Typography>
+                                Envoyer un message
+                            </Button>
                         </Box>
                     </Box>
+
+                    {/* Informations */}
+                    <Typography variant="h6" sx={{ fontWeight: 600, mt: 3, mb: 2, fontFamily: '"Nunito", sans-serif' }}>
+                        Informations
+                    </Typography>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+                        <MuiIcons.CalendarToday sx={{ fontSize: 18, color: '#ED6A5A', mr: 1 }} />
+                        <Typography sx={{ fontFamily: '"Nunito", sans-serif' }}>{formatDate(activity.date)}</Typography>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+                        <MuiIcons.LocationOn sx={{ fontSize: 18, color: '#ED6A5A', mr: 1 }} />
+                        <Typography sx={{ fontFamily: '"Nunito", sans-serif' }}>
+                            {activity.address?.street || activity.address?.city}
+                        </Typography>
+                    </Box>
+                    {/* Participants */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <MuiIcons.Group sx={{ fontSize: 18, color: '#ED6A5A', mr: 1 }} />
+                        <Typography sx={{ fontFamily: '"Nunito", sans-serif' }}>
+                            {registeredCount}/{activity.participants || 0} participants
+                        </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
+                        {participantsList.map((uid) => (
+                            <Avatar key={uid} src={getUserAvatarUrl(uid)} sx={{ width: 36, height: 36, border: '2px solid #3454D1' }} />
+                        ))}
+                    </Box>
+
+                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, fontFamily: '"Nunito", sans-serif' }}>
+                        Détail de l'annonce
+                    </Typography>
+                    <Typography sx={{ color: '#333', mb: 3, fontFamily: '"Nunito", sans-serif' }}>
+                        {activity.description || 'Aucune description disponible.'}
+                    </Typography>
 
                     {/* Avis — uniquement si activité terminée */}
                     {isPast && (
@@ -335,12 +382,7 @@ function ActivityDetail() {
                                         avis.map((a) => (
                                             <Box key={a.id} sx={{ mt: 2 }}>
                                                 <Box
-                                                    sx={{
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'space-between',
-                                                        mb: 0.5,
-                                                    }}
+                                                    sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}
                                                 >
                                                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                                         <Avatar src={a.user?.photoUrl} sx={{ width: 32, height: 32, mr: 1 }} />
@@ -362,37 +404,6 @@ function ActivityDetail() {
                             )}
                         </>
                     )}
-
-                    {/* Informations */}
-                    <Typography variant="h6" sx={{ fontWeight: 600, mt: 3, mb: 2, fontFamily: '"Nunito", sans-serif' }}>
-                        Informations
-                    </Typography>
-
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-                        <MuiIcons.CalendarToday sx={{ fontSize: 18, color: '#ED6A5A', mr: 1 }} />
-                        <Typography sx={{ fontFamily: '"Nunito", sans-serif' }}>{formatDate(activity.date)}</Typography>
-                    </Box>
-
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-                        <MuiIcons.LocationOn sx={{ fontSize: 18, color: '#ED6A5A', mr: 1 }} />
-                        <Typography sx={{ fontFamily: '"Nunito", sans-serif' }}>
-                            {activity.address?.street || activity.address?.city}
-                        </Typography>
-                    </Box>
-
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <MuiIcons.Group sx={{ fontSize: 18, color: '#ED6A5A', mr: 1 }} />
-                        <Typography sx={{ fontFamily: '"Nunito", sans-serif' }}>
-                            {registeredCount}/{activity.participants || 0} participants
-                        </Typography>
-                    </Box>
-
-                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, fontFamily: '"Nunito", sans-serif' }}>
-                        Détail de l'annonce
-                    </Typography>
-                    <Typography sx={{ color: '#333', mb: 3, fontFamily: '"Nunito", sans-serif' }}>
-                        {activity.description || 'Aucune description disponible.'}
-                    </Typography>
                 </Box>
             </Box>
 

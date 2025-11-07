@@ -167,3 +167,50 @@ export async function getConversations(userId) {
         return []
     }
 }
+
+/**
+ * Récupère les conversations de l'utilisateur avec le dernier message
+ * @param {string} userId - ID de l'utilisateur
+ * @returns {Promise<Array>} - Liste des conversations : { contactId, lastMessage }
+ */
+export async function getConversationsWithLastMessage(userId) {
+    if (!userId) throw new Error('userId requis')
+
+    const messagesRef = collection(db, 'messages')
+
+    // Messages envoyés
+    const sentQuery = query(messagesRef, where('senderId', '==', userId))
+    const sentSnapshot = await getDocs(sentQuery)
+
+    // Messages reçus
+    const receivedQuery = query(messagesRef, where('receiverId', '==', userId))
+    const receivedSnapshot = await getDocs(receivedQuery)
+
+    const allMessages = [...sentSnapshot.docs, ...receivedSnapshot.docs].map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+    }))
+
+    // Grouper par interlocuteur
+    const conversationsMap = new Map()
+
+    allMessages.forEach((msg) => {
+        const contactId = msg.senderId === userId ? msg.receiverId : msg.senderId
+
+        if (!conversationsMap.has(contactId)) {
+            conversationsMap.set(contactId, msg)
+        } else {
+            // garder le dernier message
+            if (msg.createdAt?.toDate() > conversationsMap.get(contactId).createdAt?.toDate()) {
+                conversationsMap.set(contactId, msg)
+            }
+        }
+    })
+
+    // Retourner sous forme tableau
+    return Array.from(conversationsMap.entries()).map(([contactId, msg]) => ({
+        contactId,
+        lastMessage: msg.text,
+        lastMessageDate: msg.createdAt?.toDate() || null,
+    }))
+}

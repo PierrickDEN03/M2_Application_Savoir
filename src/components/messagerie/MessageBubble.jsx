@@ -1,7 +1,7 @@
 // FILE: src/components/messagerie/MessageBubble.jsx
 import React, { useState, useEffect } from 'react'
 import { Box, Typography, Avatar } from '@mui/material'
-import { fetchUserById } from '../../services/userService'
+import { fetchUserById, getUserAvatarUrl } from '../../services/userService'
 
 export default function MessageBubble({ message, isOwn, isGroupChat }) {
     const [senderData, setSenderData] = useState(null)
@@ -35,7 +35,7 @@ export default function MessageBubble({ message, isOwn, isGroupChat }) {
     }
 
     const senderName = senderData?.displayName || senderData?.firstName || 'Utilisateur'
-    const senderPhoto = senderData?.photoUrl || '/avatar_default.jpg'
+    const senderPhoto = getUserAvatarUrl(message.senderId)
 
     return (
         <Box

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getConversations } from '../../../services/messagesService'
+import { getConversationsWithLastMessage } from '../../../services/messagesService'
 import { getUserActivityConversations } from '../../../services/conversationsService'
 import { fetchActivityById } from '../../../services/activitiesService'
+import { fetchCategoriesFromDB } from '../../../services/categoriesService'
 import ContactItem from '../../../components/messagerie/ContactItem'
 import ActivityContactItem from '../../../components/messagerie/ActivityContactItem'
 import { getAuth } from 'firebase/auth'
@@ -16,6 +17,7 @@ function Messagerie() {
     const [privateContacts, setPrivateContacts] = useState([])
     const [groupConversations, setGroupConversations] = useState([])
     const [loading, setLoading] = useState(true)
+
     const navigate = useNavigate()
     const auth = getAuth()
     const currentUser = auth.currentUser
@@ -28,22 +30,31 @@ function Messagerie() {
                     return
                 }
 
-                // 🔹 Récupérer les conversations privées
-                const privateConvs = await getConversations(currentUser.uid)
+                // Conversations privées avec dernier message
+                const privateConvs = await getConversationsWithLastMessage(currentUser.uid)
                 setPrivateContacts(privateConvs)
 
-                // 🔹 Récupérer les conversations de groupe
+                // Conversations de groupe
                 const groupConvs = await getUserActivityConversations(currentUser.uid)
 
-                // 🔹 Enrichir avec les infos des activités
+                // Chargement catégories
+                const allCategories = await fetchCategoriesFromDB()
+
+                // Enrichissement des conversations avec activité + catégorie
                 const enrichedGroupConvs = await Promise.all(
                     groupConvs.map(async (conv) => {
                         try {
                             const activity = await fetchActivityById(conv.activityId)
+
+                            const categoryData =
+                                allCategories.find((cat) => cat.id === activity?.categoryId) ||
+                                allCategories.find((cat) => cat.description === 'Autres')
+
                             return {
                                 ...conv,
                                 activityTitle: activity?.title || 'Activité sans titre',
-                                activityCategory: activity?.category || 'Autres',
+                                activityCategory: categoryData?.description || 'Autres',
+                                categoryData: categoryData || null,
                                 activityDate: activity?.date || null,
                             }
                         } catch (error) {
@@ -52,6 +63,7 @@ function Messagerie() {
                                 ...conv,
                                 activityTitle: 'Activité',
                                 activityCategory: 'Autres',
+                                categoryData: null,
                             }
                         }
                     })
@@ -130,7 +142,7 @@ function Messagerie() {
                 </Typography>
             ) : (
                 <Stack spacing={4}>
-                    {/* 🔹 Conversations de groupe */}
+                    {/* Discussions de groupe */}
                     {groupConversations.length > 0 && (
                         <Box>
                             <Typography
@@ -147,6 +159,7 @@ function Messagerie() {
                             >
                                 <GroupIcon /> Discussions de groupe
                             </Typography>
+
                             <Stack spacing={2}>
                                 {groupConversations.map((conv) => (
                                     <ActivityContactItem
@@ -159,7 +172,7 @@ function Messagerie() {
                         </Box>
                     )}
 
-                    {/* 🔹 Conversations privées */}
+                    {/* Messages privés */}
                     {privateContacts.length > 0 && (
                         <Box>
                             <Typography
@@ -176,12 +189,15 @@ function Messagerie() {
                             >
                                 <PersonIcon /> Messages privés
                             </Typography>
+
                             <Stack spacing={2}>
-                                {privateContacts.map((contactId) => (
+                                {privateContacts.map((conv) => (
                                     <ContactItem
-                                        key={contactId}
-                                        contactId={contactId}
-                                        onClick={() => navigate(`/user/send-message/${contactId}`)}
+                                        key={conv.contactId}
+                                        contactId={conv.contactId}
+                                        lastMessage={conv.lastMessage}
+                                        lastMessageDate={conv.lastMessageDate}
+                                        onClick={() => navigate(`/user/send-message/${conv.contactId}`)}
                                     />
                                 ))}
                             </Stack>

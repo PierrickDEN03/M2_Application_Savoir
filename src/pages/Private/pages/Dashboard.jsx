@@ -26,7 +26,6 @@ export default function Dashboard() {
             const notPrivatePaths = ['/', '/login', '/register-profile', '/auth/callback']
 
             if (!currentUser) return
-            console.log(hasNoActivitiesOrReservations(currentUser.uid))
             const noActivitiesOrReservations = await hasNoActivitiesOrReservations(currentUser.uid)
 
             if (lastPath && notPrivatePaths.some((p) => lastPath.includes(p)) && noActivitiesOrReservations) {

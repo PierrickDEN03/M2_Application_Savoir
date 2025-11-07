@@ -3,12 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Box, Typography, Avatar, CircularProgress } from '@mui/material'
 import StarIcon from '@mui/icons-material/Star'
 import { auth, db } from '../../../firebase-config'
-import { fetchUserById } from '../../../services/userService'
+import { fetchUserById, getUserAvatarUrl } from '../../../services/userService'
 import { fetchActivityById } from '../../../services/activitiesService'
 import { sendMessage, listenToMessages } from '../../../services/messagesService'
 import { getOrCreateActivityConversation, listenToActivityMessages, sendActivityMessage } from '../../../services/conversationsService'
 import { collection, getDocs, query, where } from 'firebase/firestore'
 import { getAverageNoteUser } from '../../../services/avisService'
+import { getCategoryImage, fetchCategoryById } from '../../../services/categoriesService'
 import MessageBubble from '../../../components/messagerie/MessageBubble'
 import MessageInput from '../../../components/messagerie/MessageInput'
 import AvatarPlaceholder from '../../../components/utils/Avatar_Placeholder'
@@ -28,11 +29,26 @@ export default function SendMessage() {
     const [conversationId, setConversationId] = useState(null)
     const [participants, setParticipants] = useState([])
     const [averageRating, setAverageRating] = useState(null)
+    const [categoryImage, setCategoryImage] = useState('/avatar_default.png')
 
     // Fonction de scroll améliorée
     const scrollToBottom = (behavior = 'smooth') => {
         messagesEndRef.current?.scrollIntoView({ behavior, block: 'end' })
     }
+
+    // Récupération de l'image selon categoryId
+    useEffect(() => {
+        const loadCategoryImage = async () => {
+            if (activity?.categoryId) {
+                const cat = await fetchCategoryById(activity.categoryId)
+                if (cat?.description) {
+                    const img = getCategoryImage(cat.description)
+                    setCategoryImage(img)
+                }
+            }
+        }
+        loadCategoryImage()
+    }, [activity?.categoryId])
 
     // Scroll automatique quand les messages changent
     useEffect(() => {
@@ -214,8 +230,9 @@ export default function SendMessage() {
             >
                 {isGroupChat ? (
                     <>
-                        <Avatar src={'/activity_group_icon.png'} sx={{ width: 48, height: 48, border: '2px solid #3454D1' }} />
-                        <Box>
+                        <Avatar src={categoryImage} sx={{ width: 48, height: 48, border: '2px solid #3454D1' }} />
+
+                        <Box onClick={() => navigate(`/user/activity/${activityId}`)} sx={{ cursor: 'pointer' }}>
                             <Typography variant="body1" sx={{ fontWeight: 600, fontFamily: '"Nunito", sans-serif' }}>
                                 {activity?.title || "Discussion de l'activité"}
                             </Typography>
@@ -226,10 +243,8 @@ export default function SendMessage() {
                     </>
                 ) : (
                     <>
-                        <Avatar
-                            src={recipient?.photoUrl || '/avatar_default.jpg'}
-                            sx={{ width: 48, height: 48, border: '2px solid #3454D1' }}
-                        />
+                        <Avatar src={getUserAvatarUrl(recipient.id)} sx={{ width: 48, height: 48, border: '2px solid #3454D1' }} />
+
                         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                             <Box
                                 sx={{

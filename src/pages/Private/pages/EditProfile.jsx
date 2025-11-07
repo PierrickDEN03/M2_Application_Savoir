@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Box, Typography, TextField, Button, Avatar, Chip, CircularProgress, IconButton } from '@mui/material'
 import * as MuiIcons from '@mui/icons-material'
 import { auth } from '../../../firebase-config'
-import { fetchUserById, updateUserProfile } from '../../../services/userService'
+import { fetchUserById, updateUserProfile, getUserAvatarUrl } from '../../../services/userService'
 import { getUserInterests } from '../../../services/categoriesService'
 
 export default function EditProfile() {
@@ -148,13 +148,16 @@ export default function EditProfile() {
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
                 <Box sx={{ position: 'relative' }}>
                     <Avatar
-                        src={photoUrl || '/avatar_default.jpg'}
+                        src={
+                            photoUrl && photoUrl !== '/avatar_default.jpg' ? photoUrl : getUserAvatarUrl(idUser) // <-- fallback avec identicon public basé sur UID
+                        }
                         sx={{
                             width: 100,
                             height: 100,
                             border: '4px solid white',
                         }}
                     />
+
                     <IconButton
                         onClick={handlePhotoClick}
                         sx={{
