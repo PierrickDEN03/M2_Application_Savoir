@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react'
-import { TextField, Button, Typography, Snackbar, Alert, Box, Link } from '@mui/material'
+import { TextField, Button, Typography, Snackbar, Alert, Box } from '@mui/material'
 import { UserContext } from '../../../context/userContext'
 
 export default function SignInMagic() {
@@ -51,7 +51,7 @@ export default function SignInMagic() {
         <Box
             sx={{
                 height: '100vh',
-                bgcolor: '#3454D1',
+                bgcolor: '#e4eff6',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -62,29 +62,54 @@ export default function SignInMagic() {
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    textAlign: 'center',
+
                     width: '100%',
                     px: 3,
                 }}
             >
-                {/* Logo */}
-                <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#F0E7D6', mb: 1, fontFamily: 'Poppins, sans-serif' }}>
-                    echo
-                    <Box component="span" sx={{ color: '#ED6A5A' }}>
-                        •
-                    </Box>
-                    ly
-                </Typography>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        textAlign: 'center',
+                    }}
+                >
+                    <Box
+                        component="img"
+                        src="/assets/Logo.svg"
+                        alt="Logo"
+                        sx={{
+                            width: { xs: '200px', sm: '280px' },
+                            height: 'auto',
+                        }}
+                    />
+                </Box>
 
-                {/* Slogan */}
-                <Typography variant="subtitle2" sx={{ color: '#FFD166', mb: 4 }}>
+                <Typography
+                    sx={{
+                        color: '#ED6A5A',
+                        fontSize: '1rem',
+                        mb: { xs: 10, sm: 28 },
+                        fontFamily: '"Nunito", sans-serif',
+                        fontWeight: 400,
+                    }}
+                >
                     Là où chaque rencontre résonne
                 </Typography>
-
                 {/* Titre */}
-                <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#F0E7D6', mb: 3 }}>
-                    Se connecter
-                </Typography>
+                <Box sx={{ width: '100%', mb: 3, ml: 5, display: 'flex', justifyContent: 'left' }}>
+                    <Typography
+                        variant="h5"
+                        sx={{
+                            fontWeight: 'bold',
+                            color: '#3454D1',
+                            fontFamily: '"All Round Gothic Semi", sans-serif',
+                        }}
+                    >
+                        Se connecter
+                    </Typography>
+                </Box>
 
                 {/* Formulaire */}
                 <Box
@@ -105,9 +130,10 @@ export default function SignInMagic() {
                         onChange={(e) => setEmail(e.target.value)}
                         sx={{
                             width: '320px',
-                            mb: 3,
+                            mb: 8,
                             bgcolor: 'white',
                             borderRadius: '8px',
+                            fontFamily: '"Nunito", sans-serif',
                             '& .MuiOutlinedInput-root': {
                                 borderRadius: '8px',
                             },
@@ -124,6 +150,7 @@ export default function SignInMagic() {
                             borderRadius: '12px',
                             py: 1.5,
                             fontWeight: 'bold',
+                            fontFamily: '"Nunito", sans-serif',
                             fontSize: '1rem',
                             textTransform: 'uppercase',
                             '&:hover': { bgcolor: '#B2DDF7', color: '#3454D1' },
@@ -132,14 +159,6 @@ export default function SignInMagic() {
                         Se connecter →
                     </Button>
                 </Box>
-
-                {/* Lien inscription */}
-                <Typography variant="body2" sx={{ mt: 4, color: '#F0E7D6' }}>
-                    Pas encore de compte ?{' '}
-                    <Link href="/login" underline="none" sx={{ color: '#B2DDF7', fontWeight: 'bold' }}>
-                        Créer un compte
-                    </Link>
-                </Typography>
             </Box>
 
             {/* Snackbar */}

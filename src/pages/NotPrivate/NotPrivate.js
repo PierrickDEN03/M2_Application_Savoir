@@ -34,22 +34,22 @@ export default function NotPrivate() {
             <Box
                 sx={{
                     height: '100vh',
-                    bgcolor: '#3454D1',
+                    bgcolor: '#e4eff6',
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
                 }}
             >
-                <CircularProgress sx={{ color: '#FFD166' }} />
+                <CircularProgress sx={{ color: '#3454D1' }} />
             </Box>
         )
     }
 
-    // Si connecté ET profil enregistré → redirige vers dashboard
+    // ✅ Si connecté ET profil enregistré → dashboard
     if (authUser && authUser.registered) {
         return <Navigate to="/user/dashboard" replace />
     }
 
-    // Sinon, autorise l'accès aux pages non privées
+    // ✅ Sinon (pas connecté OU connecté mais pas enregistré) → accès autorisé
     return <Outlet />
 }

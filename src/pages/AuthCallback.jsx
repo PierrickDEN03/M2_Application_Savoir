@@ -1,62 +1,64 @@
 // FILE: src/pages/AuthCallback.jsx
-import React, { useEffect, useState, useContext } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Container, Typography, CircularProgress } from '@mui/material'
-import { auth } from '../firebase-config'
-import { UserContext } from '../context/userContext'
+import { Container, Typography, CircularProgress, Box } from '@mui/material'
+import { completeSignInWithEmailLink } from '../services/userService'
 
 export default function AuthCallback() {
     const navigate = useNavigate()
-    const { completeSignInWithEmailLink, profileExists } = useContext(UserContext)
-    const [error, setError] = useState(null)
+    const [status, setStatus] = useState({ loading: true, error: null })
 
     useEffect(() => {
-        async function run() {
+        async function handleAuthCallback() {
             try {
-                // Finalise la connexion en utilisant l’URL
+                // 1️⃣ Finalise la connexion avec le lien magique
                 const result = await completeSignInWithEmailLink(window.location.href)
 
-                const user = auth.currentUser || result.user
-                if (!user) {
-                    setError('Utilisateur non connecté après signIn')
+                if (!result?.user) {
+                    setStatus({
+                        loading: false,
+                        error: "Impossible de récupérer l'utilisateur, recommence la connexion.",
+                    })
                     return
                 }
 
-                // Vérifie si un profil existe en base
-                const exists = await profileExists(user.uid)
-
-                if (exists) {
-                    // Si profil déjà créé => dashboard
-                    navigate('/user/dashboard')
-                } else {
-                    // Sinon => page pour compléter son profil
-                    navigate('/register-profile', { state: { email: user.email } })
-                }
+                // 2️⃣ Redirige TOUJOURS vers register-profile
+                // (NotPrivate se chargera de rediriger si déjà enregistré)
+                navigate('/register-profile', {
+                    state: { email: result.user.email },
+                    replace: true,
+                })
             } catch (err) {
                 console.error('Erreur AuthCallback:', err)
-                if (err.message === 'email-required') {
-                    setError('Impossible de retrouver ton email, recommence la connexion.')
-                } else {
-                    setError('Lien invalide ou expiré, demande un nouveau lien de connexion.')
-                }
+                const message =
+                    err.message === 'email-required'
+                        ? 'Impossible de retrouver ton email, recommence la connexion.'
+                        : 'Lien invalide ou expiré, demande un nouveau lien de connexion.'
+                setStatus({ loading: false, error: message })
             }
         }
 
-        run()
-    }, [navigate, completeSignInWithEmailLink, profileExists])
+        handleAuthCallback()
+    }, [navigate])
 
-    if (error) {
+    if (status.loading) {
         return (
-            <Container sx={{ mt: 8 }}>
-                <Typography color="error">{error}</Typography>
+            <Container sx={{ mt: 8, textAlign: 'center' }}>
+                <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+                    <CircularProgress />
+                    <Typography>Connexion en cours…</Typography>
+                </Box>
             </Container>
         )
     }
 
-    return (
-        <Container sx={{ mt: 8, textAlign: 'center' }}>
-            <CircularProgress />
-            <Typography sx={{ mt: 2 }}>Connexion en cours…</Typography>
-        </Container>
-    )
+    if (status.error) {
+        return (
+            <Container sx={{ mt: 8 }}>
+                <Typography color="error">{status.error}</Typography>
+            </Container>
+        )
+    }
+
+    return null
 }

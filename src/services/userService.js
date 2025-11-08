@@ -185,3 +185,14 @@ export function getUserAvatarUrl(uid) {
 // --- Auth utils ---
 export const signOut = () => firebaseSignOut(auth)
 export const subscribeToAuth = (callback) => onAuthStateChanged(auth, callback)
+
+export const getProfile = async (uid) => {
+    try {
+        const docRef = doc(db, 'users', uid)
+        const docSnap = await getDoc(docRef)
+        return docSnap.exists() ? docSnap.data() : null
+    } catch (err) {
+        console.error('Erreur getProfile:', err)
+        return null
+    }
+}

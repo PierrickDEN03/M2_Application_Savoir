@@ -1,6 +1,7 @@
 // FILE: src/components/AddressAutocomplete.jsx
 import React, { useState } from 'react'
-import { TextField, Autocomplete } from '@mui/material'
+import { TextField, Autocomplete, InputAdornment } from '@mui/material'
+import { LocationOn } from '@mui/icons-material'
 
 export default function AddressAutocomplete({ value, onAddressSelected, error, helperText, sx }) {
     const [addressSuggestions, setAddressSuggestions] = useState([])
@@ -56,16 +57,31 @@ export default function AddressAutocomplete({ value, onAddressSelected, error, h
             renderInput={(params) => (
                 <TextField
                     {...params}
-                    label="Adresse complète"
-                    required
+                    placeholder="Recherche une adresse..."
                     error={!!error}
                     helperText={helperText}
+                    InputProps={{
+                        ...params.InputProps,
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <LocationOn sx={{ color: '#B0BEC5' }} />  {/* CHANGÉ : LocationOn au lieu de Home */}
+                            </InputAdornment>
+                        ),
+                    }}
                     sx={{
+                        width: '100%',
                         mb: 2,
                         bgcolor: 'white',
-                        borderRadius: '8px',
-                        '& .MuiOutlinedInput-root': { borderRadius: '8px' },
-                        width: '100%',
+                        borderRadius: '24px',
+                        '& .MuiOutlinedInput-root': {
+                            borderRadius: '24px',
+                            fontSize: '0.9rem',
+                            py: 0.8,
+                            bgcolor: 'white',
+                        },
+                        '& .MuiInputBase-input': {
+                            py: 1.2,
+                        },
                     }}
                 />
             )}
