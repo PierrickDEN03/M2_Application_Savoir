@@ -1,10 +1,11 @@
-import React, { useState, useContext } from 'react'
+import React, { useState } from 'react'
 import { TextField, Button, Typography, Snackbar, Alert, Box, Link, Divider, InputAdornment } from '@mui/material'
-import { MailOutline, Google, Facebook } from '@mui/icons-material'
-import { UserContext } from '../../../context/userContext'
+import { MailOutline, Google } from '@mui/icons-material'
+import { actionCodeSettings, auth } from '../../../firebase-config'
+import { sendSignInLinkToEmail } from 'firebase/auth'
 
 export default function SignInMagic() {
-    const { sendMagicLink } = useContext(UserContext)
+    //const { sendMagicLink } = useContext(UserContext)
     const [email, setEmail] = useState('')
     const [status, setStatus] = useState({ open: false, severity: 'info', message: '' })
     const [isSending, setIsSending] = useState(false)
@@ -31,18 +32,13 @@ export default function SignInMagic() {
 
         try {
             setIsSending(true)
-            const result = await sendMagicLink(email)
+            await sendSignInLinkToEmail(auth, email, actionCodeSettings)
+            window.localStorage.setItem('emailForSignIn', email)
 
-            if (result === 'not_registered') {
-                setStatus({ open: true, severity: 'error', message: 'Email non enregistré' })
-            } else if (result === 'too_soon') {
-                setStatus({ open: true, severity: 'warning', message: 'Lien déjà envoyé récemment, vérifie ta boîte mail' })
-            } else {
-                setStatus({ open: true, severity: 'success', message: 'Lien envoyé — vérifie ta boîte mail' })
-            }
+            setStatus({ open: true, severity: 'success', message: 'Lien envoyé !' })
         } catch (err) {
             console.error(err)
-            setStatus({ open: true, severity: 'error', message: 'Erreur serveur, réessaie plus tard' })
+            setStatus({ open: true, severity: 'error', message: err.message })
         } finally {
             setTimeout(() => setIsSending(false), 5000)
         }
@@ -196,32 +192,11 @@ export default function SignInMagic() {
                         width: { xs: '180px', sm: '250px' },
                         justifyContent: 'flex-center',
                         py: 1,
-                        mb: 1,
+                        mb: 4,
                         '&:hover': { bgcolor: '#f9f9f9', borderColor: '#ccc' },
                     }}
                 >
                     Se connecter avec Google
-                </Button>
-
-                {/* FACEBOOK */}
-                <Button
-                    variant="outlined"
-                    startIcon={<Facebook sx={{ color: '#1877F2', fontSize: '1.1rem' }} />}
-                    sx={{
-                        bgcolor: 'white',
-                        color: '#000',
-                        border: '1px solid #ddd',
-                        borderRadius: '24px',
-                        textTransform: 'none',
-                        fontWeight: 500,
-                        fontSize: '0.9rem',
-                        width: { xs: '180px', sm: '250px' },
-                        justifyContent: 'flex-center',
-                        py: 1,
-                        '&:hover': { bgcolor: '#f9f9f9', borderColor: '#ccc' },
-                    }}
-                >
-                    Se connecter avec Facebook
                 </Button>
 
                 {/* LIEN BAS */}

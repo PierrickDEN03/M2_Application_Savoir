@@ -4,7 +4,7 @@ import { Routes, Route } from 'react-router-dom'
 import Private from './pages/Private/Private'
 import NotPrivate from './pages/NotPrivate/NotPrivate'
 import Dashboard from './pages/Private/pages/Dashboard'
-import SignInMagic from './pages/NotPrivate/pages/SignIn'
+import SignIn from './pages/NotPrivate/pages/SignIn'
 import Signup from './pages/NotPrivate/pages/Signup'
 import AuthCallback from './pages/AuthCallback'
 import RegisterProfile from './pages/NotPrivate/pages/RegisterProfile'
@@ -30,7 +30,7 @@ function App() {
             <Route path="/" element={<NotPrivate />}>
                 <Route path="/" element={<Home />} />
                 {/* Connexion par lien magique */}
-                <Route path="/login" element={<SignInMagic />} />
+                <Route path="/login" element={<SignIn />} />
                 {/* Inscription avec magic link */}
                 <Route path="/signup" element={<Signup />} />
                 {/* Complétion du profil après 1ère connexion */}

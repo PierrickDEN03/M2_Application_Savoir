@@ -1,16 +1,19 @@
 // FILE: src/pages/RegisterProfile.jsx
 import React, { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { TextField, Button, Box, Typography, CircularProgress, Snackbar, Alert, Avatar, IconButton, InputAdornment } from '@mui/material'
 import { PhotoCamera, Person, PersonOutline, MailOutline, Home, LocationCity, PinDrop } from '@mui/icons-material'
 import { auth } from '../../../firebase-config'
-import { subscribeToAuth, createProfile } from '../../../services/userService'
+import { createProfile } from '../../../services/userService'
 import useLoadGooglePlaces from '../../../components/google_api/useLoadGooglePlaces'
 import AddressAutocomplete from '../../../components/google_api/AddressAutocomplete'
+import { isSignInWithEmailLink, signInWithEmailLink } from 'firebase/auth'
+import { getProfile } from '../../../services/userService'
+
 
 export default function RegisterProfile() {
     const navigate = useNavigate()
-    const location = useLocation()
+    // const location = useLocation()
     useLoadGooglePlaces()
 
     const [loadingUser, setLoadingUser] = useState(true)
@@ -25,7 +28,7 @@ export default function RegisterProfile() {
         phone: '',
         photoUrl: '',
         password: '',
-        confirmationPassword: '',
+        confirmPassword: '',
         birthDate: '',
         age: 0,
     })
@@ -33,21 +36,55 @@ export default function RegisterProfile() {
     const [errors, setErrors] = useState({})
     const [status, setStatus] = useState({ open: false, severity: 'info', message: '' })
 
-    // Vérifie si l’utilisateur est connecté
+
+
     useEffect(() => {
-        const unsubscribe = subscribeToAuth((user) => {
-            if (!user) {
+        const handleMagicLink = async () => {
+            // 1. VÉRIFIE SI C'EST UN LIEN MAGIQUE
+            if (!isSignInWithEmailLink(auth, window.location.href)) {
                 navigate('/login')
-            } else {
-                setFormData((prev) => ({
-                    ...prev,
-                    email: location.state?.email || user.email || '',
-                }))
-                setLoadingUser(false)
+                return
             }
-        })
-        return () => unsubscribe()
-    }, [location.state, navigate])
+
+            // 2. RÉCUPÈRE L'EMAIL
+            let email = window.localStorage.getItem('emailForSignIn')
+            if (!email) {
+                email = window.prompt('Confirme ton email pour continuer :')
+            }
+            if (!email) {
+                setStatus({ open: true, severity: 'error', message: 'Email requis' })
+                return
+            }
+
+            try {
+                // 3. CONNEXION AVEC LE LIEN MAGIQUE
+                const result = await signInWithEmailLink(auth, email, window.location.href)
+                window.localStorage.removeItem('emailForSignIn')
+
+                // 4. VÉRIFIE SI LE PROFIL EXISTE DÉJÀ
+                const profile = await getProfile(result.user.uid) // ← AJOUTE CETTE FONCTION DANS userService
+
+                if (profile) {
+                    // COMPTE EXISTANT → REDIRECTION DIRECTE
+                    console.log('Compte existant → connexion directe')
+                    navigate('/user/dashboard')
+                    return
+                }
+
+                // 5. NOUVEAU COMPTE → AFFICHE LE FORMULAIRE
+                setFormData(prev => ({ ...prev, email }))
+                setLoadingUser(false)
+
+            } catch (err) {
+                console.error('Lien magique échoué:', err)
+                setStatus({ open: true, severity: 'error', message: 'Lien invalide ou expiré' })
+                setTimeout(() => navigate('/login'), 3000)
+            }
+        }
+
+        handleMagicLink()
+    }, [navigate])
+
 
     const handleChange = (field) => (e) => {
         const value = e.target.value
@@ -130,36 +167,35 @@ export default function RegisterProfile() {
 
     const handleSubmit = async (e) => {
         e.preventDefault()
+        console.log('SOUMISSION DÉMARRÉE !') // AJOUTE ÇA
         if (!validateStep()) return
+
         if (!auth.currentUser) {
             setStatus({ open: true, severity: 'error', message: 'Utilisateur non connecté' })
             return
         }
-
+        console.log('UID:', auth.currentUser.uid)
         try {
             const uid = auth.currentUser.uid
+            // const user = auth.currentUser
             const payload = {
                 displayName: `${formData.firstName} ${formData.lastName}`,
                 ...formData,
                 age: calculateAge(formData.birthDate),
-                hasPassword: true, // Optionnel : marque qu'il a un mot de passe
+                hasPassword: true,
             }
-
-            // Mettre à jour le mot de passe Firebase Auth
-            // await auth.currentUser.updatePassword(formData.password)
 
             await createProfile(uid, payload, photoFile)
             navigate('/user/interest')
         } catch (err) {
             console.error(err)
-            let message = "Erreur inconnue"
+            let message = 'Erreur inconnue'
 
             if (err.code === 'auth/requires-recent-login') {
-                message = "Veuillez vous reconnecter pour définir un mot de passe"
-                // Redirige vers login
-                navigate('/login', { state: { email: formData.email } })
+                message = 'Lien expiré. Clique à nouveau sur le lien magique.'
+                navigate('/signup')
             } else if (err.code === 'auth/weak-password') {
-                message = "Mot de passe trop faible (6 caractères min)"
+                message = 'Mot de passe trop faible'
             } else {
                 message = err.message
             }
