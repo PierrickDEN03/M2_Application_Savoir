@@ -193,7 +193,8 @@ export default function RegisterProfile() {
         <Box
             sx={{
                 width: '100vw',
-                minHeight: '105vh',
+                minHeight: '100vh',
+                overflox: 'hidden',
                 bgcolor: '#E7F2F8',
                 display: 'flex',
                 alignItems: 'center',

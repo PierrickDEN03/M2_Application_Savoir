@@ -19,12 +19,12 @@ export default function SignInMagic() {
         }
 
         if (!email.trim()) {
-            setStatus({ open: true, severity: 'error', message: 'L’email est requis' })
+            setStatus({ open: true, severity: 'error', message: "L'email est requis" })
             return
         }
 
         if (!validateEmail(email)) {
-            setStatus({ open: true, severity: 'error', message: 'L’email n’est pas valide' })
+            setStatus({ open: true, severity: 'error', message: "L'email n'est pas valide" })
             return
         }
 
@@ -55,6 +55,7 @@ export default function SignInMagic() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                overflow: 'hidden',
             }}
         >
             <Box
@@ -62,7 +63,6 @@ export default function SignInMagic() {
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-
                     width: '100%',
                     px: 3,
                 }}
@@ -97,8 +97,9 @@ export default function SignInMagic() {
                 >
                     Là où chaque rencontre résonne
                 </Typography>
+
                 {/* Titre */}
-                <Box sx={{ width: '100%', mb: 3, ml: 5, display: 'flex', justifyContent: 'left' }}>
+                <Box sx={{ width: '100%', maxWidth: '320px', mb: 3, display: 'flex', justifyContent: 'flex-start' }}>
                     <Typography
                         variant="h5"
                         sx={{
@@ -117,9 +118,10 @@ export default function SignInMagic() {
                     onSubmit={handleSend}
                     sx={{
                         width: '100%',
+                        maxWidth: '320px',
                         display: 'flex',
                         flexDirection: 'column',
-                        alignItems: 'center',
+                        alignItems: 'stretch',
                     }}
                 >
                     <TextField
@@ -129,7 +131,7 @@ export default function SignInMagic() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         sx={{
-                            width: '320px',
+                            width: '100%',
                             mb: 8,
                             bgcolor: 'white',
                             borderRadius: '8px',
@@ -144,7 +146,7 @@ export default function SignInMagic() {
                         type="submit"
                         disabled={isSending}
                         sx={{
-                            width: '270px',
+                            width: '100%',
                             bgcolor: '#ED6A5A',
                             color: '#fff',
                             borderRadius: '12px',

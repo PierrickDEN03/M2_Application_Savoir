@@ -9,12 +9,13 @@ export default function Home() {
         <Box
             sx={{
                 width: '100vw',
-                minHeight: '108vh',
+                height: '100vh',
                 bgcolor: '#E7F2F8',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 px: 2,
+                overflow: 'hidden', // Empêche tout débordement
             }}
         >
             <Box
