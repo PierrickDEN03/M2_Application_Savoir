@@ -23,7 +23,12 @@ function LastPathTracker() {
     const location = useLocation()
 
     useEffect(() => {
-        sessionStorage.setItem('lastPath', location.pathname)
+        // Ne tracker que les pages publiques
+        const publicPaths = ['/', '/login', '/register-profile', '/auth/callback']
+
+        if (publicPaths.includes(location.pathname)) {
+            sessionStorage.setItem('lastPublicPath', location.pathname)
+        }
     }, [location.pathname])
 
     return null

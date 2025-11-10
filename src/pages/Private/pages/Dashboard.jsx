@@ -1,6 +1,6 @@
 // FILE: src/pages/Dashboard.jsx
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { Box, Typography, CircularProgress } from '@mui/material'
 import { auth } from '../../../firebase-config'
 import { fetchUserById } from '../../../services/userService'
@@ -12,6 +12,7 @@ import MyInscriptions from '../../../components/dashboard/MyInscriptions/MyInscr
 import MyFavorites from '../../../components/dashboard/MyFavorites/MyFavorites'
 
 export default function Dashboard() {
+    const location = useLocation()
     const navigate = useNavigate()
     const currentUser = auth.currentUser
 
@@ -19,17 +20,48 @@ export default function Dashboard() {
     const [userName, setUserName] = useState('Utilisateur')
     const [currentTab, setCurrentTab] = useState('activities')
 
-    // Redirection depuis certaines pages et si aucune inscription et création d'activités
     useEffect(() => {
         const redirectIfNeeded = async () => {
-            const lastPath = sessionStorage.getItem('lastPath')
-            const notPrivatePaths = ['/', '/login', '/register-profile', '/auth/callback']
-
             if (!currentUser) return
-            const noActivitiesOrReservations = await hasNoActivitiesOrReservations(currentUser.uid)
 
-            if (lastPath && notPrivatePaths.some((p) => lastPath.includes(p)) && noActivitiesOrReservations) {
-                navigate('/user/map', { replace: true })
+            // Vérifier si on doit contrôler les activités
+            const shouldCheck = sessionStorage.getItem('checkActivitiesOnDashboard')
+
+            // Si pas de flag, ne rien faire
+            if (!shouldCheck) {
+                console.log('Pas de vérification nécessaire - accès direct au dashboard')
+                return
+            }
+
+            // Supprimer le flag immédiatement pour éviter les re-checks
+            sessionStorage.removeItem('checkActivitiesOnDashboard')
+
+            // Récupérer le dernier chemin public
+            const lastPublicPath = sessionStorage.getItem('lastPublicPath')
+
+            console.log('Vérification des activités...', {
+                lastPublicPath,
+                currentPath: window.location.pathname,
+            })
+
+            try {
+                const noActivitiesOrReservations = await hasNoActivitiesOrReservations(currentUser.uid)
+
+                console.log({
+                    lastPublicPath,
+                    noActivitiesOrReservations,
+                    shouldRedirect: noActivitiesOrReservations,
+                })
+
+                // Rediriger uniquement si pas d'activités
+                if (noActivitiesOrReservations) {
+                    console.log('Redirection vers /user/map - aucune activité trouvée')
+                    navigate('/user/map', { replace: true })
+                } else {
+                    console.log('Utilisateur a des activités - reste sur dashboard')
+                }
+            } catch (error) {
+                console.error('Erreur lors de la vérification des activités:', error)
             }
         }
 

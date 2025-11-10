@@ -1,13 +1,14 @@
-// src/pages/NotPrivate/NotPrivate.js
 import React, { useEffect, useState } from 'react'
-import { Outlet, Navigate } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import { Box, CircularProgress } from '@mui/material'
 import { getAuthenticatedUser } from '../../services/userService'
 
 export default function NotPrivate() {
+    const navigate = useNavigate()
     const [checkingUser, setCheckingUser] = useState(true)
     const [authUser, setAuthUser] = useState(null)
 
+    // Hook pour charger l'utilisateur
     useEffect(() => {
         let mounted = true
 
@@ -29,6 +30,15 @@ export default function NotPrivate() {
         }
     }, [])
 
+    // Hook pour rediriger si profil enregistré
+    useEffect(() => {
+        if (!checkingUser && authUser?.registered) {
+            // Marquer que l'utilisateur vient d'une page publique
+            sessionStorage.setItem('checkActivitiesOnDashboard', 'true')
+            navigate('/user/dashboard', { replace: true })
+        }
+    }, [checkingUser, authUser, navigate])
+
     if (checkingUser) {
         return (
             <Box
@@ -45,11 +55,6 @@ export default function NotPrivate() {
         )
     }
 
-    // ✅ Si connecté ET profil enregistré → dashboard
-    if (authUser && authUser.registered) {
-        return <Navigate to="/user/dashboard" replace />
-    }
-
-    // ✅ Sinon (pas connecté OU connecté mais pas enregistré) → accès autorisé
+    // Sinon accès autorisé à la page NotPrivate
     return <Outlet />
 }
