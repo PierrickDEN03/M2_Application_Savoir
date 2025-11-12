@@ -1,4 +1,4 @@
-// MapActivities.jsx — version corrigée
+// MapActivities.jsx — version corrigée avec selectedIndexRef
 import React, { useCallback, useState, useRef, useEffect } from 'react'
 import { GoogleMap, Marker } from '@react-google-maps/api'
 import { Box, Fade } from '@mui/material'
@@ -14,7 +14,10 @@ export default function MapActivities({ activities = [] }) {
     const [map, setMap] = useState(null)
     const [selectedIndex, setSelectedIndex] = useState(null)
     const [categories, setCategories] = useState({})
+    const [, forceUpdate] = useState({})
     const scrollContainerRef = useRef(null)
+    const isScrollingProgrammatically = useRef(false)
+    const selectedIndexRef = useRef(null)
 
     const onLoad = useCallback((mapInstance) => setMap(mapInstance), [])
     const onUnmount = useCallback(() => setMap(null), [])
@@ -38,53 +41,91 @@ export default function MapActivities({ activities = [] }) {
     useEffect(() => {
         if (activities.length > 0 && selectedIndex === null) {
             setSelectedIndex(0)
+            selectedIndexRef.current = 0
         }
     }, [activities, selectedIndex])
 
-    /** Synchronisation : clic sur un marker => scroll vers la carte correspondante **/
+    /** Synchroniser le ref avec le state **/
     useEffect(() => {
-        if (selectedIndex !== null && scrollContainerRef.current && activities.length > 0) {
+        selectedIndexRef.current = selectedIndex
+    }, [selectedIndex])
+
+    /** Fonction pour scroller vers une activité et centrer la map **/
+    const scrollToActivity = useCallback(
+        (index) => {
+            if (!scrollContainerRef.current || !activities[index]) return
+
             const container = scrollContainerRef.current
-            const card = container.children[selectedIndex]
+            const card = container.children[index]
             if (!card) return
 
+            // Scroll vers la carte (instant pour éviter les événements intermédiaires)
             container.scrollTo({
                 left: card.offsetLeft,
-                behavior: 'smooth',
+                behavior: 'auto', // Changé de 'smooth' à 'auto'
             })
 
-            // Centrer la map sur la position de l’activité sélectionnée
-            if (map && activities[selectedIndex]) {
-                map.panTo(activities[selectedIndex].position)
+            // Centrer la map
+            if (map) {
+                map.panTo(activities[index].position)
                 map.setZoom(14)
             }
-        }
-    }, [selectedIndex, map, activities])
+
+            // Réinitialiser le flag immédiatement car le scroll est instantané
+            setTimeout(() => {
+                isScrollingProgrammatically.current = false
+            }, 100)
+        },
+        [activities, map]
+    )
 
     /** Détection du scroll manuel pour changer la carte sélectionnée **/
-    const handleScroll = () => {
+    const handleScroll = useCallback(() => {
+        // Ignorer si on scrolle programmatiquement
+        if (isScrollingProgrammatically.current) return
+
         if (!scrollContainerRef.current || activities.length === 0) return
+
         const container = scrollContainerRef.current
         const scrollLeft = container.scrollLeft
         const cardWidth = container.clientWidth
         const newIndex = Math.round(scrollLeft / cardWidth)
 
-        if (newIndex !== selectedIndex && newIndex >= 0 && newIndex < activities.length) {
+        if (newIndex !== selectedIndexRef.current && newIndex >= 0 && newIndex < activities.length) {
+            selectedIndexRef.current = newIndex
             setSelectedIndex(newIndex)
+            forceUpdate({}) // Force le re-render des markers
+
+            // Centrer la map sur la nouvelle activité
+            if (map && activities[newIndex]) {
+                map.panTo(activities[newIndex].position)
+                map.setZoom(14)
+            }
         }
-    }
+    }, [activities, map])
 
     /** Clic sur un marker **/
-    const handleMarkerClick = (index) => {
-        setSelectedIndex(index)
-    }
+    const handleMarkerClick = useCallback(
+        (index) => {
+            console.log({ selectedIndex: index })
+            // IMPORTANT : activer le flag et mettre à jour TOUT immédiatement
+            isScrollingProgrammatically.current = true
+            selectedIndexRef.current = index
+            setSelectedIndex(index)
+
+            // Scroll immédiatement
+            scrollToActivity(index)
+        },
+        [scrollToActivity]
+    )
 
     /** Fermer le carrousel **/
-    const handleCloseCarousel = () => {
+    const handleCloseCarousel = useCallback(() => {
         setSelectedIndex(null)
-    }
+        selectedIndexRef.current = null
+    }, [])
 
-    /** Génération d’une icône personnalisée pour le marker **/
+    /** Génération d'une icône personnalisée pour le marker **/
     const getCustomIcon = (activity, isSelected) => {
         const category = categories[activity.categoryId]
         if (!category) {
@@ -168,7 +209,7 @@ export default function MapActivities({ activities = [] }) {
                 }}
             >
                 {activities.map((activity, index) => {
-                    const icon = getCustomIcon(activity, selectedIndex === index)
+                    const icon = getCustomIcon(activity, selectedIndexRef.current === index)
                     return (
                         <Marker
                             key={activity.id}
