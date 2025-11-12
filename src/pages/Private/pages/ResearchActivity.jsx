@@ -131,8 +131,8 @@ export default function ResearchActivity() {
             <Box
                 sx={{
                     position: 'fixed',
-                    bottom: 30,
-                    left: 20,
+                    top: 30,
+                    right: 20,
                     zIndex: 100,
                     display: 'flex',
                     gap: 2,
@@ -143,34 +143,32 @@ export default function ResearchActivity() {
                     onClick={() => setViewMode(viewMode === 'map' ? 'list' : 'map')}
                     sx={{
                         position: 'fixed',
-                        bottom: 130,
-                        left: '50%',
-                        bgcolor: '#FFD166',
-                        borderRadius: '50px',
-                        transform: 'translateX(-50%)',
+                        top: 135,
+                        right: 20,
+                        zIndex: 2000,
+                        bgcolor: 'white',
+                        borderRadius: '50%',
                         boxShadow: 4,
-                        px: 2.5,
-                        py: 1.2,
+                        width: 56,
+                        height: 56,
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 1,
+                        justifyContent: 'center',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
+                        '&:hover': {
+                            boxShadow: 6,
+                            transform: 'scale(1.05)',
+                        },
                     }}
                 >
                     {viewMode === 'map' ? (
                         <>
-                            <Typography sx={{ fontWeight: 600, color: '#000000', fontSize: 14, fontFamily: '"Nunito", sans-serif' }}>
-                                Voir la liste
-                            </Typography>
-                            <MuiIcons.ViewList sx={{ fontSize: 20, color: '#000000' }} />
+                            <MuiIcons.ViewList sx={{ fontSize: 30, color: '#3454D1' }} />
                         </>
                     ) : (
                         <>
-                            <Typography sx={{ fontWeight: 600, color: '#000000', fontSize: 14, fontFamily: '"Nunito", sans-serif' }}>
-                                Voir la carte
-                            </Typography>
-                            <MuiIcons.Map sx={{ fontSize: 20, color: '#000000' }} />
+                            <MuiIcons.Map sx={{ fontSize: 30, color: '#3454D1' }} />
                         </>
                     )}
                 </Box>

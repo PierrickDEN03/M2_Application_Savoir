@@ -8,7 +8,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { storage } from '../../../firebase-config'
 import { UserContext } from '../../../context/userContext'
 import { createActivity, fetchActivityById, updateActivity } from '../../../services/activitiesService'
-import { getUserInterests } from '../../../services/categoriesService'
+import { fetchCategoriesFromDB } from '../../../services/categoriesService'
 import AddressAutocomplete from '../../../components/google_api/AddressAutocomplete'
 import useLoadGooglePlaces from '../../../components/google_api/useLoadGooglePlaces'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -28,8 +28,8 @@ export default function CreateActivityForm() {
 
     const [formData, setFormData] = useState({
         title: '',
-        date: new Date(),
-        time: new Date(),
+        date: new Date(new Date().setDate(new Date().getDate() + 1)), // Demain
+        time: new Date(new Date().setHours(14, 0, 0, 0)), // 14h00
         address: { street: '', city: '', postalCode: '', full: '', placeId: '' },
         participants: 4,
         duration: 1,
@@ -46,7 +46,7 @@ export default function CreateActivityForm() {
     // Load categories
     useEffect(() => {
         if (!currentUser) return
-        getUserInterests(currentUser.uid)
+        fetchCategoriesFromDB()
             .then((cats) => {
                 setCategories(cats || [])
                 setCategoriesLoaded(true)
@@ -109,6 +109,12 @@ export default function CreateActivityForm() {
             setPreviewUrl(null)
         }
     }, [formData.photoFile, formData.photoUrl, isEditMode, isLoadingActivity])
+
+    useEffect(() => {
+        if (categoriesLoaded && categories.length > 0 && !selectedCategory) {
+            setSelectedCategory(categories[0])
+        }
+    }, [categoriesLoaded, categories])
 
     const handleChangeField = (field) => (e) => {
         setFormData((s) => ({ ...s, [field]: e.target.value }))
@@ -244,7 +250,7 @@ export default function CreateActivityForm() {
             )
         }
 
-        const hasPhoto = previewUrl || formData.photoUrl
+        const hasPhoto = !!previewUrl
         const showCategory = !hasPhoto && selectedCategory && !formData.photoFile
 
         return (
@@ -252,7 +258,7 @@ export default function CreateActivityForm() {
                 {hasPhoto ? (
                     <Box
                         component="img"
-                        src={previewUrl || formData.photoUrl}
+                        src={previewUrl}
                         alt="Aperçu photo"
                         sx={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 3 }}
                     />
@@ -457,6 +463,7 @@ export default function CreateActivityForm() {
                                         onAddressSelected={handleAddressSelected}
                                         error={!!errors.address}
                                         helperText={errors.address}
+                                        filter="Lyon"
                                     />
                                 ) : (
                                     <TextField fullWidth disabled placeholder="Chargement..." />

@@ -83,7 +83,7 @@ export default function BottomNav() {
                 onClick={handleCreateActivity}
                 sx={{
                     position: 'fixed',
-                    bottom: 50,
+                    bottom: 30,
                     left: '50%',
                     transform: 'translateX(-50%)',
                     zIndex: 1001,
@@ -91,10 +91,8 @@ export default function BottomNav() {
                     color: '#fff',
                     width: 64,
                     height: 64,
-                    boxShadow: '0 4px 12px rgba(52, 84, 209, 0.4)',
                     '&:hover': {
                         bgcolor: '#2840a0',
-                        boxShadow: '0 6px 16px rgba(52, 84, 209, 0.6)',
                     },
                     transition: 'all 0.3s ease',
                 }}
@@ -124,8 +122,8 @@ export default function BottomNav() {
                         height: 'auto',
                         bgcolor: 'transparent',
                         justifyContent: 'space-around',
-                        paddingX: 1,
-                        paddingY: 1,
+                        paddingX: 0,
+                        paddingY: 0,
                         '& .MuiBottomNavigationAction-root': {
                             color: '#9E9E9E',
                             minWidth: 'auto',

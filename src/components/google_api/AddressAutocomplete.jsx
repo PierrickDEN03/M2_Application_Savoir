@@ -3,11 +3,12 @@ import React, { useState } from 'react'
 import { TextField, Autocomplete, InputAdornment } from '@mui/material'
 import { LocationOn } from '@mui/icons-material'
 
-export default function AddressAutocomplete({ value, onAddressSelected, error, helperText, sx }) {
+export default function AddressAutocomplete({ value, onAddressSelected, error, helperText, sx, filter = null }) {
     const [addressSuggestions, setAddressSuggestions] = useState([])
 
     const fetchAddressSuggestions = (input) => {
-        if (!window.google) return
+        if (!window.google || !input) return
+
         const service = new window.google.maps.places.AutocompleteService()
         service.getPlacePredictions(
             {
@@ -17,7 +18,15 @@ export default function AddressAutocomplete({ value, onAddressSelected, error, h
             },
             (predictions, status) => {
                 if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
-                    setAddressSuggestions(predictions)
+                    let results = predictions
+
+                    // ✅ Si un filtre est défini, on garde uniquement les adresses contenant la ville
+                    if (filter) {
+                        const lowerFilter = filter.toLowerCase()
+                        results = predictions.filter((p) => p.description.toLowerCase().includes(lowerFilter))
+                    }
+
+                    setAddressSuggestions(results)
                 } else {
                     setAddressSuggestions([])
                 }
@@ -39,8 +48,8 @@ export default function AddressAutocomplete({ value, onAddressSelected, error, h
                     street: streetNumber ? `${streetNumber} ${street}` : street,
                     city,
                     postalCode,
-                    full: place.formatted_address, // ✅ stock l’adresse complète
-                    placeId: place.place_id, // ✅ utile si tu veux vérifier avec placeId
+                    full: place.formatted_address,
+                    placeId: place.place_id,
                 })
             }
         })
@@ -64,7 +73,7 @@ export default function AddressAutocomplete({ value, onAddressSelected, error, h
                         ...params.InputProps,
                         startAdornment: (
                             <InputAdornment position="start">
-                                <LocationOn sx={{ color: '#B0BEC5' }} />  {/* CHANGÉ : LocationOn au lieu de Home */}
+                                <LocationOn sx={{ color: '#B0BEC5' }} />
                             </InputAdornment>
                         ),
                     }}
@@ -72,9 +81,9 @@ export default function AddressAutocomplete({ value, onAddressSelected, error, h
                         width: '100%',
                         mb: 2,
                         bgcolor: 'white',
-                        borderRadius: '24px',
+                        borderRadius: 2,
                         '& .MuiOutlinedInput-root': {
-                            borderRadius: '24px',
+                            borderRadius: 2,
                             fontSize: '0.9rem',
                             py: 0.8,
                             bgcolor: 'white',

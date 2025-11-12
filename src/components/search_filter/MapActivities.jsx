@@ -205,7 +205,11 @@ export default function MapActivities({ activities = [] }) {
                     mapTypeControl: false,
                     streetViewControl: false,
                     fullscreenControl: false,
-                    zoomControl: true,
+                    zoomControl: false,
+                    rotateControl: false,
+                    scaleControl: false,
+                    clickableIcons: false,
+                    keyboardShortcuts: false,
                 }}
             >
                 {activities.map((activity, index) => {
@@ -245,7 +249,7 @@ export default function MapActivities({ activities = [] }) {
                 <Box
                     sx={{
                         position: 'fixed',
-                        bottom: 190,
+                        bottom: 110,
                         left: '50%',
                         transform: 'translateX(-50%)',
                         zIndex: 1500,
