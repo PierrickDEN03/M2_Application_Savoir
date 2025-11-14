@@ -1,17 +1,28 @@
 import React, { useState, useContext, useEffect } from 'react'
-import { Box, Container, Typography, TextField, Button, MenuItem, Slider, Snackbar, Alert, CircularProgress } from '@mui/material'
+import {
+    Box,
+    Container,
+    Typography,
+    TextField,
+    Button,
+    MenuItem,
+    Slider,
+    Snackbar,
+    Alert,
+    CircularProgress,
+    IconButton,
+} from '@mui/material'
 import { LocalizationProvider, DatePicker, TimePicker } from '@mui/x-date-pickers'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import frLocale from 'date-fns/locale/fr'
 import * as MuiIcons from '@mui/icons-material'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { storage } from '../../../firebase-config'
 import { UserContext } from '../../../context/userContext'
 import { createActivity, fetchActivityById, updateActivity } from '../../../services/activitiesService'
 import { fetchCategoriesFromDB } from '../../../services/categoriesService'
 import AddressAutocomplete from '../../../components/google_api/AddressAutocomplete'
 import useLoadGooglePlaces from '../../../components/google_api/useLoadGooglePlaces'
 import { useNavigate, useParams } from 'react-router-dom'
+import { verifyAddressWithId } from '../../../components/google_api/verifyAddressWithGoogle'
 
 export default function CreateActivityForm() {
     const loaded = useLoadGooglePlaces()
@@ -20,7 +31,6 @@ export default function CreateActivityForm() {
     const { activityId } = useParams()
     const isEditMode = Boolean(activityId)
     const [isLoadingActivity, setIsLoadingActivity] = useState(isEditMode)
-
     const [step, setStep] = useState(1)
     const [categories, setCategories] = useState([])
     const [selectedCategory, setSelectedCategory] = useState(null)
@@ -28,9 +38,15 @@ export default function CreateActivityForm() {
 
     const [formData, setFormData] = useState({
         title: '',
-        date: new Date(new Date().setDate(new Date().getDate() + 1)), // Demain
-        time: new Date(new Date().setHours(14, 0, 0, 0)), // 14h00
-        address: { street: '', city: '', postalCode: '', full: '', placeId: '' },
+        date: new Date(new Date().setDate(new Date().getDate() + 1)),
+        time: new Date(new Date().setHours(14, 0, 0, 0)),
+        address: {
+            street: '',
+            city: '',
+            postalCode: '',
+            full: '',
+            placeId: '',
+        },
         participants: 4,
         duration: 1,
         description: '',
@@ -40,7 +56,11 @@ export default function CreateActivityForm() {
 
     const [previewUrl, setPreviewUrl] = useState(null)
     const [errors, setErrors] = useState({})
-    const [status, setStatus] = useState({ open: false, severity: 'info', message: '' })
+    const [status, setStatus] = useState({
+        open: false,
+        severity: 'info',
+        message: '',
+    })
     const [submitting, setSubmitting] = useState(false)
 
     // Load categories
@@ -60,6 +80,7 @@ export default function CreateActivityForm() {
     // Load activity data if edit mode
     useEffect(() => {
         if (!isEditMode || !currentUser || !categoriesLoaded) return
+
         const loadActivity = async () => {
             setIsLoadingActivity(true)
             try {
@@ -73,7 +94,13 @@ export default function CreateActivityForm() {
                     title: activity.title || '',
                     date,
                     time,
-                    address: activity.address || { street: '', city: '', postalCode: '', full: '', placeId: '' },
+                    address: activity.address || {
+                        street: '',
+                        city: '',
+                        postalCode: '',
+                        full: '',
+                        placeId: '',
+                    },
                     participants: activity.participants || 4,
                     duration: activity.duration || 1,
                     description: activity.description || '',
@@ -87,15 +114,20 @@ export default function CreateActivityForm() {
                 if (activity.photoUrl) setPreviewUrl(activity.photoUrl)
             } catch (err) {
                 console.error(err)
-                setStatus({ open: true, severity: 'error', message: "Erreur lors du chargement de l'activité." })
+                setStatus({
+                    open: true,
+                    severity: 'error',
+                    message: "Erreur lors du chargement de l'activité.",
+                })
             } finally {
                 setIsLoadingActivity(false)
             }
         }
+
         loadActivity()
     }, [activityId, isEditMode, currentUser, categories, categoriesLoaded])
 
-    // Photo preview logic - VERSION STABILISÉE
+    // Photo preview logic
     useEffect(() => {
         if (isEditMode && isLoadingActivity) return
 
@@ -146,12 +178,30 @@ export default function CreateActivityForm() {
         const file = e.target.files?.[0] ?? null
         if (file) {
             if (!file.type.startsWith('image/')) {
-                setStatus({ open: true, severity: 'error', message: 'Format de fichier non supporté.' })
+                setStatus({
+                    open: true,
+                    severity: 'error',
+                    message: 'Format de fichier non supporté.',
+                })
                 return
             }
             setFormData((s) => ({ ...s, photoFile: file }))
             setErrors((p) => ({ ...p, photoFile: undefined }))
         }
+    }
+
+    // NOUVELLE FONCTION : Supprimer la photo
+    const handleDeletePhoto = (e) => {
+        e.stopPropagation() // Empêcher le clic de déclencher l'upload
+        setFormData((s) => ({
+            ...s,
+            photoFile: null,
+            photoUrl: null,
+        }))
+        setPreviewUrl(null)
+        // Réinitialiser l'input file
+        const input = document.getElementById('photo-upload')
+        if (input) input.value = ''
     }
 
     const validateStep = (s = step) => {
@@ -175,37 +225,59 @@ export default function CreateActivityForm() {
     const formatDuration = (val) => {
         const hours = Math.floor(val)
         const minutes = val % 1 === 0 ? 0 : Math.round((val % 1) * 60)
-        return `${hours}h${minutes > 0 ? ` ${minutes}min` : ''}`
+        return `${hours}h${minutes > 0 ? `${minutes}min` : ''}`
     }
 
     const handleFinalSubmit = async () => {
         if (!validateStep(2)) {
-            setStatus({ open: true, severity: 'error', message: 'Corrige les champs.' })
+            setStatus({
+                open: true,
+                severity: 'error',
+                message: 'Corrige les champs.',
+            })
             return
         }
+
         if (!currentUser) {
-            setStatus({ open: true, severity: 'error', message: 'Vous devez être connecté.' })
+            setStatus({
+                open: true,
+                severity: 'error',
+                message: 'Vous devez être connecté.',
+            })
             return
         }
 
         setSubmitting(true)
-        try {
-            let photoUrl = formData.photoUrl || null
-            if (formData.photoFile) {
-                const storageRef = ref(storage, `activities/${currentUser.uid}/${Date.now()}_${formData.photoFile.name}`)
-                await uploadBytes(storageRef, formData.photoFile)
-                photoUrl = await getDownloadURL(storageRef)
-            }
 
+        try {
+            // Simulation : pas d'upload réel
+            let photoUrl = formData.photoUrl || null
+
+            // Combine date + time
             const combinedDate = new Date(formData.date)
             combinedDate.setHours(formData.time.getHours())
             combinedDate.setMinutes(formData.time.getMinutes())
+
+            // Récupération géolocalisation
+            let geo = null
+            if (formData.address?.placeId) {
+                geo = await verifyAddressWithId(formData.address.placeId)
+            }
+
+            if (!geo?.position) {
+                throw new Error("Impossible d'obtenir les coordonnées du lieu via Google.")
+            }
 
             const payload = {
                 title: formData.title.trim(),
                 categoryId: selectedCategory?.id || null,
                 date: combinedDate.toISOString(),
                 address: formData.address,
+                position: {
+                    lat: geo.position.lat,
+                    lng: geo.position.lng,
+                },
+                addressFormatted: geo.address || null,
                 participants: formData.participants,
                 duration: formData.duration,
                 description: formData.description.trim(),
@@ -216,21 +288,33 @@ export default function CreateActivityForm() {
 
             if (isEditMode) {
                 await updateActivity(activityId, payload)
-                setStatus({ open: true, severity: 'success', message: 'Activité mise à jour !' })
+                setStatus({
+                    open: true,
+                    severity: 'success',
+                    message: 'Activité mise à jour !',
+                })
                 setTimeout(() => navigate(-1), 1500)
             } else {
                 await createActivity(currentUser.uid, payload)
-                setStatus({ open: true, severity: 'success', message: 'Activité créée !' })
+                setStatus({
+                    open: true,
+                    severity: 'success',
+                    message: 'Activité créée !',
+                })
                 setTimeout(() => navigate(-1), 1500)
             }
         } catch (err) {
             console.error(err)
-            setStatus({ open: true, severity: 'error', message: err.message || 'Erreur lors de la sauvegarde.' })
+            setStatus({
+                open: true,
+                severity: 'error',
+                message: err.message || 'Erreur lors de la sauvegarde.',
+            })
             setSubmitting(false)
         }
     }
 
-    // VERSION SIMPLIFIÉE ET STABLE DU RENDU DE PREVIEW
+    // Rendu de la preview avec bouton supprimer
     const renderPhotoPreview = () => {
         if (isEditMode && (isLoadingActivity || !categoriesLoaded)) {
             return (
@@ -260,7 +344,12 @@ export default function CreateActivityForm() {
                         component="img"
                         src={previewUrl}
                         alt="Aperçu photo"
-                        sx={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 3 }}
+                        sx={{
+                            width: '100%',
+                            height: 160,
+                            objectFit: 'cover',
+                            borderRadius: 3,
+                        }}
                     />
                 ) : showCategory ? (
                     <Box
@@ -294,6 +383,28 @@ export default function CreateActivityForm() {
                     </Box>
                 )}
 
+                {/* Bouton Supprimer si une photo est présente */}
+                {hasPhoto && (
+                    <IconButton
+                        onClick={handleDeletePhoto}
+                        sx={{
+                            position: 'absolute',
+                            top: 12,
+                            right: 12,
+                            bgcolor: 'rgba(255, 255, 255, 0.9)',
+                            width: 36,
+                            height: 36,
+                            '&:hover': {
+                                bgcolor: 'white',
+                            },
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                        }}
+                    >
+                        <MuiIcons.Delete sx={{ fontSize: 20, color: '#EF4444' }} />
+                    </IconButton>
+                )}
+
+                {/* Bouton Éditer (toujours visible) */}
                 <Box
                     sx={{
                         position: 'absolute',
@@ -338,7 +449,12 @@ export default function CreateActivityForm() {
                                 Back
                             </Button>
                             <Typography
-                                sx={{ color: '#3454D1', fontSize: 28, fontWeight: 700, fontFamily: '"All Round Gothic Semi", sans-serif' }}
+                                sx={{
+                                    color: '#3454D1',
+                                    fontSize: 28,
+                                    fontWeight: 700,
+                                    fontFamily: '"All Round Gothic Semi", sans-serif',
+                                }}
                             >
                                 Ton activité
                             </Typography>
@@ -362,7 +478,6 @@ export default function CreateActivityForm() {
                     )}
                 </Box>
 
-                {/* SUPPRESSION DE LA KEY PROBLÉMATIQUE */}
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
                     {step === 1 && (
                         <>
@@ -529,7 +644,12 @@ export default function CreateActivityForm() {
                                 variant="contained"
                                 onClick={() => {
                                     if (validateStep(1)) setStep(2)
-                                    else setStatus({ open: true, severity: 'error', message: 'Corrige les champs.' })
+                                    else
+                                        setStatus({
+                                            open: true,
+                                            severity: 'error',
+                                            message: 'Corrige les champs.',
+                                        })
                                 }}
                                 sx={{
                                     bgcolor: '#FF7B6C',
@@ -540,7 +660,10 @@ export default function CreateActivityForm() {
                                     fontSize: '1rem',
                                     fontFamily: '"Nunito", sans-serif',
                                     boxShadow: '0 4px 12px rgba(255, 123, 108, 0.3)',
-                                    '&:hover': { bgcolor: '#FF6B5A', boxShadow: '0 6px 16px rgba(255, 123, 108, 0.4)' },
+                                    '&:hover': {
+                                        bgcolor: '#FF6B5A',
+                                        boxShadow: '0 6px 16px rgba(255, 123, 108, 0.4)',
+                                    },
                                 }}
                             >
                                 Valider
@@ -593,7 +716,12 @@ export default function CreateActivityForm() {
                                 />
                                 {errors.participants && (
                                     <Typography
-                                        sx={{ color: 'error.main', fontSize: '0.85rem', mt: 0.5, fontFamily: '"Nunito", sans-serif' }}
+                                        sx={{
+                                            color: 'error.main',
+                                            fontSize: '0.85rem',
+                                            mt: 0.5,
+                                            fontFamily: '"Nunito", sans-serif',
+                                        }}
                                     >
                                         {errors.participants}
                                     </Typography>
@@ -644,7 +772,12 @@ export default function CreateActivityForm() {
                                 />
                                 {errors.duration && (
                                     <Typography
-                                        sx={{ color: 'error.main', fontSize: '0.85rem', mt: 0.5, fontFamily: '"Nunito", sans-serif' }}
+                                        sx={{
+                                            color: 'error.main',
+                                            fontSize: '0.85rem',
+                                            mt: 0.5,
+                                            fontFamily: '"Nunito", sans-serif',
+                                        }}
                                     >
                                         {errors.duration}
                                     </Typography>
@@ -695,7 +828,10 @@ export default function CreateActivityForm() {
                                     fontSize: '1rem',
                                     fontFamily: '"Nunito", sans-serif',
                                     boxShadow: '0 4px 12px rgba(255, 123, 108, 0.3)',
-                                    '&:hover': { bgcolor: '#FF6B5A', boxShadow: '0 6px 16px rgba(255, 123, 108, 0.4)' },
+                                    '&:hover': {
+                                        bgcolor: '#FF6B5A',
+                                        boxShadow: '0 6px 16px rgba(255, 123, 108, 0.4)',
+                                    },
                                 }}
                             >
                                 {submitting ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Valider'}
