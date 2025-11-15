@@ -1,70 +1,42 @@
-# Getting Started with Create React App
+# Echo.ly
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+**Slogan :** "Là où chaque rencontre résonne"
 
-## Available Scripts
+Echo.ly est une application de partage de savoir communautaire entre étudiants dans la ville de Lyon. Elle vise à faciliter l’échange de connaissances et à créer des connexions entre étudiants autour de sujets variés.
 
-In the project directory, you can run:
+## Démonstration
 
-### `npm start`
+Le site est accessible ici : [https://m2-application-savoir-dcve.vercel.app/](https://m2-application-savoir-dcve.vercel.app/)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Technologies utilisées
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Frontend
+- **React** : Framework principal pour le développement de l’interface utilisateur.
+- **MUI (Material-UI)** : Pour les composants graphiques et la gestion du design system.
 
-### `npm test`
+### Backend
+- **Swagger** : Documentation interactive de l’API pour faciliter les tests et la compréhension des endpoints.
+- **Firebase** : Authentification, base de données et hébergement des données.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Objectif du projet
 
-### `npm run build`
+Ce projet est le fruit d’une collaboration entre développement et UX design, visant à créer une application intuitive, performante et centrée sur l’utilisateur. Il met en avant l’importance de l’expérience utilisateur tout en intégrant des fonctionnalités techniques robustes.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Fonctionnalités principales
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- Création et consultation de posts de savoir.
+- Interaction communautaire autour des contenus partagés.
+- Interface responsive adaptée aux différents appareils.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## TODO
 
-### `npm run eject`
+- Gestion des photos dans Firebase.
+- Optimisation du style MUI pour une expérience utilisateur plus fluide et cohérente.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Contribution
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Les contributions sont les bienvenues ! Pour contribuer, merci de créer une issue ou un pull request décrivant vos améliorations ou corrections.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Licence
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Ce projet est sous licence MIT.
