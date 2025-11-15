@@ -2,7 +2,7 @@
 
 **Slogan :** "Là où chaque rencontre résonne"
 
-Echo.ly est une application de partage de savoir communautaire entre étudiants dans la ville de Lyon. Elle vise à faciliter l’échange de connaissances et à créer des connexions entre étudiants autour de sujets variés.
+Echo.ly est une application de partage de savoir communautaire entre étudiants à Lyon. Elle facilite l’échange de connaissances et la création de connexions entre étudiants autour de sujets variés.
 
 ## Démonstration
 
@@ -12,31 +12,38 @@ Le site est accessible ici : [https://m2-application-savoir-dcve.vercel.app/](ht
 
 ### Frontend
 - **React** : Framework principal pour le développement de l’interface utilisateur.
-- **MUI (Material-UI)** : Pour les composants graphiques et la gestion du design system.
+- **MUI (Material-UI)** : Composants graphiques et design system pour l’interface.
 
 ### Backend
-- **Swagger** : Documentation interactive de l’API pour faciliter les tests et la compréhension des endpoints.
-- **Firebase** : Authentification, base de données et hébergement des données.
+- **Node.js** : Serveur et logique métier côté backend.
+- **Firebase** : Authentification, base de données, Cloud Functions pour les notifications et hébergement.
+- **Swagger** : Documentation interactive de l’API pour tester et comprendre les endpoints.
+- **Google Maps API** : Intégration pour cartes interactives, calcul de distances et géolocalisation des activités.
 
 ## Objectif du projet
 
-Ce projet est le fruit d’une collaboration entre développement et UX design, visant à créer une application intuitive, performante et centrée sur l’utilisateur. Il met en avant l’importance de l’expérience utilisateur tout en intégrant des fonctionnalités techniques robustes.
+Créer une application intuitive, performante et centrée sur l’utilisateur, combinant UX design et fonctionnalités techniques robustes pour un partage de savoir fluide entre étudiants.
 
 ## Fonctionnalités principales
 
-- Création et consultation de posts de savoir.
-- Interaction communautaire autour des contenus partagés.
-- Interface responsive adaptée aux différents appareils.
+- **CRUD complet des posts de savoir** : création, consultation, modification, suppression.
+- **Interactions communautaires** : commentaires, likes, et partage de contenus.
+- **Gestion des notifications** : 
+  - Notifications en temps réel via Firebase Cloud Functions.
+  - Gestion des tokens utilisateurs pour l’envoi et le filtrage des notifications.
+- **Authentification** : via Firebase Authentication, sécurisation des données utilisateur.
+- **Interface responsive** : adaptée aux mobiles, tablettes et desktop.
 
-## TODO
+## Node.js : commandes principales
 
-- Gestion des photos dans Firebase.
-- Optimisation du style MUI pour une expérience utilisateur plus fluide et cohérente.
+Pour installer et lancer le projet en local :  
 
-## Contribution
+```bash
+# Installer les dépendances
+npm install
 
-Les contributions sont les bienvenues ! Pour contribuer, merci de créer une issue ou un pull request décrivant vos améliorations ou corrections.
+# Lancer l’application en mode développement
+npm start
 
-## Licence
-
-Ce projet est sous licence MIT.
+# Compiler pour la production
+npm run build
