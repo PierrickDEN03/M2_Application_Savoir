@@ -4,7 +4,7 @@ import BottomNavigation from '@mui/material/BottomNavigation'
 import BottomNavigationAction from '@mui/material/BottomNavigationAction'
 import HomeIcon from '@mui/icons-material/Home'
 import ChatIcon from '@mui/icons-material/Chat'
-import MapIcon from '@mui/icons-material/Map'
+import LocationOnIcon from '@mui/icons-material/LocationOn'
 import AccountCircleIcon from '@mui/icons-material/AccountCircle'
 import Paper from '@mui/material/Paper'
 import { Fab } from '@mui/material'
@@ -17,26 +17,18 @@ export default function BottomNav() {
     const { currentUser } = useContext(UserContext)
 
     const getValueFromPath = (path) => {
-        // 🔹 IMPORTANT : Vérifier les messages AVANT /user/activity
+        // Aucun item actif pour la création
+        if (path === '/user/create-activity') return -1
+
         if (path === '/user/messagerie' || path.startsWith('/user/send-message') || path.startsWith('/user/activity-message')) return 4
-
-        // 🔹 Carte et activités
         if (path === '/user/map' || path.startsWith('/user/activity')) return 1
+        if (path === '/user/dashboard') return 0
 
-        // 🔹 Dashboard et création
-        if (path === '/user/dashboard' || path === '/user/create-activity') return 0
-
-        // 🔹 Cas du profil
         if (path.startsWith('/user/profile')) {
             const segments = path.split('/')
             const profileId = segments[segments.length - 1]
-
-            // Si c'est le profil du user connecté → activer l'onglet Profil
-            if (currentUser && profileId === currentUser.uid) {
-                return 3
-            } else {
-                return -1
-            }
+            if (currentUser && profileId === currentUser.uid) return 3
+            return -1
         }
 
         return 0
@@ -72,6 +64,7 @@ export default function BottomNav() {
     }
 
     const handleCreateActivity = () => {
+        setValue(-1) // Désélection explicite
         navigate('/user/create-activity')
     }
 
@@ -83,14 +76,14 @@ export default function BottomNav() {
                 onClick={handleCreateActivity}
                 sx={{
                     position: 'fixed',
-                    bottom: 30,
+                    bottom: 35,
                     left: '50%',
                     transform: 'translateX(-50%)',
                     zIndex: 1001,
                     bgcolor: '#3454D1',
                     color: '#fff',
-                    width: 64,
-                    height: 64,
+                    width: 58,
+                    height: 58,
                     '&:hover': {
                         bgcolor: '#2840a0',
                     },
@@ -143,7 +136,7 @@ export default function BottomNav() {
                     }}
                 >
                     <BottomNavigationAction label="Accueil" icon={<HomeIcon />} />
-                    <BottomNavigationAction label="Carte" icon={<MapIcon />} />
+                    <BottomNavigationAction label="Carte" icon={<LocationOnIcon />} />
                     <BottomNavigationAction label="" icon={null} disabled />
                     <BottomNavigationAction label="Profil" icon={<AccountCircleIcon />} />
                     <BottomNavigationAction label="Message" icon={<ChatIcon />} />

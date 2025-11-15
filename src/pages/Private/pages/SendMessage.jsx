@@ -13,13 +13,14 @@ import { getCategoryImage, fetchCategoryById } from '../../../services/categorie
 import MessageBubble from '../../../components/messagerie/MessageBubble'
 import MessageInput from '../../../components/messagerie/MessageInput'
 import AvatarPlaceholder from '../../../components/utils/Avatar_Placeholder'
+import ActivityCard from '../../../components/utils/ActivityCard'
 
 export default function SendMessage() {
     const { idUser, activityId } = useParams()
     const navigate = useNavigate()
     const currentUser = auth.currentUser
     const messagesEndRef = useRef(null)
-    const messagesContainerRef = useRef(null) // Nouveau ref pour le container
+    const messagesContainerRef = useRef(null)
 
     const [recipient, setRecipient] = useState(null)
     const [activity, setActivity] = useState(null)
@@ -52,11 +53,9 @@ export default function SendMessage() {
 
     // Scroll automatique quand les messages changent
     useEffect(() => {
-        // Petit délai pour s'assurer que le DOM est à jour
         const timer = setTimeout(() => {
             scrollToBottom('smooth')
         }, 100)
-
         return () => clearTimeout(timer)
     }, [messages])
 
@@ -77,7 +76,15 @@ export default function SendMessage() {
 
         const loadData = async () => {
             try {
-                // 🔹 Message privé
+                // 🔹 Charger l'activité si activityId existe
+                if (activityId) {
+                    const activityData = await fetchActivityById(activityId)
+                    if (activityData) {
+                        setActivity(activityData)
+                    }
+                }
+
+                // 🔹 Charger le destinataire si idUser existe (conversation privée)
                 if (idUser) {
                     const userData = await fetchUserById(idUser)
                     if (!userData) {
@@ -95,8 +102,8 @@ export default function SendMessage() {
                         setAverageRating(null)
                     }
 
+                    // Messages privés (1:1)
                     setLoading(false)
-
                     try {
                         unsubscribe = listenToMessages(currentUser.uid, idUser, (msgs) => {
                             setMessages(msgs)
@@ -108,11 +115,8 @@ export default function SendMessage() {
                     return
                 }
 
-                // 🔹 Conversation d'activité
-                if (activityId) {
-                    const activityData = await fetchActivityById(activityId)
-                    if (activityData) setActivity(activityData)
-
+                // 🔹 Conversation de groupe (uniquement activityId, pas de idUser)
+                if (activityId && !idUser) {
                     const reservationsRef = collection(db, 'reservations')
                     const q = query(reservationsRef, where('activityId', '==', activityId))
                     const snapshot = await getDocs(q)
@@ -168,7 +172,6 @@ export default function SendMessage() {
             } else if (conversationId) {
                 await sendActivityMessage(conversationId, currentUser.uid, text)
             }
-            // Scroll après l'envoi
             setTimeout(() => scrollToBottom('smooth'), 100)
         } catch (error) {
             console.error("Erreur lors de l'envoi du message:", error)
@@ -193,9 +196,6 @@ export default function SendMessage() {
             </Box>
         )
     }
-
-    const isGroupChat = Boolean(activityId)
-
     return (
         <Box sx={{ minHeight: '100vh', bgcolor: '#e4eff6', display: 'flex', flexDirection: 'column' }}>
             <AvatarPlaceholder />
@@ -222,75 +222,87 @@ export default function SendMessage() {
                     bgcolor: '#ffffff',
                     p: 2,
                     display: 'flex',
-                    alignItems: 'center',
+                    flexDirection: 'column',
                     gap: 2,
                     borderTopLeftRadius: 20,
                     borderTopRightRadius: 20,
                 }}
             >
-                {isGroupChat ? (
-                    <>
-                        <Avatar src={categoryImage} sx={{ width: 48, height: 48, border: '2px solid #3454D1' }} />
+                {/* Section Utilisateur ou Groupe */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    {/* Avatar et infos utilisateur (si conversation privée) */}
+                    {idUser && recipient ? (
+                        <>
+                            <Avatar src={getUserAvatarUrl(recipient.id)} sx={{ width: 48, height: 48, border: '2px solid #3454D1' }} />
 
-                        <Box onClick={() => navigate(`/user/activity/${activityId}`)} sx={{ cursor: 'pointer' }}>
-                            <Typography variant="body1" sx={{ fontWeight: 600, fontFamily: '"Nunito", sans-serif' }}>
-                                {activity?.title || "Discussion de l'activité"}
-                            </Typography>
-                            <Typography variant="caption" sx={{ color: '#666', fontFamily: '"Nunito", sans-serif' }}>
-                                {participants.length} participant{participants.length > 1 ? 's' : ''}
-                            </Typography>
-                        </Box>
-                    </>
-                ) : (
-                    <>
-                        <Avatar src={getUserAvatarUrl(recipient.id)} sx={{ width: 48, height: 48, border: '2px solid #3454D1' }} />
-
-                        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 1,
-                                    cursor: 'pointer',
-                                }}
-                                onClick={() => navigate(`/user/profile/${idUser}`)}
-                            >
-                                <Typography variant="body1" sx={{ fontWeight: 600, color: '#1a1a1a', fontFamily: '"Nunito", sans-serif' }}>
-                                    {recipient?.displayName || recipient?.firstName || 'Utilisateur'}
-                                </Typography>
-
-                                {averageRating && (
-                                    <Box
+                            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 1,
+                                        cursor: 'pointer',
+                                    }}
+                                    onClick={() => navigate(`/user/profile/${idUser}`)}
+                                >
+                                    <Typography
+                                        variant="body1"
                                         sx={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: 0.5,
-                                            bgcolor: 'white',
-                                            border: '1px solid #f28b82',
-                                            borderRadius: '50px',
-                                            px: 1,
-                                            py: 0.2,
+                                            fontWeight: 600,
+                                            color: '#1a1a1a',
+                                            fontFamily: '"Nunito", sans-serif',
                                         }}
                                     >
-                                        <StarIcon sx={{ color: '#f28b82', fontSize: 18 }} />
-                                        <Typography
-                                            variant="body2"
+                                        {recipient?.displayName || recipient?.firstName || 'Utilisateur'}
+                                    </Typography>
+
+                                    {averageRating && (
+                                        <Box
                                             sx={{
-                                                fontWeight: 600,
-                                                color: '#f28b82',
-                                                fontFamily: '"All Round Gothic Semi", sans-serif',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 0.5,
+                                                bgcolor: 'white',
+                                                border: '1px solid #f28b82',
+                                                borderRadius: '50px',
+                                                px: 1,
+                                                py: 0.2,
                                             }}
                                         >
-                                            {averageRating}
-                                        </Typography>
-                                    </Box>
-                                )}
+                                            <StarIcon sx={{ color: '#f28b82', fontSize: 18 }} />
+                                            <Typography
+                                                variant="body2"
+                                                sx={{
+                                                    fontWeight: 600,
+                                                    color: '#f28b82',
+                                                    fontFamily: '"All Round Gothic Semi", sans-serif',
+                                                }}
+                                            >
+                                                {averageRating}
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                </Box>
+                                <Typography variant="caption" sx={{ color: '#666', fontFamily: '"Nunito", sans-serif' }}>
+                                    Conversation privée
+                                </Typography>
                             </Box>
-                            <Typography variant="caption" sx={{ color: '#666', fontFamily: '"Nunito", sans-serif' }}>
-                                Conversation privée
-                            </Typography>
-                        </Box>
-                    </>
+                        </>
+                    ) : null}
+                </Box>
+
+                {/* Carte d'activité (affichée si activityId existe) */}
+                {activityId && activity && (
+                    <Box>
+                        <ActivityCard activity={activity} />
+
+                        <Typography
+                            variant="caption"
+                            sx={{ display: 'block', p1: 2, pt: 3, color: '#666', fontFamily: '"Nunito", sans-serif' }}
+                        >
+                            {participants.length} participant{participants.length > 1 ? 's' : ''}
+                        </Typography>
+                    </Box>
                 )}
             </Box>
 
@@ -303,7 +315,6 @@ export default function SendMessage() {
                     overflowY: 'auto',
                     overflowX: 'hidden',
                     pb: 30,
-                    // Style de scrollbar personnalisé (optionnel)
                     '&::-webkit-scrollbar': {
                         width: '8px',
                     },
@@ -338,7 +349,6 @@ export default function SendMessage() {
                         {messages.map((message) => (
                             <MessageBubble key={message.id} message={message} isOwn={message.senderId === currentUser.uid} />
                         ))}
-                        {/* Element invisible pour le scroll */}
                         <div ref={messagesEndRef} style={{ height: '1px' }} />
                     </>
                 )}

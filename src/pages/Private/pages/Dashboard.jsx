@@ -1,6 +1,6 @@
 // FILE: src/pages/Dashboard.jsx
 import React, { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Box, Typography, CircularProgress } from '@mui/material'
 import { auth } from '../../../firebase-config'
 import { fetchUserById } from '../../../services/userService'
@@ -12,7 +12,6 @@ import MyInscriptions from '../../../components/dashboard/MyInscriptions/MyInscr
 import MyFavorites from '../../../components/dashboard/MyFavorites/MyFavorites'
 
 export default function Dashboard() {
-    const location = useLocation()
     const navigate = useNavigate()
     const currentUser = auth.currentUser
 
@@ -157,7 +156,10 @@ export default function Dashboard() {
                         onClick={() => setCurrentTab('activities')}
                         sx={{
                             flex: 1,
+                            display: 'flex',
                             textAlign: 'center',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                             py: 1.2,
                             borderRadius: 2.5,
                             cursor: 'pointer',
@@ -180,7 +182,10 @@ export default function Dashboard() {
                         onClick={() => setCurrentTab('inscriptions')}
                         sx={{
                             flex: 1,
+                            display: 'flex',
                             textAlign: 'center',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                             py: 1.2,
                             borderRadius: 2.5,
                             cursor: 'pointer',
@@ -203,7 +208,10 @@ export default function Dashboard() {
                         onClick={() => setCurrentTab('favorites')}
                         sx={{
                             flex: 1,
+                            display: 'flex',
                             textAlign: 'center',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                             py: 1.2,
                             borderRadius: 2.5,
                             cursor: 'pointer',

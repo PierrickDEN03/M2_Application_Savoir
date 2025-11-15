@@ -144,6 +144,10 @@ export default function UserProfile() {
                             gap: 1.2,
                         }}
                     >
+                        {/* Age */}
+                        <Typography sx={{ color: '#555', fontWeight: 500, fontFamily: '"Nunito", sans-serif' }}>
+                            {user.age ? `${user.age} ans` : '28 ans'}
+                        </Typography>
                         {/* Ville */}
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                             <MuiIcons.LocationOn fontSize="small" sx={{ color: '#3454D1' }} />

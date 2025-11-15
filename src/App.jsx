@@ -18,6 +18,7 @@ import UserProfile from './pages/Private/pages/UserProfile'
 import EditProfile from './pages/Private/pages/EditProfile'
 import SendMessage from './pages/Private/pages/SendMessage'
 import Messagerie from './pages/Private/pages/Messagerie'
+import { fetchCategoriesFromDB } from './services/activitiesService'
 
 function LastPathTracker() {
     const location = useLocation()
@@ -35,6 +36,7 @@ function LastPathTracker() {
 }
 
 function App() {
+    console.log(fetchCategoriesFromDB())
     return (
         <>
             <LastPathTracker />
@@ -66,6 +68,8 @@ function App() {
                     <Route path="/user/profile/:idUser" element={<UserProfile />} />
                     <Route path="/user/modif-profile/:idUser" element={<EditProfile />} />
                     <Route path="/user/send-message/:idUser" element={<SendMessage />} />
+                    {/* Envoi un message à l'utilisateur à propos d'une activité */}
+                    <Route path="/user/send-message/:idUser/:activityId" element={<SendMessage />} />
                     <Route path="/user/activity-message/:activityId/" element={<SendMessage />} />
                     <Route path="/user/messagerie" element={<Messagerie />} />
                 </Route>

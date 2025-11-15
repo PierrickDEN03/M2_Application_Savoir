@@ -60,7 +60,10 @@ export default function Private() {
     return (
         <div>
             {!hiddenNavRoutes.some((route) => location.pathname.startsWith(route)) && <BottomNav />}
-            <Outlet context={{ user }} />
+
+            <Box sx={{ mb: 8 }}>
+                <Outlet context={{ user }} />
+            </Box>
         </div>
     )
 }

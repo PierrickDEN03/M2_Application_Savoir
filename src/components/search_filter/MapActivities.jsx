@@ -1,9 +1,9 @@
-// MapActivities.jsx — version corrigée avec selectedIndexRef
+// MapActivities.jsx — version optimisée avec chargement groupé des catégories
 import React, { useCallback, useState, useRef, useEffect } from 'react'
 import { GoogleMap, Marker } from '@react-google-maps/api'
 import { Box, Fade } from '@mui/material'
 import ActivityCard from '../utils/ActivityCard'
-import { fetchCategoryById } from '../../services/categoriesService.js'
+import { fetchCategoriesFromDB } from '../../services/categoriesService.js'
 import * as MuiIcons from '@mui/icons-material'
 import ReactDOMServer from 'react-dom/server'
 
@@ -22,20 +22,22 @@ export default function MapActivities({ activities = [] }) {
     const onLoad = useCallback((mapInstance) => setMap(mapInstance), [])
     const onUnmount = useCallback(() => setMap(null), [])
 
-    /** Chargement des catégories **/
+    /** Chargement optimisé de toutes les catégories en une seule fois **/
     useEffect(() => {
-        async function loadCategories() {
-            const cats = {}
-            for (const activity of activities) {
-                if (activity.categoryId && !cats[activity.categoryId]) {
-                    const cat = await fetchCategoryById(activity.categoryId)
-                    if (cat) cats[activity.categoryId] = cat
-                }
-            }
-            setCategories(cats)
+        async function loadAllCategories() {
+            const allCategories = await fetchCategoriesFromDB()
+
+            // Transformer le tableau en objet indexé par id pour un accès rapide
+            const categoriesMap = allCategories.reduce((acc, cat) => {
+                acc[cat.id] = cat
+                return acc
+            }, {})
+
+            setCategories(categoriesMap)
         }
-        if (activities.length > 0) loadCategories()
-    }, [activities])
+
+        loadAllCategories()
+    }, [])
 
     /** Sélection de la première activité par défaut **/
     useEffect(() => {
@@ -62,13 +64,13 @@ export default function MapActivities({ activities = [] }) {
             // Scroll vers la carte (instant pour éviter les événements intermédiaires)
             container.scrollTo({
                 left: card.offsetLeft,
-                behavior: 'auto', // Changé de 'smooth' à 'auto'
+                behavior: 'auto',
             })
 
             // Centrer la map
             if (map) {
                 map.panTo(activities[index].position)
-                map.setZoom(14)
+                map.setZoom(18)
             }
 
             // Réinitialiser le flag immédiatement car le scroll est instantané
@@ -94,7 +96,7 @@ export default function MapActivities({ activities = [] }) {
         if (newIndex !== selectedIndexRef.current && newIndex >= 0 && newIndex < activities.length) {
             selectedIndexRef.current = newIndex
             setSelectedIndex(newIndex)
-            forceUpdate({}) // Force le re-render des markers
+            forceUpdate({})
 
             // Centrer la map sur la nouvelle activité
             if (map && activities[newIndex]) {
@@ -107,8 +109,7 @@ export default function MapActivities({ activities = [] }) {
     /** Clic sur un marker **/
     const handleMarkerClick = useCallback(
         (index) => {
-            console.log({ selectedIndex: index })
-            // IMPORTANT : activer le flag et mettre à jour TOUT immédiatement
+            // Activer le flag et mettre à jour immédiatement
             isScrollingProgrammatically.current = true
             selectedIndexRef.current = index
             setSelectedIndex(index)
@@ -128,6 +129,7 @@ export default function MapActivities({ activities = [] }) {
     /** Génération d'une icône personnalisée pour le marker **/
     const getCustomIcon = (activity, isSelected) => {
         const category = categories[activity.categoryId]
+
         if (!category) {
             const size = isSelected ? 50 : 40
             return {
@@ -198,7 +200,7 @@ export default function MapActivities({ activities = [] }) {
             <GoogleMap
                 mapContainerStyle={containerStyle}
                 center={center}
-                zoom={12}
+                zoom={14}
                 onLoad={onLoad}
                 onUnmount={onUnmount}
                 options={{

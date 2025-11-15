@@ -93,7 +93,7 @@ export default function ChooseInterest() {
                     sx={{
                         display: 'flex',
                         flexWrap: 'wrap',
-                        justifyContent: 'start',
+                        justifyContent: 'space-around',
                         gap: 2,
                         maxWidth: '400px',
                         mb: 4,

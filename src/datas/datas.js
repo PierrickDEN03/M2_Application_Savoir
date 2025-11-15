@@ -6,27 +6,27 @@ import { addReservation } from '../services/reservationsService'
 // ------------------------
 // Catégories existantes
 // ------------------------
-const categories = [
-    { id: '4IRMWhxiGFxgNOwVpg8r', description: 'Shopping' },
-    { id: '4cJXqJo3V1KD7V996HuA', description: 'Cinéma' },
-    { id: '5BpFGj2TAbxGKyoA2Vrd', description: 'Photographie' },
-    { id: '6CWbnUWjsuxVq2isxhPX', description: 'Danse' },
-    { id: '7f2uNuW0mwZFFY2uQjmx', description: 'Randonnées' },
-    { id: '8hBkMbyOqyyboTOmzBxH', description: 'Cuisine' },
-    { id: 'B6rLI1acZ8iKCIGM7zWy', description: 'Yoga' },
-    { id: 'IjNoF0eXCjPOydfb9yyJ', description: 'Sport' },
-    { id: 'Ilx5RrxAVNLW6zxs3pCp', description: 'Astronomie' },
-    { id: 'Kzpzc3mI9M2SQo6JX1bw', description: 'Lecture' },
-    { id: 'SX78JHJqyiEjj51KJAzy', description: 'Culture' },
-    { id: 'Yc0OkTe9JdNUXZ4guC1K', description: 'Bricolage' },
-    { id: 'ZBg92skofHoZV46Q34qn', description: 'Autres' },
-    { id: 'jfUPqAX6im81lWevYmqL', description: 'Jeux de société' },
-    { id: 'mRzfUJysJ9rCC0bKhsKy', description: 'Jeux vidéo' },
-    { id: 'obDibFfne1UdxBg1mWLa', description: 'Running' },
-    { id: 'pRe8oGc9j9Hx7LxQjb5h', description: 'Yoga' },
-    { id: 'u1t0xiXVvL6NLa7fo49j', description: 'Théâtre' },
-    { id: 'v3Mw9l31Y8Ff4eHITFDZ', description: 'Art' },
-    { id: 'yRPnt0C9cenVpmw59041', description: 'Musique' },
+export const categories = [
+    { id: '4IRMWhxiGFxgNOwVpg8r', description: 'Shopping', iconName: 'ShoppingCart' },
+    { id: '4cJXqJo3V1KD7V996HuA', description: 'Cinéma', iconName: 'Movie' },
+    { id: '5BpFGj2TAbxGKyoA2Vrd', description: 'Photographie', iconName: 'CameraAlt' },
+    { id: '6CWbnUWjsuxVq2isxhPX', description: 'Danse', iconName: 'DirectionsRun' },
+    { id: '7f2uNuW0mwZFFY2uQjmx', description: 'Randonnées', iconName: 'Hiking' },
+    { id: '8hBkMbyOqyyboTOmzBxH', description: 'Cuisine', iconName: 'Restaurant' },
+    { id: 'B6rLI1acZ8iKCIGM7zWy', description: 'Yoga', iconName: 'SelfImprovement' },
+    { id: 'IjNoF0eXCjPOydfb9yyJ', description: 'Sport', iconName: 'FitnessCenter' },
+    { id: 'Ilx5RrxAVNLW6zxs3pCp', description: 'Astronomie', iconName: 'RocketLaunch' },
+    { id: 'Kzpzc3mI9M2SQo6JX1bw', description: 'Lecture', iconName: 'MenuBook' },
+    { id: 'SX78JHJqyiEjj51KJAzy', description: 'Culture', iconName: 'TheaterComedy' },
+    { id: 'Yc0OkTe9JdNUXZ4guC1K', description: 'Bricolage', iconName: 'Build' },
+    { id: 'ZBg92skofHoZV46Q34qn', description: 'Autres', iconName: 'Category' },
+    { id: 'jfUPqAX6im81lWevYmqL', description: 'Jeux de société', iconName: 'SportsEsports' },
+    { id: 'mRzfUJysJ9rCC0bKhsKy', description: 'Jeux vidéo', iconName: 'VideogameAsset' },
+    { id: 'obDibFfne1UdxBg1mWLa', description: 'Running', iconName: 'DirectionsRun' },
+    { id: 'pRe8oGc9j9Hx7LxQjb5h', description: 'Yoga', iconName: 'SelfImprovement' },
+    { id: 'u1t0xiXVvL6NLa7fo49j', description: 'Théâtre', iconName: 'TheaterComedy' },
+    { id: 'v3Mw9l31Y8Ff4eHITFDZ', description: 'Art', iconName: 'Palette' },
+    { id: 'yRPnt0C9cenVpmw59041', description: 'Musique', iconName: 'MusicNote' },
 ]
 
 const categoriesMap = Object.fromEntries(categories.map((c) => [c.id, c.description]))
