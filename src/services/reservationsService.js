@@ -70,11 +70,11 @@ export async function sendTomorrowActivityReminders() {
         const tomorrow = new Date(now)
         tomorrow.setDate(now.getDate() + 1)
 
-        // On ne garde que les activités dont la date est demain (tolérance 00h-23h59)
         const startOfDay = new Date(tomorrow.setHours(0, 0, 0, 0))
         const endOfDay = new Date(tomorrow.setHours(23, 59, 59, 999))
 
         const allReservations = await getDocs(collection(db, 'reservations'))
+        const notificationsMap = new Map() // userId -> { token, messages: [] }
 
         for (const reservationDoc of allReservations.docs) {
             const { activityId, userId } = reservationDoc.data()
@@ -84,26 +84,34 @@ export async function sendTomorrowActivityReminders() {
             const activityDate = new Date(activity.date)
             if (activityDate >= startOfDay && activityDate <= endOfDay) {
                 const token = await getUserNotificationToken(userId)
-                if (token) {
-                    const dateString = new Date(activity.date).toLocaleString('fr-FR', {
-                        weekday: 'long',
-                        day: 'numeric',
-                        month: 'long',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                    })
+                if (!token) continue
 
-                    await sendNotification(token, {
-                        title: `Rappel : ${activity.title}`,
-                        body: `Demain à ${dateString}`,
-                        url: `/user/activity/${activity.id}`,
-                        activityId: activity.id,
-                    })
-
-                    console.log(`📬 Notification envoyée à ${userId} pour ${activity.title}`)
-                } else {
-                    console.warn(`⚠️ Aucun token FCM trouvé pour ${userId}`)
+                if (!notificationsMap.has(userId)) {
+                    notificationsMap.set(userId, { token, messages: [] })
                 }
+
+                const dateString = activityDate.toLocaleString('fr-FR', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                })
+
+                notificationsMap.get(userId).messages.push({
+                    title: `Rappel : ${activity.title}`,
+                    body: `Demain à ${dateString}`,
+                    url: `/user/activity/${activity.id}`,
+                    activityId: activity.id,
+                })
+            }
+        }
+
+        // Envoi unique par utilisateur
+        for (const [userId, { token, messages }] of notificationsMap) {
+            for (const msg of messages) {
+                await sendNotification(token, msg)
+                console.log(`📬 Notification envoyée à ${userId} pour ${msg.title}`)
             }
         }
 

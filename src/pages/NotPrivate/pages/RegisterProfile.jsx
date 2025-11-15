@@ -2,7 +2,22 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { TextField, Button, Box, Typography, CircularProgress, Snackbar, Alert, Avatar, IconButton, InputAdornment } from '@mui/material'
-import { PhotoCamera, Person, PersonOutline, MailOutline, Home, LocationCity, PinDrop } from '@mui/icons-material'
+import { DatePicker } from '@mui/x-date-pickers/DatePicker'
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import frLocale from 'date-fns/locale/fr'
+import {
+    PhotoCamera,
+    Person,
+    PersonOutline,
+    MailOutline,
+    Home,
+    LocationCity,
+    PinDrop,
+    Phone,
+    Close,
+    CalendarToday,
+} from '@mui/icons-material'
 import { auth } from '../../../firebase-config'
 import { createProfile, getProfile } from '../../../services/userService'
 import useLoadGooglePlaces from '../../../components/google_api/useLoadGooglePlaces'
@@ -27,6 +42,7 @@ export default function RegisterProfile() {
         age: 0,
     })
     const [photoFile, setPhotoFile] = useState(null)
+    const [photoPreview, setPhotoPreview] = useState(null)
     const [errors, setErrors] = useState({})
     const [status, setStatus] = useState({ open: false, severity: 'info', message: '' })
 
@@ -41,7 +57,6 @@ export default function RegisterProfile() {
                     return
                 }
 
-                // Vérifier si le profil existe déjà
                 const profile = await getProfile(user.uid)
 
                 if (profile) {
@@ -50,7 +65,6 @@ export default function RegisterProfile() {
                     return
                 }
 
-                // Nouveau profil → pré-remplir l'email
                 console.log('🆕 Nouveau profil à créer')
                 setFormData((prev) => ({ ...prev, email: user.email }))
                 setLoadingUser(false)
@@ -71,11 +85,6 @@ export default function RegisterProfile() {
     const handleChange = (field) => (e) => {
         const value = e.target.value
         setFormData({ ...formData, [field]: value })
-
-        if (field === 'birthDate') {
-            const age = calculateAge(value)
-            setFormData((prev) => ({ ...prev, age }))
-        }
     }
 
     const handlePhoneChange = (e) => {
@@ -83,13 +92,13 @@ export default function RegisterProfile() {
 
         if (value.length > 10) value = value.slice(0, 10)
 
-        if (value.startsWith('33') && value.length > 2) {
-            value = `+33 ${value.slice(2, 4)} ${value.slice(4, 7)} ${value.slice(7)}`.trim()
-        } else if (value.length > 0) {
-            value = `${value.slice(0, 2)} ${value.slice(2, 4)} ${value.slice(4, 7)} ${value.slice(7)}`.trim()
+        let formatted = ''
+        for (let i = 0; i < value.length; i += 2) {
+            if (i > 0) formatted += ' '
+            formatted += value.slice(i, i + 2)
         }
 
-        setFormData((prev) => ({ ...prev, phone: value }))
+        setFormData((prev) => ({ ...prev, phone: formatted }))
     }
 
     const handleAddressSelected = ({ street, city, postalCode }) => setFormData((p) => ({ ...p, street, city, postalCode }))
@@ -98,8 +107,20 @@ export default function RegisterProfile() {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0]
             setPhotoFile(file)
-            setFormData((prev) => ({ ...prev, photoUrl: URL.createObjectURL(file) }))
+
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                setPhotoPreview(reader.result)
+            }
+            reader.readAsDataURL(file)
         }
+    }
+
+    const handleRemovePhoto = () => {
+        setPhotoFile(null)
+        setPhotoPreview(null)
+        const fileInput = document.getElementById('icon-button-file')
+        if (fileInput) fileInput.value = ''
     }
 
     const calculateAge = (birthDate) => {
@@ -123,12 +144,19 @@ export default function RegisterProfile() {
             if (!formData.city.trim()) newErrors.city = 'Ville requise'
             if (!formData.postalCode.trim()) newErrors.postalCode = 'Code postal requis'
         } else if (step === 3) {
-            if (!formData.birthDate) newErrors.birthDate = 'Date de naissance requise'
-            else if (calculateAge(formData.birthDate) < 18) newErrors.birthDate = 'Tu dois avoir 18 ans minimum'
-            if (!formData.phone.trim()) {
+            if (!formData.birthDate) {
+                newErrors.birthDate = 'Date de naissance requise'
+            } else if (calculateAge(formData.birthDate) < 18) {
+                newErrors.birthDate = 'Tu dois avoir 18 ans minimum'
+            }
+
+            const cleanPhone = formData.phone.replace(/\s/g, '')
+            if (!cleanPhone) {
                 newErrors.phone = 'Numéro requis'
-            } else if (!/^(?:\+33|0)[1-9]\d{8}$/.test(formData.phone.replace(/\s/g, ''))) {
-                newErrors.phone = 'Numéro invalide (ex: +33612345678 ou 0612345678)'
+            } else if (cleanPhone.length !== 10) {
+                newErrors.phone = 'Le numéro doit contenir 10 chiffres'
+            } else if (!/^0[1-9]\d{8}$/.test(cleanPhone)) {
+                newErrors.phone = 'Numéro invalide (doit commencer par 01-09)'
             }
         }
         setErrors(newErrors)
@@ -163,7 +191,7 @@ export default function RegisterProfile() {
                 hasPassword: false,
             }
 
-            await createProfile(uid, payload, photoFile)
+            await createProfile(uid, payload, null)
             navigate('/user/interest')
         } catch (err) {
             console.error(err)
@@ -194,7 +222,7 @@ export default function RegisterProfile() {
             sx={{
                 width: '100vw',
                 minHeight: '100vh',
-                overflox: 'hidden',
+                overflow: 'hidden',
                 bgcolor: '#E7F2F8',
                 display: 'flex',
                 alignItems: 'center',
@@ -279,10 +307,10 @@ export default function RegisterProfile() {
                                     width: '100%',
                                     mb: 2,
                                     bgcolor: 'white',
-                                    borderRadius: '24px',
+                                    borderRadius: 2,
                                     fontFamily: '"Nunito", sans-serif',
                                     '& .MuiOutlinedInput-root': {
-                                        borderRadius: '24px',
+                                        borderRadius: 2,
                                         fontSize: '0.9rem',
                                         py: 0.8,
                                     },
@@ -308,10 +336,10 @@ export default function RegisterProfile() {
                                     width: '100%',
                                     mb: 2,
                                     bgcolor: 'white',
-                                    borderRadius: '24px',
+                                    borderRadius: 2,
                                     fontFamily: '"Nunito", sans-serif',
                                     '& .MuiOutlinedInput-root': {
-                                        borderRadius: '24px',
+                                        borderRadius: 2,
                                         fontSize: '0.9rem',
                                         py: 0.8,
                                     },
@@ -335,10 +363,10 @@ export default function RegisterProfile() {
                                     width: '100%',
                                     mb: 5,
                                     bgcolor: 'white',
-                                    borderRadius: '24px',
+                                    borderRadius: 2,
                                     fontFamily: '"Nunito", sans-serif',
                                     '& .MuiOutlinedInput-root': {
-                                        borderRadius: '24px',
+                                        borderRadius: 2,
                                         fontSize: '0.9rem',
                                         py: 0.8,
                                     },
@@ -354,7 +382,7 @@ export default function RegisterProfile() {
                                     maxWidth: '100%',
                                     bgcolor: '#ED6A5A',
                                     color: '#fff',
-                                    borderRadius: '24px',
+                                    borderRadius: 5,
                                     py: 1.1,
                                     fontWeight: 600,
                                     fontSize: '0.85rem',
@@ -391,10 +419,10 @@ export default function RegisterProfile() {
                                     width: '100%',
                                     mb: 2,
                                     bgcolor: 'white',
-                                    borderRadius: '24px',
+                                    borderRadius: 2,
                                     fontFamily: '"Nunito", sans-serif',
                                     '& .MuiOutlinedInput-root': {
-                                        borderRadius: '24px',
+                                        borderRadius: 2,
                                         fontSize: '0.9rem',
                                         py: 0.8,
                                     },
@@ -420,10 +448,10 @@ export default function RegisterProfile() {
                                     width: '100%',
                                     mb: 2,
                                     bgcolor: 'white',
-                                    borderRadius: '24px',
+                                    borderRadius: 2,
                                     fontFamily: '"Nunito", sans-serif',
                                     '& .MuiOutlinedInput-root': {
-                                        borderRadius: '24px',
+                                        borderRadius: 2,
                                         fontSize: '0.9rem',
                                         py: 0.8,
                                     },
@@ -449,10 +477,10 @@ export default function RegisterProfile() {
                                     width: '100%',
                                     mb: 5,
                                     bgcolor: 'white',
-                                    borderRadius: '24px',
+                                    borderRadius: 2,
                                     fontFamily: '"Nunito", sans-serif',
                                     '& .MuiOutlinedInput-root': {
-                                        borderRadius: '24px',
+                                        borderRadius: 2,
                                         fontSize: '0.9rem',
                                         py: 0.8,
                                     },
@@ -468,7 +496,7 @@ export default function RegisterProfile() {
                                         width: { xs: '150px', sm: '200px' },
                                         bgcolor: '#B2DDF7',
                                         color: '#3454D1',
-                                        borderRadius: '24px',
+                                        borderRadius: 5,
                                         py: 1,
                                         fontWeight: 600,
                                         fontSize: '0.8rem',
@@ -484,7 +512,7 @@ export default function RegisterProfile() {
                                         width: { xs: '150px', sm: '200px' },
                                         bgcolor: '#ED6A5A',
                                         color: '#fff',
-                                        borderRadius: '24px',
+                                        borderRadius: 5,
                                         py: 1,
                                         fontWeight: 600,
                                         fontSize: '0.8rem',
@@ -500,7 +528,28 @@ export default function RegisterProfile() {
 
                     {step === 3 && (
                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <Avatar src={formData.photoUrl || '/avatar_default.jpg'} sx={{ width: 120, height: 120, mb: 2 }} />
+                            {/* Avatar avec bouton de suppression */}
+                            <Box sx={{ position: 'relative', mb: 2 }}>
+                                <Avatar src={photoPreview || '/avatar_default.jpg'} sx={{ width: 120, height: 120 }} />
+                                {photoPreview && (
+                                    <IconButton
+                                        onClick={handleRemovePhoto}
+                                        sx={{
+                                            position: 'absolute',
+                                            bottom: -5,
+                                            right: -5,
+                                            bgcolor: '#ED6A5A',
+                                            color: 'white',
+                                            width: 30,
+                                            height: 30,
+                                            '&:hover': { bgcolor: '#d85a4c' },
+                                        }}
+                                    >
+                                        <Close sx={{ fontSize: 18 }} />
+                                    </IconButton>
+                                )}
+                            </Box>
+
                             <label htmlFor="icon-button-file">
                                 <input
                                     accept="image/*"
@@ -509,55 +558,94 @@ export default function RegisterProfile() {
                                     style={{ display: 'none' }}
                                     onChange={handlePhotoChange}
                                 />
-                                <IconButton component="span" sx={{ color: '#3454D1', mb: 2 }}>
+                                <IconButton component="span" sx={{ color: '#3454D1', mb: 3 }}>
                                     <PhotoCamera />
                                 </IconButton>
                             </label>
+
+                            {/* Date de naissance avec DatePicker MUI */}
+                            <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={frLocale}>
+                                <DatePicker
+                                    value={formData.birthDate ? new Date(formData.birthDate) : null}
+                                    onChange={(newDate) => {
+                                        if (newDate) {
+                                            const formatted = newDate.toISOString().split('T')[0]
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                birthDate: formatted,
+                                                age: calculateAge(formatted),
+                                            }))
+                                        }
+                                    }}
+                                    disableFuture
+                                    openTo="year"
+                                    views={['year', 'month', 'day']}
+                                    slotProps={{
+                                        textField: {
+                                            fullWidth: true,
+                                            placeholder: 'Date de naissance',
+                                            error: !!errors.birthDate,
+                                            helperText: errors.birthDate,
+                                            InputProps: {
+                                                startAdornment: (
+                                                    <InputAdornment position="start">
+                                                        <CalendarToday sx={{ color: '#B0BEC5' }} />
+                                                    </InputAdornment>
+                                                ),
+                                            },
+                                            sx: {
+                                                width: '100%',
+                                                mb: 2,
+                                                bgcolor: 'white',
+                                                borderRadius: 2,
+                                                fontFamily: '"Nunito", sans-serif',
+                                                '& .MuiOutlinedInput-root': {
+                                                    borderRadius: 2,
+                                                    fontSize: '0.9rem',
+                                                    py: 0.8,
+                                                },
+                                                '& .MuiInputBase-input': {
+                                                    py: 1.2,
+                                                    fontFamily: '"Nunito", sans-serif',
+                                                },
+                                            },
+                                        },
+                                    }}
+                                />
+                            </LocalizationProvider>
+
+                            {/* Téléphone avec format français */}
                             <TextField
-                                type="date"
-                                placeholder="Date de naissance"
-                                value={formData.birthDate}
-                                onChange={handleChange('birthDate')}
-                                error={!!errors.birthDate}
-                                helperText={errors.birthDate}
-                                InputLabelProps={{ shrink: true }}
-                                sx={{
-                                    width: '100%',
-                                    mb: 2,
-                                    bgcolor: 'white',
-                                    borderRadius: '24px',
-                                    '& .MuiOutlinedInput-root': {
-                                        borderRadius: '24px',
-                                        fontSize: '0.9rem',
-                                        py: 0.8,
-                                    },
-                                    '& .MuiInputBase-input': {
-                                        py: 1.2,
-                                    },
-                                }}
-                            />
-                            <TextField
-                                placeholder="Numéro de téléphone"
+                                placeholder="06 12 34 56 78"
                                 value={formData.phone}
                                 onChange={handlePhoneChange}
                                 error={!!errors.phone}
-                                helperText={errors.phone ? errors.phone : ''}
+                                helperText={errors.phone}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <Phone sx={{ color: '#B0BEC5' }} />
+                                        </InputAdornment>
+                                    ),
+                                }}
                                 sx={{
                                     width: '100%',
                                     mb: 5,
                                     bgcolor: 'white',
-                                    borderRadius: '24px',
+                                    borderRadius: 2,
                                     fontFamily: '"Nunito", sans-serif',
                                     '& .MuiOutlinedInput-root': {
-                                        borderRadius: '24px',
+                                        borderRadius: 2,
                                         fontSize: '0.9rem',
                                         py: 0.8,
                                     },
                                     '& .MuiInputBase-input': {
                                         py: 1.2,
+                                        letterSpacing: '0.5px',
                                     },
                                 }}
                             />
+
                             <Box sx={{ display: 'flex', gap: 2, width: '100%', justifyContent: 'center' }}>
                                 <Button
                                     onClick={prevStep}
@@ -565,7 +653,7 @@ export default function RegisterProfile() {
                                         width: { xs: '150px', sm: '200px' },
                                         bgcolor: '#B2DDF7',
                                         color: '#3454D1',
-                                        borderRadius: '24px',
+                                        borderRadius: 5,
                                         py: 1,
                                         fontWeight: 600,
                                         fontSize: '0.8rem',
@@ -581,7 +669,7 @@ export default function RegisterProfile() {
                                         width: { xs: '150px', sm: '200px' },
                                         bgcolor: '#ED6A5A',
                                         color: '#fff',
-                                        borderRadius: '24px',
+                                        borderRadius: 5,
                                         py: 1,
                                         fontWeight: 600,
                                         fontSize: '0.8rem',

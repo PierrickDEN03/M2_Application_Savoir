@@ -7,7 +7,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { fr } from 'date-fns/locale'
 import { isSameDay } from 'date-fns'
 import * as MuiIcons from '@mui/icons-material'
-import { fetchCategoriesFromDB } from '../../services/categoriesService'
+import { fetchCategoriesFromDB, getUserInterests } from '../../services/categoriesService'
 import { saveUserFilters, loadUserFilters } from '../../services/filtresService'
 import CityAutocomplete from '../google_api/CityAutoComplete'
 import { UserContext } from '../../context/userContext'
@@ -36,10 +36,9 @@ export default function Filtre({ onFilterChange, viewMode = 'map' }) {
     useEffect(() => {
         const loadData = async () => {
             try {
-                const cats = await fetchCategoriesFromDB()
-                setCategories(cats)
-
                 if (currentUser?.uid) {
+                    const cats = await getUserInterests(currentUser.uid)
+                    setCategories(cats)
                     const savedFilters = await loadUserFilters(currentUser.uid)
                     if (savedFilters) {
                         setFilters(savedFilters)

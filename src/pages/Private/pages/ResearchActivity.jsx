@@ -7,7 +7,6 @@ import ListActivities from '../../../components/search_filter/ListActivities'
 import Filtre from '../../../components/search_filter/Filtre'
 import useActivitiesFilter from '../../../components/search_filter/useActivitiesFilter'
 import { fetchActivitiesFromDB } from '../../../services/activitiesService'
-import { verifyAddressWithId } from '../../../components/google_api/verifyAddressWithGoogle'
 import { auth } from '../../../firebase-config'
 
 const libraries = ['places', 'geometry']
@@ -33,13 +32,10 @@ export default function ResearchActivity() {
     const [error, setError] = useState(null)
     const [viewMode, setViewMode] = useState('map')
 
-    // 🔹 Charger les activités une fois Google Maps prêt
+    // 🔹 Charger les activités
     useEffect(() => {
-        if (!googleMapsLoaded) return
-
         const loadActivities = async () => {
             try {
-                console.log('Fetching activities...')
                 setLoadingActivities(true)
                 setError(null)
 
@@ -47,37 +43,29 @@ export default function ResearchActivity() {
                 const now = new Date()
                 const user = auth?.currentUser
 
+                const hasCoordinates = (p) => p && typeof p.lat === 'number' && typeof p.lng === 'number'
+
                 const filteredDocs = user
-                    ? docs.filter((doc) => doc.createdBy !== user.uid && doc.userId !== user.uid && new Date(doc.date) > now)
-                    : docs.filter((doc) => new Date(doc.date) > now)
+                    ? docs.filter(
+                          (doc) =>
+                              doc.createdBy !== user.uid &&
+                              doc.userId !== user.uid &&
+                              new Date(doc.date) > now &&
+                              hasCoordinates(doc.position)
+                      )
+                    : docs.filter((doc) => new Date(doc.date) > now && hasCoordinates(doc.position))
 
-                const verified = []
-                for (const doc of filteredDocs) {
-                    if (!doc.placeId) continue
-                    try {
-                        const pos = await verifyAddressWithId(doc.placeId)
-                        if (!pos?.position) continue
-                        verified.push({
-                            ...doc,
-                            position: pos.position,
-                            address: pos.address,
-                        })
-                    } catch (e) {
-                        console.warn('Impossible de géocoder', doc.title, e)
-                    }
-                }
-
-                setActivities(verified)
+                setActivities(filteredDocs)
             } catch (err) {
                 console.error(err)
-                setError('Impossible de charger les activités. Réessayez plus tard.')
+                setError('Impossible de charger les activités.')
             } finally {
                 setLoadingActivities(false)
             }
         }
 
         loadActivities()
-    }, [googleMapsLoaded])
+    }, [])
 
     // 🔹 Appliquer les filtres
     const filteredActivities = useActivitiesFilter(activities, filters)
@@ -131,8 +119,8 @@ export default function ResearchActivity() {
             <Box
                 sx={{
                     position: 'fixed',
-                    bottom: 30,
-                    left: 20,
+                    top: 30,
+                    right: 20,
                     zIndex: 100,
                     display: 'flex',
                     gap: 2,
@@ -143,34 +131,33 @@ export default function ResearchActivity() {
                     onClick={() => setViewMode(viewMode === 'map' ? 'list' : 'map')}
                     sx={{
                         position: 'fixed',
-                        bottom: 130,
-                        left: '50%',
-                        bgcolor: '#FFD166',
-                        borderRadius: '50px',
-                        transform: 'translateX(-50%)',
+                        top: viewMode === 'map' ? 135 : 90,
+                        right: viewMode === 'map' ? 20 : 17,
+                        zIndex: 2000,
+                        bgcolor: 'white',
+                        p: viewMode === 'map' ? 0 : 1,
+                        borderRadius: '50%',
                         boxShadow: 4,
-                        px: 2.5,
-                        py: 1.2,
+                        width: viewMode === 'map' ? 56 : 22,
+                        height: viewMode === 'map' ? 56 : 22,
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 1,
+                        justifyContent: 'center',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
+                        '&:hover': {
+                            boxShadow: 6,
+                            transform: 'scale(1.05)',
+                        },
                     }}
                 >
                     {viewMode === 'map' ? (
                         <>
-                            <Typography sx={{ fontWeight: 600, color: '#000000', fontSize: 14, fontFamily: '"Nunito", sans-serif' }}>
-                                Voir la liste
-                            </Typography>
-                            <MuiIcons.ViewList sx={{ fontSize: 20, color: '#000000' }} />
+                            <MuiIcons.ViewList sx={{ fontSize: 30, color: '#3454D1' }} />
                         </>
                     ) : (
                         <>
-                            <Typography sx={{ fontWeight: 600, color: '#000000', fontSize: 14, fontFamily: '"Nunito", sans-serif' }}>
-                                Voir la carte
-                            </Typography>
-                            <MuiIcons.Map sx={{ fontSize: 20, color: '#000000' }} />
+                            <MuiIcons.Map sx={{ fontSize: 24, color: '#3454D1' }} />
                         </>
                     )}
                 </Box>

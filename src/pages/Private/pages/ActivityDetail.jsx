@@ -286,7 +286,7 @@ function ActivityDetail() {
                                 fullWidth
                                 variant="contained"
                                 startIcon={<MuiIcons.Message />}
-                                onClick={() => navigate(`/user/send-message/${creator?.id}`)}
+                                onClick={() => navigate(`/user/send-message/${creator?.id}/${activityId}`)}
                                 sx={{
                                     bgcolor: '#FFD186',
                                     color: 'white',
@@ -328,7 +328,12 @@ function ActivityDetail() {
                     </Box>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
                         {participantsList.map((uid) => (
-                            <Avatar key={uid} src={getUserAvatarUrl(uid)} sx={{ width: 36, height: 36, border: '2px solid #3454D1' }} />
+                            <Avatar
+                                onClick={() => navigate(`/user/profile/${uid}`)}
+                                key={uid}
+                                src={getUserAvatarUrl(uid)}
+                                sx={{ width: 36, height: 36, border: '2px solid #3454D1' }}
+                            />
                         ))}
                     </Box>
 
