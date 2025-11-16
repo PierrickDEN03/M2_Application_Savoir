@@ -47,3 +47,11 @@ npm start
 
 # Compiler pour la production
 npm run build
+
+```
+
+## TODO
+
+- Implémenter le design desktop et tablette
+- Changer la gestion des photos en utilisant Firebase storage 
+
