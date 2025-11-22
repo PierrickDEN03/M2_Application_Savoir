@@ -6,9 +6,8 @@ import HomeIcon from '@mui/icons-material/Home'
 import ChatIcon from '@mui/icons-material/Chat'
 import LocationOnIcon from '@mui/icons-material/LocationOn'
 import AccountCircleIcon from '@mui/icons-material/AccountCircle'
-import Paper from '@mui/material/Paper'
-import { Fab } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
+import Paper from '@mui/material/Paper'
 import { UserContext } from '../../context/userContext'
 
 export default function BottomNav() {
@@ -17,11 +16,14 @@ export default function BottomNav() {
     const { currentUser } = useContext(UserContext)
 
     const getValueFromPath = (path) => {
-        // Aucun item actif pour la création
-        if (path === '/user/create-activity') return -1
+        if (path === '/user/create-activity' || path.startsWith('/user/activity-edit')) {
+            return 2
+        }
 
         if (path === '/user/messagerie' || path.startsWith('/user/send-message') || path.startsWith('/user/activity-message')) return 4
+
         if (path === '/user/map' || path.startsWith('/user/activity')) return 1
+
         if (path === '/user/dashboard') return 0
 
         if (path.startsWith('/user/profile')) {
@@ -38,19 +40,20 @@ export default function BottomNav() {
 
     useEffect(() => {
         setValue(getValueFromPath(location.pathname))
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location.pathname, currentUser])
 
     const handleChange = (event, newValue) => {
-        if (newValue === 2) return
-
         setValue(newValue)
+
         switch (newValue) {
             case 0:
                 navigate('/user/dashboard')
                 break
             case 1:
                 navigate('/user/map')
+                break
+            case 2:
+                navigate('/user/create-activity')
                 break
             case 3:
                 if (currentUser) navigate(`/user/profile/${currentUser.uid}`)
@@ -63,85 +66,54 @@ export default function BottomNav() {
         }
     }
 
-    const handleCreateActivity = () => {
-        setValue(-1) // Désélection explicite
-        navigate('/user/create-activity')
-    }
-
     return (
-        <>
-            {/* Bouton flottant central */}
-            <Fab
-                aria-label="add"
-                onClick={handleCreateActivity}
+        <Paper
+            sx={{
+                position: 'fixed',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                borderRadius: '20px 20px 0 0',
+                bgcolor: 'white',
+                zIndex: 1000,
+                border: 'none',
+            }}
+            elevation={3}
+        >
+            <BottomNavigation
+                value={value}
+                onChange={handleChange}
+                showLabels
                 sx={{
-                    position: 'fixed',
-                    bottom: 35,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    zIndex: 1001,
-                    bgcolor: '#3454D1',
-                    color: '#fff',
-                    width: 58,
-                    height: 58,
-                    '&:hover': {
-                        bgcolor: '#2840a0',
+                    height: 'auto',
+                    bgcolor: 'transparent',
+                    justifyContent: 'space-around',
+                    '& .MuiBottomNavigationAction-root': {
+                        color: '#9E9E9E',
+                        minWidth: 'auto',
+                        padding: '8px 12px',
+                        borderRadius: '12px',
+                        margin: '6px 0',
+                        transition: 'all 0.2s ease',
+                        flexDirection: 'column',
+                        fontSize: '0.7rem',
+                        '&:hover': { color: '#3454D1' },
+                        '& .MuiSvgIcon-root': { fontSize: '24px', marginBottom: '2px' },
                     },
-                    transition: 'all 0.3s ease',
+                    '& .Mui-selected': {
+                        color: '#3454D1 !important',
+                        '& .MuiSvgIcon-root': { fontSize: '28px' },
+                    },
                 }}
             >
-                <AddIcon sx={{ fontSize: 32 }} />
-            </Fab>
+                <BottomNavigationAction label="Accueil" icon={<HomeIcon />} />
+                <BottomNavigationAction label="Carte" icon={<LocationOnIcon />} />
 
-            {/* Bottom Navigation */}
-            <Paper
-                sx={{
-                    position: 'fixed',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    borderRadius: '20px 20px 0 0',
-                    bgcolor: 'white',
-                    zIndex: 1000,
-                    border: 'none',
-                }}
-                elevation={3}
-            >
-                <BottomNavigation
-                    value={value}
-                    onChange={handleChange}
-                    showLabels
-                    sx={{
-                        height: 'auto',
-                        bgcolor: 'transparent',
-                        justifyContent: 'space-around',
-                        paddingX: 0,
-                        paddingY: 0,
-                        '& .MuiBottomNavigationAction-root': {
-                            color: '#9E9E9E',
-                            minWidth: 'auto',
-                            padding: '8px 12px',
-                            borderRadius: '12px',
-                            margin: '4px 0',
-                            transition: 'all 0.2s ease',
-                            flexDirection: 'column',
-                            fontSize: '0.7rem',
-                            '&:hover': { color: '#3454D1' },
-                            '& .MuiSvgIcon-root': { fontSize: '24px', marginBottom: '2px' },
-                        },
-                        '& .Mui-selected': {
-                            color: '#3454D1 !important',
-                            '& .MuiSvgIcon-root': { fontSize: '28px' },
-                        },
-                    }}
-                >
-                    <BottomNavigationAction label="Accueil" icon={<HomeIcon />} />
-                    <BottomNavigationAction label="Carte" icon={<LocationOnIcon />} />
-                    <BottomNavigationAction label="" icon={null} disabled />
-                    <BottomNavigationAction label="Profil" icon={<AccountCircleIcon />} />
-                    <BottomNavigationAction label="Message" icon={<ChatIcon />} />
-                </BottomNavigation>
-            </Paper>
-        </>
+                <BottomNavigationAction label="" icon={<AddIcon />} />
+
+                <BottomNavigationAction label="Profil" icon={<AccountCircleIcon />} />
+                <BottomNavigationAction label="Message" icon={<ChatIcon />} />
+            </BottomNavigation>
+        </Paper>
     )
 }
