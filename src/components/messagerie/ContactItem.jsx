@@ -39,7 +39,10 @@ function ContactItem({ contactId, onClick, lastMessage, lastMessageDate }) {
                                 {lastMessage}
                             </Typography>
                             {lastMessageDate && (
-                                <Typography variant="caption" sx={{ color: '#555', fontFamily: '"Nunito", sans-serif' }}>
+                                <Typography
+                                    variant="caption"
+                                    sx={{ color: '#555', fontFamily: '"Nunito", sans-serif', textAlign: 'right' }}
+                                >
                                     {formatActivityDate(lastMessageDate)}
                                 </Typography>
                             )}

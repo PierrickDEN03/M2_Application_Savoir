@@ -91,7 +91,11 @@ function ActivityContactItem({ conversation, onClick }) {
                                     fontSize: '0.75rem',
                                     height: 26,
                                     borderRadius: '6px',
-                                    '.MuiChip-icon': { fontSize: 16 },
+                                    /* Cible l’icône interne du Chip */
+                                    '& .MuiChip-icon': {
+                                        color: 'white !important',
+                                        fontSize: 16,
+                                    },
                                 }}
                             />
                         </Box>
